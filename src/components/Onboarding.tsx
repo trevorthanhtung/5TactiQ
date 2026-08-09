@@ -77,7 +77,7 @@ const MiniMatchday = () => {
         <div className="w-10 h-10 md:w-12 md:h-12 bg-slate-800 rounded-full border-2 border-slate-800 shadow-sm flex items-center justify-center">
           <span className="text-white text-xs font-bold font-display">AWAY</span>
         </div>
-        <span className="text-[10px] font-bold text-slate-800 whitespace-nowrap">{t('onboarding.opponent', 'ĐỐI THỦ')}</span>
+        <span className="text-[10px] font-bold text-text-main whitespace-nowrap">{t('onboarding.opponent', 'ĐỐI THỦ')}</span>
       </motion.div>
     </div>
   </div>
