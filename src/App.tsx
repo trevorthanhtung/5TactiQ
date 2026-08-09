@@ -23,21 +23,47 @@ function App() {
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
 
+    const updateThemeMeta = (isDark: boolean) => {
+      const themeColor = isDark ? '#121212' : '#f6f4ed';
+      
+      let metaThemeColor = document.querySelector('meta[name="theme-color"]');
+      if (!metaThemeColor) {
+        metaThemeColor = document.createElement('meta');
+        metaThemeColor.setAttribute('name', 'theme-color');
+        document.head.appendChild(metaThemeColor);
+      }
+      metaThemeColor.setAttribute('content', themeColor);
+
+      let metaStatusBar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+      if (!metaStatusBar) {
+        metaStatusBar = document.createElement('meta');
+        metaStatusBar.setAttribute('name', 'apple-mobile-web-app-status-bar-style');
+        document.head.appendChild(metaStatusBar);
+      }
+      metaStatusBar.setAttribute('content', isDark ? 'black' : 'default');
+    };
+
     if (theme === 'system') {
       const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      const isDark = systemTheme === 'dark';
       root.classList.add(systemTheme);
+      updateThemeMeta(isDark);
       
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       const handleChange = (e: MediaQueryListEvent) => {
         if (useThemeStore.getState().theme === 'system') {
           root.classList.remove('light', 'dark');
-          root.classList.add(e.matches ? 'dark' : 'light');
+          const isDarkNow = e.matches;
+          root.classList.add(isDarkNow ? 'dark' : 'light');
+          updateThemeMeta(isDarkNow);
         }
       };
       mediaQuery.addEventListener('change', handleChange);
       return () => mediaQuery.removeEventListener('change', handleChange);
     } else {
+      const isDark = theme === 'dark';
       root.classList.add(theme);
+      updateThemeMeta(isDark);
     }
   }, [theme]);
 

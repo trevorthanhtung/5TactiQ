@@ -96,7 +96,7 @@ export default function Matchday() {
   const [showLiveUpdateModal, setShowLiveUpdateModal] = useState(false);
   const [isMatchDropdownOpen, setIsMatchDropdownOpen] = useState(false);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
-  const [bibColorSelection, setBibColorSelection] = useState<'A' | 'B' | null>(null);
+  const [bibColorSelection, setBibColorSelection] = useState<'A' | 'B' | 'C' | 'D' | null>(null);
 
   const getBibColorLabel = (val: string) => {
     switch (val) {
@@ -658,7 +658,7 @@ export default function Matchday() {
                                     {t(`matchday.team_${team.toLowerCase()}`)}
                                   </div>
                                   <div className={`text-xl font-display font-bold ${team === 'A' ? 'text-primary' : 'text-text-main'}`}>
-                                    {match[scoreField] ?? 0}
+                                    {Number(match[scoreField] ?? 0)}
                                   </div>
                                 </div>
                               </div>
@@ -680,7 +680,7 @@ export default function Matchday() {
                                 {t(`matchday.team_${team.toLowerCase()}`)}
                               </div>
                               <div className={`${isTwoTeams ? 'text-3xl' : 'text-xl'} font-display font-bold ${team === 'A' ? 'text-primary' : 'text-text-main'}`}>
-                                {match[scoreField] ?? 0}
+                                {Number(match[scoreField] ?? 0)}
                               </div>
                             </div>
                           </div>
@@ -1040,7 +1040,7 @@ export default function Matchday() {
                       <div className="text-center">
                         <div className="text-[10px] uppercase font-bold text-text-muted">{t(`matchday.team_${team.toLowerCase()}`)} ({getBibColorLabel(currentMatch[colorField] as string)})</div>
                         <div className={`text-4xl font-display font-bold ${team === 'A' ? 'text-primary' : 'text-text-main'}`}>
-                          {currentMatch[scoreField] ?? 0}
+                          {Number(currentMatch[scoreField] ?? 0)}
                         </div>
                       </div>
                     </div>
@@ -1535,7 +1535,7 @@ export default function Matchday() {
                         {idx > 0 && <div className="text-4xl font-display text-text-muted">-</div>}
                         <div className="text-center">
                           <div className="text-xs font-bold text-text-muted mb-1">{t(`matchday.team_${team.toLowerCase()}`)} ({getBibColorLabel(currentMatch[colorField] as string)})</div>
-                          <div className={`text-5xl font-display ${team === 'A' ? 'text-primary' : 'text-text-main'}`}>{currentMatch[scoreField] ?? 0}</div>
+                          <div className={`text-5xl font-display ${team === 'A' ? 'text-primary' : 'text-text-main'}`}>{Number(currentMatch[scoreField] ?? 0)}</div>
                         </div>
                       </div>
                     );
