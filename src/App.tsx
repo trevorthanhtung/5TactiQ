@@ -12,6 +12,7 @@ import { usePageVisibility } from './hooks/usePageVisibility';
 import { usePersistentStorage } from './hooks/usePersistentStorage';
 import { useBackgroundSync } from './hooks/useBackgroundSync';
 import { useThemeStore } from './store/useThemeStore';
+import { Capacitor } from '@capacitor/core';
 
 function App() {
   usePersistentStorage();
@@ -22,6 +23,13 @@ function App() {
   useEffect(() => {
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
+
+    // Dynamic Safe Area Injection for Android Native
+    if (Capacitor.isNativePlatform()) {
+      root.style.setProperty('--safe-top', 'max(env(safe-area-inset-top, 0px), 2.5rem)');
+    } else {
+      root.style.setProperty('--safe-top', 'env(safe-area-inset-top, 0px)');
+    }
 
     const updateThemeMeta = (isDark: boolean) => {
       const themeColor = isDark ? '#121212' : '#f6f4ed';
@@ -113,7 +121,7 @@ function App() {
   };
 
   return (
-    <div style={{ paddingBottom: `max(env(safe-area-inset-bottom), ${keyboardHeight}px)`, paddingTop: 'env(safe-area-inset-top)' }} className="w-full h-[100dvh] relative overflow-hidden transition-all duration-300 bg-background text-text-main">
+    <div style={{ paddingBottom: `max(env(safe-area-inset-bottom), ${keyboardHeight}px)` }} className="w-full h-[100dvh] relative overflow-hidden transition-all duration-300 bg-background text-text-main">
       {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
       {!showSplash && showOnboarding && <Onboarding onComplete={handleOnboardingComplete} />}
       
