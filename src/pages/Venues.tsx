@@ -1,0 +1,259 @@
+import { useState, useEffect } from 'react';
+import { useVenueStore } from '../store/useVenueStore';
+import { ArrowLeft, MapPin, Phone, Plus, Map, X, Trash2, Edit2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useHardwareBack } from '../hooks/useHardwareBack';
+import { VenuesSkeleton } from '../components/ui/VenuesSkeleton';
+import { BottomSheet } from '../components/ui/BottomSheet';
+import { useTranslation } from 'react-i18next';
+import type { Venue } from '../types';
+
+export default function Venues() {
+  const { t } = useTranslation();
+  const { venues, addVenue, updateVenue, deleteVenue } = useVenueStore();
+  const navigate = useNavigate();
+
+  const [showModal, setShowModal] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 300);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useHardwareBack(showModal, () => handleCloseModal());
+  useHardwareBack(deleteConfirmId !== null, () => setDeleteConfirmId(null));
+
+  const [formData, setFormData] = useState({
+    name: '',
+    address: '',
+    phone: '',
+  });
+
+  const handleOpenModal = (venue?: Venue) => {
+    if (venue) {
+      setEditingId(venue.id);
+      setFormData({
+        name: venue.name,
+        address: venue.address,
+        phone: venue.phone,
+      });
+    } else {
+      setEditingId(null);
+      setFormData({ name: '', address: '', phone: '' });
+    }
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setEditingId(null);
+    setFormData({ name: '', address: '', phone: '' });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingId) {
+      updateVenue(editingId, formData);
+    } else {
+      addVenue(formData);
+    }
+    handleCloseModal();
+  };
+
+  const handleDelete = (id: string) => {
+    deleteVenue(id);
+    setDeleteConfirmId(null);
+    handleCloseModal();
+  };
+
+  if (isLoading) {
+    return <VenuesSkeleton />;
+  }
+
+  return (
+    <div className="p-4 flex flex-col min-h-full max-w-5xl mx-auto w-full pb-8">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6 pt-2">
+        <div className="flex items-center gap-2 @sm:gap-3">
+          <button
+            onClick={() => navigate('/more')}
+            className="p-2 text-primary hover:bg-primary/10 border-2 border-primary/30 hover:border-primary transition-all shrink-0"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <div>
+            <h1 className="text-2xl @md:text-4xl font-display uppercase text-primary leading-none">{t('venues.title', 'Danh bạ Sân bóng')}</h1>
+          </div>
+        </div>
+        <button
+          onClick={() => handleOpenModal()}
+          className="hallmark-btn flex items-center gap-2 bg-secondary text-white shrink-0"
+        >
+          <Plus size={20} /> <span className="hidden @xl:inline">{t('venues.add_venue', 'Thêm sân')}</span>
+        </button>
+      </div>
+
+      <div className="hallmark-divider mb-6"></div>
+
+      {venues.length === 0 ? (
+        <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-primary/30 bg-primary/5 text-primary text-center">
+          <Map className="mb-4 opacity-50" size={48} />
+          <h3 className="font-display text-xl uppercase mb-2">{t('venues.no_venues', 'Chưa có sân bóng nào')}</h3>
+          <p className="text-text-muted text-sm max-w-sm mb-6">{t('venues.no_venues_desc', 'Hãy thêm các sân bóng thường xuyên thi đấu vào danh bạ để dễ dàng quản lý và đặt sân.')}</p>
+          <button
+            onClick={() => handleOpenModal()}
+            className="hallmark-btn bg-primary text-white"
+          >
+            {t('venues.add_first_venue', 'THÊM SÂN ĐẦU TIÊN')}
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {venues.map(venue => (
+            <div
+              key={venue.id}
+              onClick={() => handleOpenModal(venue)}
+              className="bg-surface border-2 border-border-main p-4 hover:border-primary/50 transition-colors group relative shadow-sm cursor-pointer hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_var(--color-primary)] flex flex-col h-full"
+            >
+              <div className="mb-2">
+                <h3 className="font-display font-bold text-primary uppercase text-xl leading-tight group-hover:text-secondary transition-colors">{venue.name}</h3>
+              </div>
+
+              <div className="flex-1 flex flex-col text-sm text-text-muted">
+                {venue.address && (
+                  <a 
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue.address)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex items-start gap-2 mb-3 hover:text-secondary group/link transition-colors"
+                  >
+                    <MapPin size={16} className="text-slate-400 shrink-0 mt-0.5 group-hover/link:text-secondary transition-colors" />
+                    <span className="underline-offset-2 group-hover/link:underline">{venue.address}</span>
+                  </a>
+                )}
+                {venue.phone && (
+                  <div className="mt-auto">
+                    <a
+                      href={`tel:${venue.phone}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold uppercase tracking-wider hover:bg-emerald-700 hover:-translate-y-0.5 transition-all shadow-[2px_2px_0px_0px_rgba(4,120,87,1)] border-2 border-emerald-700"
+                    >
+                      <Phone size={14} /> {t('venues.call_book', 'GỌI ĐẶT SÂN: ')} {venue.phone}
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Modal Thêm/Sửa */}
+      <BottomSheet
+        isOpen={showModal}
+        onClose={handleCloseModal}
+        title={
+          <span className="flex items-center gap-2">
+            <Map size={24} /> {editingId ? t('venues.modal_edit_title', 'Cập nhật') : t('venues.modal_add_title', 'Thêm Sân Bóng')}
+          </span>
+        }
+      >
+        <form onSubmit={handleSubmit} className="space-y-4 pr-1">
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">{t('venues.venue_name', 'Tên sân bóng *')}</label>
+            <input
+              type="text"
+              inputMode="text"
+              enterKeyHint="next"
+              required
+              value={formData.name}
+              onChange={e => setFormData({ ...formData, name: e.target.value })}
+              className="w-full border-2 border-border-main bg-surface p-3 rounded-none focus:border-primary outline-none font-bold text-primary"
+              placeholder={t('venues.venue_name_placeholder', 'Ví dụ: Sân Chảo Lửa')}
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">{t('venues.address', 'Địa chỉ')}</label>
+            <input
+              type="text"
+              inputMode="text"
+              enterKeyHint="next"
+              value={formData.address}
+              onChange={e => setFormData({ ...formData, address: e.target.value })}
+              className="w-full border-2 border-border-main bg-surface p-3 rounded-none focus:border-primary outline-none font-medium"
+              placeholder={t('venues.address_placeholder', 'Ví dụ: 30 Phan Thúc Duyện, Tân Bình')}
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">{t('venues.phone', 'Số điện thoại liên hệ')}</label>
+            <input
+              type="tel"
+              inputMode="tel"
+              enterKeyHint="done"
+              value={formData.phone}
+              onChange={e => setFormData({ ...formData, phone: e.target.value })}
+              className="w-full border-2 border-border-main bg-surface p-3 rounded-none focus:border-primary outline-none font-medium"
+              placeholder={t('venues.phone_placeholder', 'Ví dụ: 0901234567')}
+            />
+          </div>
+
+          <div className="pt-4 flex gap-3 mt-4">
+            {editingId && (
+              <button
+                type="button"
+                onClick={() => setDeleteConfirmId(editingId)}
+                className="p-3 bg-rose-50 border-2 border-rose-200 text-rose-600 hover:bg-rose-100 transition-colors flex items-center justify-center shrink-0 active:scale-95"
+                title={t('venues.delete_tooltip', 'Xóa sân bóng')}
+              >
+                <Trash2 size={24} />
+              </button>
+            )}
+            <button type="button" onClick={handleCloseModal} className="flex-1 bg-transparent text-text-muted font-display uppercase tracking-wider py-3 border-2 border-slate-300 hover:bg-surface transition-colors active:scale-95">
+              {t('venues.cancel', 'HỦY')}
+            </button>
+            <button type="submit" className="flex-1 bg-secondary text-white font-display uppercase tracking-wider py-3 border-2 border-secondary hover:bg-[#d05c21] transition-colors active:scale-95">
+              {editingId ? t('venues.update_btn', 'CẬP NHẬT') : t('venues.add_btn', 'THÊM SÂN')}
+            </button>
+          </div>
+        </form>
+      </BottomSheet>
+
+      {/* Modal Xác nhận Xóa */}
+      <BottomSheet
+        isOpen={deleteConfirmId !== null}
+        onClose={() => setDeleteConfirmId(null)}
+        variant="danger"
+        title={
+          <span className="flex items-center gap-2">
+            <Trash2 size={24} /> {t('venues.delete_title', 'Xóa sân bóng')}
+          </span>
+        }
+      >
+        <p className="text-text-muted text-sm md:text-base font-sans mb-8 leading-relaxed">{t('venues.delete_msg', 'Bạn có chắc chắn muốn xóa sân bóng này khỏi danh bạ không? Hành động này không thể hoàn tác.')}</p>
+
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => setDeleteConfirmId(null)}
+            className="flex-1 bg-transparent text-text-muted font-display uppercase tracking-wider py-3 border-2 border-slate-300 hover:bg-surface transition-colors active:scale-95"
+          >
+            {t('venues.delete_cancel', 'HỦY BỎ')}
+          </button>
+          <button
+            type="button"
+            onClick={() => deleteConfirmId && handleDelete(deleteConfirmId)}
+            className="flex-1 bg-rose-600 text-white font-display uppercase tracking-wider py-3 border-2 border-rose-700 hover:bg-rose-700 transition-colors active:scale-95"
+          >
+            {t('venues.delete_confirm', 'XÁC NHẬN')}
+          </button>
+        </div>
+      </BottomSheet>
+    </div>
+  );
+}

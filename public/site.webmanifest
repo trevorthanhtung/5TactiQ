@@ -1,0 +1,23 @@
+{
+  "name": "5TactiQ",
+  "short_name": "5TactiQ",
+  "description": "Quản lý đội bóng 5v5 - Đội hình, lịch thi đấu, chiến thuật Futsal",
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#121212",
+  "theme_color": "#121212"
+}
