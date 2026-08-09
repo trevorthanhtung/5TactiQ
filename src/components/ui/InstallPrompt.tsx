@@ -8,17 +8,30 @@ export default function InstallPrompt() {
   const { t } = useTranslation();
   const { isInstallable, isIOS, promptInstall } = useInstallPrompt();
   const [isVisible, setIsVisible] = useState(false);
+  const [isAndroidWeb, setIsAndroidWeb] = useState(false);
 
   useEffect(() => {
-    if (isInstallable) {
-      // Delay showing the prompt by a few seconds to not be too aggressive
-      const timer = setTimeout(() => {
-        setIsVisible(true);
-      }, 3000);
-      return () => clearTimeout(timer);
-    } else {
-      setIsVisible(false);
-    }
+    import('@capacitor/core').then(({ Capacitor }) => {
+      const isNative = Capacitor.isNativePlatform();
+      const isAndroid = !isNative && /android/i.test(navigator.userAgent || '');
+      setIsAndroidWeb(isAndroid);
+      const isHidden = localStorage.getItem('hideInstallPrompt') === 'true';
+
+      if (isHidden || isNative) {
+        setIsVisible(false);
+        return;
+      }
+
+      if (isAndroid || isInstallable) {
+        // Delay showing the prompt by a few seconds to not be too aggressive
+        const timer = setTimeout(() => {
+          setIsVisible(true);
+        }, 3000);
+        return () => clearTimeout(timer);
+      } else {
+        setIsVisible(false);
+      }
+    });
   }, [isInstallable]);
 
   if (!isVisible) return null;
@@ -45,6 +58,24 @@ export default function InstallPrompt() {
                 <span className="font-bold text-primary">{t('install_prompt.desc_ios_2')}</span>
               </p>
             </>
+          ) : isAndroidWeb ? (
+            <>
+              <p className="text-xs text-text-muted mb-3 font-sans">
+                Tải bản App chính thức (APK) để có trải nghiệm mượt mà, kết nối P2P siêu tốc và chơi không cần mạng!
+              </p>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => {
+                    window.open('https://github.com/trevorthanhtung/5TactiQ/raw/main/releases/5TactiQ.apk', '_blank');
+                    setIsVisible(false);
+                    localStorage.setItem('hideInstallPrompt', 'true');
+                  }}
+                  className="flex-1 hallmark-btn bg-primary text-white py-2 text-xs flex items-center justify-center gap-1"
+                >
+                  <Download size={14} /> TẢI APP NGAY
+                </button>
+              </div>
+            </>
           ) : (
             <>
               <p className="text-xs text-text-muted mb-3 font-sans">{t('install_prompt.desc_android')}</p>
@@ -52,7 +83,10 @@ export default function InstallPrompt() {
                 <button 
                   onClick={async () => {
                     const accepted = await promptInstall();
-                    if (accepted) setIsVisible(false);
+                    if (accepted) {
+                      setIsVisible(false);
+                      localStorage.setItem('hideInstallPrompt', 'true');
+                    }
                   }}
                   className="flex-1 hallmark-btn bg-primary text-white py-2 text-xs flex items-center justify-center gap-1"
                 >
@@ -64,7 +98,10 @@ export default function InstallPrompt() {
         </div>
 
         <button 
-          onClick={() => setIsVisible(false)}
+          onClick={() => {
+            setIsVisible(false);
+            localStorage.setItem('hideInstallPrompt', 'true');
+          }}
           className="absolute -top-3 -right-3 w-8 h-8 bg-surface border-2 border-primary text-primary flex items-center justify-center hover:bg-secondary hover:text-white transition-colors active:scale-95"
         >
           <X size={18} strokeWidth={2.5} />
