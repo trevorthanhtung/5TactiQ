@@ -16,10 +16,10 @@
     }
   ],
   "start_url": "/",
-  "display": "fullscreen",
+  "display": "standalone",
   "orientation": "portrait",
   "background_color": "#121212",
-  "theme_color": "#121212",
+  "theme_color": "#f6f4ed",
   "shortcuts": [
     {
       "name": "Sa Bàn Nhanh",
