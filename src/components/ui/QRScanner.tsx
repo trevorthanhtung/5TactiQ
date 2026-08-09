@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { Camera, Zap, ZapOff } from 'lucide-react';
+import { Torch } from '@capawesome/capacitor-torch';
 import { BottomSheet } from './BottomSheet';
 import { useTranslation } from 'react-i18next';
 
@@ -16,14 +17,26 @@ export function QRScanner({ onScan, isOpen, onClose }: QRScannerProps) {
   const [flashEnabled, setFlashEnabled] = useState(false);
 
   const toggleFlash = async () => {
-    if (scannerRef.current) {
-      try {
-        await scannerRef.current.applyVideoConstraints({
-          advanced: [{ torch: !flashEnabled } as any]
-        });
-        setFlashEnabled(!flashEnabled);
-      } catch (err) {
-        console.error("Flash not supported", err);
+    try {
+      if (flashEnabled) {
+        await Torch.disable();
+        setFlashEnabled(false);
+      } else {
+        await Torch.enable();
+        setFlashEnabled(true);
+      }
+    } catch (err) {
+      console.error("Lỗi khi bật đèn Flash Native:", err);
+      // Fallback sử dụng WebRTC nếu plugin Native không hoạt động (trên Web)
+      if (scannerRef.current) {
+        try {
+          await scannerRef.current.applyVideoConstraints({
+            advanced: [{ torch: !flashEnabled } as any]
+          });
+          setFlashEnabled(!flashEnabled);
+        } catch (weberr) {
+          console.error("WebRTC Flash fallback cũng thất bại:", weberr);
+        }
       }
     }
   };
@@ -113,6 +126,7 @@ export function QRScanner({ onScan, isOpen, onClose }: QRScannerProps) {
             scannerRef.current = null;
           }).catch(() => {});
         }
+        Torch.disable().catch(() => {});
         setFlashEnabled(false);
       };
     }
