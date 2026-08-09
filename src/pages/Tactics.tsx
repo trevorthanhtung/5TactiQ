@@ -60,6 +60,29 @@ export default function Tactics() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Tự động xoay ngang màn hình khi vào Sa Bàn, trả về ban đầu khi thoát
+  useEffect(() => {
+    try {
+      if (window.screen && window.screen.orientation && typeof window.screen.orientation.lock === 'function') {
+        window.screen.orientation.lock('landscape').catch(() => {
+          // Trình duyệt có thể chặn auto-lock nếu chưa có thao tác chạm
+        });
+      }
+    } catch {
+      // Ignore
+    }
+
+    return () => {
+      try {
+        if (window.screen && window.screen.orientation && typeof window.screen.orientation.unlock === 'function') {
+          window.screen.orientation.unlock();
+        }
+      } catch {
+        // Ignore
+      }
+    };
+  }, []);
+
   const [positions, setPositions] = useState<Position[]>([]);
   const [lines, setLines] = useState<DrawingLine[]>([]);
   const [isDrawing, setIsDrawing] = useState(false);
