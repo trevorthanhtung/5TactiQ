@@ -174,7 +174,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
         {/* Skip Button */}
         <button 
           onClick={onComplete}
-          className={`absolute right-6 z-50 font-display uppercase tracking-widest text-sm font-bold opacity-80 hover:opacity-100 transition-opacity top-[calc(env(safe-area-inset-top,0px)+1.5rem)] ${step.textColor}`}
+          className={`absolute right-6 z-50 font-display uppercase tracking-widest text-sm font-bold opacity-80 hover:opacity-100 transition-opacity top-[max(env(safe-area-inset-top,0px),2.5rem)] ${step.textColor}`}
         >
           {t('onboarding.skip', 'Bỏ qua')}
         </button>
@@ -229,7 +229,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
       </div>
 
       {/* Bottom Content Section (40%) */}
-      <div className="relative flex-[4] w-full bg-surface border-t-4 border-primary z-20 flex flex-col justify-between px-6 pt-6 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] md:px-10 md:pt-10 md:pb-[calc(env(safe-area-inset-bottom,0px)+2.5rem)]">
+      <div className="relative flex-[4] w-full bg-surface border-t-4 border-primary z-20 flex flex-col justify-between px-6 pt-6 pb-[max(env(safe-area-inset-bottom,0px),2.5rem)] md:px-10 md:pt-10 md:pb-[max(env(safe-area-inset-bottom,0px),3.5rem)]">
         
         <AnimatePresence mode="wait">
           <motion.div
