@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { capacitorStorage } from '../utils/capacitorStorage';
 import type { Player } from '../types';
 
 interface PlayerState {
@@ -48,6 +49,7 @@ export const usePlayerStore = create<PlayerState>()(
     }),
     {
       name: 'katfc-player-storage',
+      storage: createJSONStorage(() => capacitorStorage),
     }
   )
 );

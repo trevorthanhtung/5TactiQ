@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
-import { Camera } from 'lucide-react';
+import { Camera, Zap, ZapOff } from 'lucide-react';
 import { BottomSheet } from './BottomSheet';
 import { useTranslation } from 'react-i18next';
 
@@ -13,6 +13,20 @@ interface QRScannerProps {
 export function QRScanner({ onScan, isOpen, onClose }: QRScannerProps) {
   const { t } = useTranslation();
   const scannerRef = useRef<Html5Qrcode | null>(null);
+  const [flashEnabled, setFlashEnabled] = useState(false);
+
+  const toggleFlash = async () => {
+    if (scannerRef.current) {
+      try {
+        await scannerRef.current.applyVideoConstraints({
+          advanced: [{ torch: !flashEnabled } as any]
+        });
+        setFlashEnabled(!flashEnabled);
+      } catch (err) {
+        console.error("Flash not supported", err);
+      }
+    }
+  };
 
   useEffect(() => {
     if (isOpen && window.isSecureContext) {
@@ -40,34 +54,50 @@ export function QRScanner({ onScan, isOpen, onClose }: QRScannerProps) {
 
         const startCamera = async () => {
           try {
-            // Thử tự động khởi chạy Cam Sau (facingMode environment) ngay lập tức
-            await html5QrCode.start(
-              { facingMode: 'environment' },
-              config,
-              handleSuccess,
-              () => {}
-            );
-          } catch {
-            // Nếu không dùng được facingMode, tìm camera sau trong danh sách thiết bị
-            try {
-              const devices = await Html5Qrcode.getCameras();
-              if (devices && devices.length > 0) {
-                // Ưu tiên camera có chữ 'back' hoặc 'rear', hoặc chọn cam cuối cùng
-                const backCam = devices.find(d => 
-                  d.label.toLowerCase().includes('back') || 
-                  d.label.toLowerCase().includes('rear') ||
-                  d.label.toLowerCase().includes('sau')
-                ) || devices[devices.length - 1];
-
-                await html5QrCode.start(
-                  backCam.id,
-                  config,
-                  handleSuccess,
-                  () => {}
-                );
+            const devices = await Html5Qrcode.getCameras();
+            if (devices && devices.length > 0) {
+              // Tìm camera sau
+              let backCams = devices.filter(d => 
+                d.label.toLowerCase().includes('back') || 
+                d.label.toLowerCase().includes('rear') ||
+                d.label.toLowerCase().includes('sau') ||
+                d.label.toLowerCase().includes('environment')
+              );
+              
+              if (backCams.length === 0) {
+                  // Fallback
+                  backCams = devices;
               }
-            } catch (err) {
-              console.error("Không thể mở Camera:", err);
+
+              // Loại bỏ các camera góc rộng, tele, macro, depth
+              let mainBackCam = backCams.find(d => 
+                  !d.label.toLowerCase().includes('ultra') &&
+                  !d.label.toLowerCase().includes('wide') &&
+                  !d.label.toLowerCase().includes('góc rộng') &&
+                  !d.label.toLowerCase().includes('tele') &&
+                  !d.label.toLowerCase().includes('depth') &&
+                  !d.label.toLowerCase().includes('macro')
+              );
+
+              const selectedCameraId = mainBackCam ? mainBackCam.id : backCams[0].id;
+
+              await html5QrCode.start(
+                selectedCameraId,
+                config,
+                handleSuccess,
+                () => {}
+              );
+            } else {
+               // Fallback to facingMode if no devices found
+               await html5QrCode.start({ facingMode: 'environment' }, config, handleSuccess, () => {});
+            }
+          } catch (err) {
+            console.error("Không thể mở Camera:", err);
+            // Cố gắng fallback lần cuối
+            try {
+              await html5QrCode.start({ facingMode: 'environment' }, config, handleSuccess, () => {});
+            } catch (fallbackErr) {
+              console.error("Fallback cũng thất bại:", fallbackErr);
             }
           }
         };
@@ -83,6 +113,7 @@ export function QRScanner({ onScan, isOpen, onClose }: QRScannerProps) {
             scannerRef.current = null;
           }).catch(() => {});
         }
+        setFlashEnabled(false);
       };
     }
   }, [isOpen, onScan, onClose]);
@@ -102,8 +133,19 @@ export function QRScanner({ onScan, isOpen, onClose }: QRScannerProps) {
             <p className="text-text-muted mb-4 text-sm text-center">{t('sync.qr_instruction', 'Hướng camera vào mã QR trên máy Phát để tự động nhận mã kết nối.')}</p>
             
             {/* CSS ẩn hoàn toàn các nút Select Camera / Start Scanning dư thừa của thư viện */}
-            <div className="w-full max-w-sm overflow-hidden border-4 border-border-main rounded-lg relative min-h-[260px] bg-black">
+            <div className="w-full max-w-sm overflow-hidden border-4 border-border-main rounded-lg relative min-h-[260px] bg-black group">
               <div id="reader" className="w-full h-full [&_button]:hidden [&_select]:hidden [&_img]:hidden"></div>
+              
+              {/* Flash Toggle Button */}
+              <button 
+                onClick={toggleFlash}
+                className={`absolute bottom-4 right-4 p-3 rounded-full transition-all shadow-lg border border-white/20 z-10 ${
+                  flashEnabled ? 'bg-primary text-white scale-110' : 'bg-black/50 text-white/80 hover:bg-black/70'
+                }`}
+                title="Bật/Tắt Flash"
+              >
+                {flashEnabled ? <Zap size={24} /> : <ZapOff size={24} />}
+              </button>
             </div>
           </>
         )}

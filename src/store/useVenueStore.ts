@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { capacitorStorage } from '../utils/capacitorStorage';
 import type { Venue } from '../types';
 
 interface VenueState {
@@ -33,6 +34,7 @@ export const useVenueStore = create<VenueState>()(
     }),
     {
       name: 'katfc-venues-storage',
+      storage: createJSONStorage(() => capacitorStorage),
     }
   )
 );

@@ -41,6 +41,7 @@ function App() {
         document.head.appendChild(metaStatusBar);
       }
       metaStatusBar.setAttribute('content', isDark ? 'black' : 'default');
+
     };
 
     if (theme === 'system') {

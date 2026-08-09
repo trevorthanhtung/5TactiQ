@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { capacitorStorage } from '../utils/capacitorStorage';
 import type { MatchInfo, PlayerMatchStat } from '../types';
 
 interface MatchState {
@@ -178,6 +179,7 @@ export const useMatchStore = create<MatchState>()(
     }),
     {
       name: 'katfc-match-storage-v5',
+      storage: createJSONStorage(() => capacitorStorage),
       partialize: (state) => ({ matches: state.matches }),
     }
   )

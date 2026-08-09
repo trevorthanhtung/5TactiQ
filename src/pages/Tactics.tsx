@@ -63,6 +63,12 @@ export default function Tactics() {
   // Tự động xoay ngang màn hình khi vào Sa Bàn, trả về ban đầu khi thoát
   useEffect(() => {
     try {
+      // Native App Lock
+      import('@capacitor/screen-orientation').then(({ ScreenOrientation }) => {
+        ScreenOrientation.lock({ orientation: 'landscape' }).catch(() => {});
+      }).catch(() => {});
+      
+      // Web PWA Lock
       if (window.screen && window.screen.orientation && typeof window.screen.orientation.lock === 'function') {
         window.screen.orientation.lock('landscape').catch(() => {
           // Trình duyệt có thể chặn auto-lock nếu chưa có thao tác chạm
@@ -74,6 +80,12 @@ export default function Tactics() {
 
     return () => {
       try {
+        // Native App Unlock
+        import('@capacitor/screen-orientation').then(({ ScreenOrientation }) => {
+          ScreenOrientation.unlock().catch(() => {});
+        }).catch(() => {});
+
+        // Web PWA Unlock
         if (window.screen && window.screen.orientation && typeof window.screen.orientation.unlock === 'function') {
           window.screen.orientation.unlock();
         }

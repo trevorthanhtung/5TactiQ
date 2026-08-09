@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { capacitorStorage } from '../utils/capacitorStorage';
 import type { TrainingSession } from '../types';
 
 interface TrainingState {
@@ -44,6 +45,7 @@ export const useTrainingStore = create<TrainingState>()(
     }),
     {
       name: 'katfc-training-storage',
+      storage: createJSONStorage(() => capacitorStorage),
     }
   )
 );

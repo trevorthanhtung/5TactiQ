@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { capacitorStorage } from '../utils/capacitorStorage';
 import type { FundTransaction } from '../types';
 
 interface FundState {
@@ -26,6 +27,7 @@ export const useFundStore = create<FundState>()(
     }),
     {
       name: 'katfc-fund-storage',
+      storage: createJSONStorage(() => capacitorStorage),
     }
   )
 );

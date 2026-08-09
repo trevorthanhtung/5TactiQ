@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { capacitorStorage } from '../utils/capacitorStorage';
 import type { TacticalFrame } from '../pages/Tactics';
 
 export interface SavedTactic {
@@ -64,6 +65,7 @@ export const useTacticStore = create<TacticState>()(
     }),
     {
       name: 'tactic-storage',
+      storage: createJSONStorage(() => capacitorStorage),
     }
   )
 );
