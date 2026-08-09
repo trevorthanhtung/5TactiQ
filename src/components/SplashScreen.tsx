@@ -10,6 +10,59 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   useEffect(() => {
+    // Thử phát âm thanh (có thể bị chặn nếu browser yêu cầu tương tác trước)
+    try {
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioContext && !prefersReducedMotion) {
+        const ctx = new AudioContext();
+        const now = ctx.currentTime;
+        
+        // 1. Âm thanh lướt (Swoosh) khi các lát cắt (slices) bay vào
+        const swooshOsc = ctx.createOscillator();
+        const swooshGain = ctx.createGain();
+        swooshOsc.type = 'triangle';
+        swooshOsc.frequency.setValueAtTime(150, now + 0.2);
+        swooshOsc.frequency.exponentialRampToValueAtTime(800, now + 0.6);
+        swooshGain.gain.setValueAtTime(0, now + 0.2);
+        swooshGain.gain.linearRampToValueAtTime(0.05, now + 0.4);
+        swooshGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+        swooshOsc.connect(swooshGain);
+        swooshGain.connect(ctx.destination);
+        swooshOsc.start(now + 0.2);
+        swooshOsc.stop(now + 0.6);
+
+        // 2. Tiếng nổ trầm (Bass impact) khi vòng lan toả (pulse ring) xuất hiện
+        const boomOsc = ctx.createOscillator();
+        const boomGain = ctx.createGain();
+        boomOsc.type = 'sine';
+        boomOsc.frequency.setValueAtTime(120, now + 0.55);
+        boomOsc.frequency.exponentialRampToValueAtTime(30, now + 0.9);
+        boomGain.gain.setValueAtTime(0, now + 0.55);
+        boomGain.gain.linearRampToValueAtTime(0.2, now + 0.58);
+        boomGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+        boomOsc.connect(boomGain);
+        boomGain.connect(ctx.destination);
+        boomOsc.start(now + 0.55);
+        boomOsc.stop(now + 1.2);
+
+        // 3. Tiếng "Ping" công nghệ cao (Tech Chime) khi logo ổn định và dải sáng lướt qua
+        const pingOsc = ctx.createOscillator();
+        const pingGain = ctx.createGain();
+        pingOsc.type = 'sine';
+        pingOsc.frequency.setValueAtTime(1200, now + 0.95);
+        pingOsc.frequency.exponentialRampToValueAtTime(2400, now + 1.05);
+        pingGain.gain.setValueAtTime(0, now + 0.95);
+        pingGain.gain.linearRampToValueAtTime(0.1, now + 0.98);
+        pingGain.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
+        pingOsc.connect(pingGain);
+        pingGain.connect(ctx.destination);
+        pingOsc.start(now + 0.95);
+        pingOsc.stop(now + 1.8);
+      }
+    } catch (e) {
+      console.warn('Audio autoplay blocked by browser', e);
+    }
+
     // Bắt đầu fade out sau 2.1s (khi animation gần xong)
     const fadeTimer = setTimeout(() => {
       setIsFading(true);

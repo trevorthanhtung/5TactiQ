@@ -42,12 +42,16 @@ export function QRScanner({ onScan, isOpen, onClose }: QRScannerProps) {
   };
 
   useEffect(() => {
+    let isMounted = true;
+    let localScanner: Html5Qrcode | null = null;
+
     if (isOpen && window.isSecureContext) {
       const timer = setTimeout(() => {
-        if (!document.getElementById('reader')) return;
+        if (!isMounted || !document.getElementById('reader')) return;
 
         const html5QrCode = new Html5Qrcode('reader');
         scannerRef.current = html5QrCode;
+        localScanner = html5QrCode;
 
         const config = {
           fps: 10,
@@ -55,11 +59,12 @@ export function QRScanner({ onScan, isOpen, onClose }: QRScannerProps) {
         };
 
         const handleSuccess = (decodedText: string) => {
-          if (scannerRef.current) {
-            scannerRef.current.stop().then(() => {
-              scannerRef.current?.clear();
-              scannerRef.current = null;
-            }).catch(() => {});
+          if (localScanner) {
+            try {
+              localScanner.stop().then(() => {
+                localScanner?.clear();
+              }).catch(() => {});
+            } catch (e) {}
           }
           onScan(decodedText);
           onClose();
@@ -68,8 +73,9 @@ export function QRScanner({ onScan, isOpen, onClose }: QRScannerProps) {
         const startCamera = async () => {
           try {
             const devices = await Html5Qrcode.getCameras();
+            if (!isMounted) return;
+
             if (devices && devices.length > 0) {
-              // Tìm camera sau
               let backCams = devices.filter(d => 
                 d.label.toLowerCase().includes('back') || 
                 d.label.toLowerCase().includes('rear') ||
@@ -77,12 +83,8 @@ export function QRScanner({ onScan, isOpen, onClose }: QRScannerProps) {
                 d.label.toLowerCase().includes('environment')
               );
               
-              if (backCams.length === 0) {
-                  // Fallback
-                  backCams = devices;
-              }
+              if (backCams.length === 0) backCams = devices;
 
-              // Loại bỏ các camera góc rộng, tele, macro, depth
               let mainBackCam = backCams.find(d => 
                   !d.label.toLowerCase().includes('ultra') &&
                   !d.label.toLowerCase().includes('wide') &&
@@ -101,12 +103,11 @@ export function QRScanner({ onScan, isOpen, onClose }: QRScannerProps) {
                 () => {}
               );
             } else {
-               // Fallback to facingMode if no devices found
                await html5QrCode.start({ facingMode: 'environment' }, config, handleSuccess, () => {});
             }
           } catch (err) {
             console.error("Không thể mở Camera:", err);
-            // Cố gắng fallback lần cuối
+            if (!isMounted) return;
             try {
               await html5QrCode.start({ facingMode: 'environment' }, config, handleSuccess, () => {});
             } catch (fallbackErr) {
@@ -119,12 +120,14 @@ export function QRScanner({ onScan, isOpen, onClose }: QRScannerProps) {
       }, 250);
 
       return () => {
+        isMounted = false;
         clearTimeout(timer);
-        if (scannerRef.current) {
-          scannerRef.current.stop().then(() => {
-            scannerRef.current?.clear();
-            scannerRef.current = null;
-          }).catch(() => {});
+        if (localScanner) {
+          try {
+            localScanner.stop().then(() => {
+              localScanner?.clear();
+            }).catch(() => {});
+          } catch (e) {}
         }
         Torch.disable().catch(() => {});
         setFlashEnabled(false);
