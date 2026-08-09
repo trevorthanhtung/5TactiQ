@@ -44,7 +44,7 @@ export default function DataSync() {
   }, []);
 
   const handleExportFile = async () => {
-    const jsonStr = exportData();
+    const jsonStr = await exportData();
 
     // Check if Native Share with Files is supported
     if (navigator.share && navigator.canShare) {
@@ -93,9 +93,10 @@ export default function DataSync() {
     reader.readAsText(file);
   };
 
-  const confirmImport = () => {
+  const confirmImport = async () => {
     if (!pendingImportData) return;
-    if (importSelectedData(pendingImportData, selectedImportKeys)) {
+    const success = await importSelectedData(pendingImportData, selectedImportKeys);
+    if (success) {
       window.location.replace('/');
     } else {
       setAlertInfo({ title: t('sync.err_title', 'LỖI'), message: t('sync.err_restore_fail', 'Không thể phục hồi dữ liệu.') });
@@ -141,7 +142,7 @@ export default function DataSync() {
 
       {/* File Backup */}
       <div className="bg-surface border-2 border-border-main p-6 mb-6">
-        <h3 className="font-bold uppercase text-slate-700 mb-2">{t('sync.file_title', '1. Sao lưu bằng File (.5tactiQ)')}</h3>
+        <h3 className="font-bold uppercase text-text-main font-display text-base tracking-wide mb-2">{t('sync.file_title', '1. Sao lưu bằng File (.5tactiQ)')}</h3>
         <p className="text-sm text-text-muted mb-4">{t('sync.file_desc', 'Lưu toàn bộ dữ liệu hiện tại về máy, hoặc phục hồi từ file đã lưu.')}</p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -162,7 +163,7 @@ export default function DataSync() {
 
       {/* WebRTC Sync */}
       <div className="bg-surface border-2 border-secondary/30 p-6">
-        <h3 className="font-bold uppercase text-slate-700 mb-2">{t('sync.p2p_title', '2. Kết nối trực tiếp (P2P)')}</h3>
+        <h3 className="font-bold uppercase text-text-main font-display text-base tracking-wide mb-2">{t('sync.p2p_title', '2. Kết nối trực tiếp (P2P)')}</h3>
         <p className="text-sm text-text-muted mb-4">{t('sync.p2p_desc', 'Đồng bộ siêu tốc 2 thiết bị. Không lưu vết qua Server trung gian, bảo mật tuyệt đối.')}</p>
 
         {syncMode === 'none' && (
@@ -188,7 +189,7 @@ export default function DataSync() {
 
         {syncMode === 'host' && (
           <div className="flex flex-col items-center text-center">
-            <p className="font-display font-bold uppercase tracking-widest text-primary mb-3">{t('sync.host_instruction', 'Nhập mã này trên máy nhận')}</p>
+            <p className="font-display font-bold uppercase tracking-widest text-text-main mb-3">{t('sync.host_instruction', 'Nhập mã này trên máy nhận')}</p>
 
             {peerStatus === 'initializing' && (
               <div className="w-full max-w-xs h-[72px] bg-surface animate-pulse border-2 border-border-main mb-4 flex items-center justify-center text-slate-400 font-display uppercase tracking-widest">
@@ -206,7 +207,7 @@ export default function DataSync() {
                       type: 'success'
                     });
                   }}
-                  className="cursor-pointer hover:bg-primary/10 active:scale-95 transition-all text-5xl font-display text-primary tracking-widest bg-primary/5 border-2 border-border-main px-8 py-4 w-full max-w-xs mb-6 shadow-inner relative group"
+                  className="cursor-pointer hover:bg-surface-2 active:scale-95 transition-all text-5xl font-display text-text-main tracking-widest bg-surface border-2 border-border-main px-8 py-4 w-full max-w-xs mb-6 shadow-inner relative group"
                   title={t('sync.host_click_to_copy', 'Nhấn để sao chép')}
                 >
                   {peerId}
@@ -217,7 +218,7 @@ export default function DataSync() {
                 
                 <div className="w-full max-w-xs border-2 border-dashed border-primary/30 p-6 bg-surface flex flex-col items-center justify-center mb-6">
                   <QRCodeCanvas value={peerId} size={180} />
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-4 text-center">{t('sync.host_scan_camera', 'Quét bằng Camera')}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted mt-4 text-center">{t('sync.host_scan_camera', 'Quét bằng Camera')}</p>
                 </div>
                 
                 <div className="h-6 flex items-center justify-center">
@@ -232,7 +233,7 @@ export default function DataSync() {
             <button
               type="button"
               onClick={() => { setSyncMode('none'); resetPeer(); }}
-              className="w-full max-w-xs font-display uppercase tracking-wider py-3 border-2 border-slate-300 text-text-muted hover:bg-slate-50 transition-colors mt-6"
+              className="w-full max-w-xs font-display uppercase tracking-wider py-3 border-2 border-border-main text-text-muted hover:bg-surface-2 transition-colors mt-6"
             >
               {t('sync.host_cancel', 'Hủy phát')}
             </button>
@@ -249,13 +250,13 @@ export default function DataSync() {
                 maxLength={6}
                 value={connectCode}
                 onChange={e => setConnectCode(e.target.value.toUpperCase())}
-                className="w-full text-center text-5xl font-display tracking-[0.2em] border-4 border-border-main focus:border-secondary focus:bg-secondary/5 outline-none p-4 uppercase transition-colors shadow-inner text-primary placeholder:text-slate-200"
+                className="w-full text-center text-5xl font-display tracking-[0.2em] border-4 border-border-main focus:border-secondary focus:bg-secondary/5 outline-none p-4 uppercase transition-colors shadow-inner text-text-main placeholder:text-text-muted/30"
                 placeholder={t('sync.client_placeholder', '------')}
               />
 
               <div className="flex items-center gap-3 mt-2 w-full lg:hidden">
                 <div className="h-[2px] flex-1 bg-surface"></div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-300">{t('sync.client_or', 'Hoặc')}</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-text-muted">{t('sync.client_or', 'Hoặc')}</span>
                 <div className="h-[2px] flex-1 bg-surface"></div>
               </div>
               
@@ -279,7 +280,7 @@ export default function DataSync() {
               <button
                 type="button"
                 onClick={() => { setSyncMode('none'); resetPeer(); }}
-                className="flex-1 font-display uppercase tracking-wider py-3 border-2 border-slate-300 text-text-muted hover:bg-slate-50 transition-colors"
+                className="flex-1 font-display uppercase tracking-wider py-3 border-2 border-border-main text-text-muted hover:bg-surface-2 transition-colors"
               >
                 {t('sync.client_cancel', 'Hủy')}
               </button>
@@ -354,7 +355,7 @@ export default function DataSync() {
           <div className="flex gap-3">
             <button
               onClick={() => setPendingImportData(null)}
-              className="flex-1 font-display uppercase tracking-wider py-3 border-2 border-slate-300 text-text-muted hover:bg-slate-50 transition-colors"
+              className="flex-1 font-display uppercase tracking-wider py-3 border-2 border-border-main text-text-muted hover:bg-surface-2 transition-colors"
             >
               {t('sync.import_cancel', 'Hủy')}
             </button>

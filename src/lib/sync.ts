@@ -1,3 +1,5 @@
+import { capacitorStorage } from '../utils/capacitorStorage';
+
 export const STORAGE_KEYS_META: Record<string, string> = {
   'katfc-player-storage': 'Đội hình & Cầu thủ',
   'katfc-match-storage-v4': 'Dữ liệu Trận đấu',
@@ -10,10 +12,10 @@ export const STORAGE_KEYS_META: Record<string, string> = {
 
 export const STORAGE_KEYS = Object.keys(STORAGE_KEYS_META);
 
-export const exportData = (): string => {
+export const exportData = async (): Promise<string> => {
   const data: Record<string, string | null> = {};
   for (const key of STORAGE_KEYS) {
-    data[key] = localStorage.getItem(key);
+    data[key] = await capacitorStorage.getItem(key);
   }
   return JSON.stringify(data);
 };
@@ -39,14 +41,14 @@ export const parseBackupData = (jsonData: string): Record<string, any> | null =>
   }
 };
 
-export const importSelectedData = (parsedData: Record<string, any>, selectedKeys: string[]): boolean => {
+export const importSelectedData = async (parsedData: Record<string, any>, selectedKeys: string[]): Promise<boolean> => {
   try {
     let importedCount = 0;
     
     for (const key of selectedKeys) {
       if (STORAGE_KEYS.includes(key) && parsedData[key] !== undefined && parsedData[key] !== null) {
         const valueToSave = typeof parsedData[key] === 'object' ? JSON.stringify(parsedData[key]) : String(parsedData[key]);
-        localStorage.setItem(key, valueToSave);
+        await capacitorStorage.setItem(key, valueToSave);
         importedCount++;
       }
     }

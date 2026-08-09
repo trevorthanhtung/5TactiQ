@@ -25,9 +25,9 @@ export function usePeerSync(onDataReceived?: (dataStr: string) => void) {
       connRef.current = conn;
       setStatus('connected');
 
-      conn.on('open', () => {
+      conn.on('open', async () => {
         // Automatically send data when someone connects
-        const data = exportData();
+        const data = await exportData();
         conn.send(data);
         setStatus('success');
       });
