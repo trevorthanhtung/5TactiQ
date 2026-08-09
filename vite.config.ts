@@ -23,7 +23,7 @@ export default defineConfig({
         description: '5TactiQ Futsal Team Management & Tactical Board',
         theme_color: '#0f172a',
         background_color: '#0f172a',
-        display: 'standalone',
+        display: 'fullscreen',
         icons: [
           {
             src: 'pwa-192x192.png',
