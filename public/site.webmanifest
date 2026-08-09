@@ -19,5 +19,21 @@
   "display": "fullscreen",
   "orientation": "portrait",
   "background_color": "#121212",
-  "theme_color": "#121212"
+  "theme_color": "#121212",
+  "shortcuts": [
+    {
+      "name": "Sa Bàn Nhanh",
+      "short_name": "Sa Bàn",
+      "description": "Mở nhanh sa bàn chiến thuật bóng đá",
+      "url": "/tactics",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Quản Lý Đội Hình",
+      "short_name": "Đội Hình",
+      "description": "Quản lý danh sách cầu thủ",
+      "url": "/roster",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    }
+  ]
 }

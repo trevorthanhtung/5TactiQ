@@ -4,4 +4,8 @@
     <string name="title_activity_main">5TactiQ</string>
     <string name="package_name">com.katfc.tactiq5</string>
     <string name="custom_url_scheme">com.katfc.tactiq5</string>
+    <string name="shortcut_tactics_short">Sa Bàn Nhanh</string>
+    <string name="shortcut_tactics_long">Mở sa bàn chiến thuật 5TactiQ</string>
+    <string name="shortcut_roster_short">Quản Lý Đội Hình</string>
+    <string name="shortcut_roster_long">Xem danh sách cầu thủ</string>
 </resources>
