@@ -139,7 +139,6 @@ export default function Home() {
         <div className="hallmark-card p-5 @md:col-span-1 @xl:col-span-1 flex flex-col justify-between">
            <div>
              <h2 className="font-display text-xl uppercase tracking-widest text-primary mb-2">{t('home.tactics_title')}</h2>
-             <p className="text-sm text-text-muted mb-4">{t('home.tactics_desc')}</p>
            </div>
            
            <Link to="/tactics" className="relative flex-1 bg-emerald-900/10 border-2 border-emerald-900/20 rounded-lg overflow-hidden min-h-[160px] hover:border-secondary transition-colors group cursor-pointer block mt-2">
