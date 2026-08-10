@@ -46,7 +46,7 @@ export default function Layout() {
     <div className="flex flex-col lg:flex-row h-screen bg-surface overflow-hidden font-sans">
       
       {/* Side Rail for lg+ screens (Tablet, Fold Inside) */}
-      <nav className="hidden lg:flex flex-col w-24 bg-surface border-r-2 border-border-main shrink-0 z-40 pt-[var(--safe-top)]">
+      <nav className="hidden lg:flex flex-col w-24 bg-surface border-r-2 border-border-main shrink-0 z-40" style={{ paddingTop: 'var(--safe-top)' }}>
         <div className="p-4 flex justify-center border-b-2 border-border-main" title={settings.teamName || '5TactiQ'}>
           {settings.logoUrl ? (
             <img src={settings.logoUrl} alt="Logo" className="w-12 h-12 object-contain" />
@@ -78,7 +78,7 @@ export default function Layout() {
       {/* Main Content Area - Uses Container Queries */}
       <main id="main-content" className="flex-1 overflow-hidden lg:pb-0 @container bg-accent/30 relative">
         <AnimatePresence mode="wait">
-          <PageWrapper key={location.pathname} className="absolute inset-0 overflow-y-auto pb-[calc(6rem+env(safe-area-inset-bottom))] pt-[var(--safe-top)] lg:pb-0">
+          <PageWrapper key={location.pathname} className="absolute inset-0 overflow-y-auto pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-0" style={{ paddingTop: 'var(--safe-top)' }}>
             {outlet}
           </PageWrapper>
         </AnimatePresence>
