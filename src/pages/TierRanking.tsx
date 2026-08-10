@@ -225,25 +225,24 @@ export default function TierRanking() {
     <div className="p-4 md:p-6 flex flex-col min-h-full max-w-5xl mx-auto w-full pb-24">
       {/* Header */}
       <header className="mb-5 pt-2">
-        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm font-bold text-text-muted hover:text-secondary transition-colors mb-4 uppercase tracking-wider">
-          <ArrowLeft size={16} /> {t('tier.back')}
-        </button>
-        <div className="flex justify-between items-end gap-4">
-          <div>
-            <h1 className="text-4xl font-display uppercase text-primary leading-none">{t('tier.title')}</h1>
-            <p className="text-sm text-text-muted mt-2 font-medium">{t('tier.subtitle')}</p>
-          </div>
+        <div className="flex justify-between items-center mb-3">
+          <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm font-bold text-text-muted hover:text-secondary transition-colors uppercase tracking-wider">
+            <ArrowLeft size={16} /> {t('tier.back')}
+          </button>
 
           {players.some(p => p.tier) && (
             <button 
               onClick={handleResetAll}
-              className="hallmark-btn flex items-center gap-2 bg-secondary text-white text-sm py-2 px-4 shrink-0"
+              className="hallmark-btn flex items-center gap-1.5 bg-secondary text-white text-xs sm:text-sm py-1.5 px-3 sm:py-2 sm:px-4 shrink-0"
             >
-              <RotateCcw size={18} />
+              <RotateCcw size={15} />
               <span>{t('tier.reset_all', 'LÀM MỚI')}</span>
             </button>
           )}
         </div>
+
+        <h1 className="text-3xl sm:text-4xl font-display uppercase text-primary leading-none">{t('tier.title')}</h1>
+        <p className="text-xs sm:text-sm text-text-muted mt-2 font-medium">{t('tier.subtitle')}</p>
         <div className="hallmark-divider mt-4" />
       </header>
 
