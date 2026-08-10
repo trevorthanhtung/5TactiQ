@@ -71,7 +71,7 @@ export default function Settings({ isOpen, onClose }: { isOpen: boolean; onClose
               placeholder={t('settings.team_name_placeholder', 'Ví dụ: 5TactiQ')}
             />
           </div>
-
+          <div>
             <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">{t('settings.founded_year', 'Năm thành lập (Tùy chọn)')}</label>
             <input 
               type="text" 
