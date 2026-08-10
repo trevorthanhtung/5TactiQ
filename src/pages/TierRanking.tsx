@@ -273,7 +273,7 @@ export default function TierRanking() {
             {players.some(p => p.tier) && (
               <button 
                 onClick={handleResetAll}
-                className="flex items-center gap-1.5 text-xs font-bold text-secondary hover:text-secondary/80 bg-secondary/10 hover:bg-secondary/20 px-2.5 py-1 border border-secondary/30 transition-colors uppercase tracking-wider"
+                className="hallmark-btn flex items-center gap-1.5 bg-secondary text-white text-xs py-1 px-3"
               >
                 <RotateCcw size={13} />
                 <span>{t('tier.reset_all', 'LÀM MỚI')}</span>
