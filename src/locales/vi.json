@@ -220,7 +220,9 @@
     "note_label": "Ghi chú",
     "note_placeholder": "Nhập thông tin hoặc tình trạng chấn thương...",
     "call_player": "GỌI ĐIỆN",
-    "status_role_title": "VAI TRÒ & PHÂN LOẠI"
+    "status_role_title": "VAI TRÒ & PHÂN LOẠI",
+    "borrowed_badge": "MƯỢN",
+    "youth_badge": "TRẺ LÊN"
   },
   "position": {
     "GK": "GK",

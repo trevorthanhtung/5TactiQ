@@ -215,7 +215,9 @@
     "note_label": "Nota",
     "note_placeholder": "Información adicional...",
     "call_player": "LLAMAR JUGADOR",
-    "status_role_title": "ROLES Y CLASIFICACIONES"
+    "status_role_title": "ROLES Y CLASIFICACIONES",
+    "borrowed_badge": "CEDIDO",
+    "youth_badge": "CANTERANO"
   },
   "position": {
     "GK": "PT",

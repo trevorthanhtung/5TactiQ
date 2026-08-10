@@ -215,7 +215,9 @@
     "note_label": "Заметка",
     "note_placeholder": "Дополнительная инфо...",
     "call_player": "ПОЗВОНИТЬ ИГРОКУ",
-    "status_role_title": "РОЛИ И КЛАССИФИКАЦИИ"
+    "status_role_title": "РОЛИ И КЛАССИФИКАЦИИ",
+    "borrowed_badge": "АРЕНДА",
+    "youth_badge": "ВОСПИТАННИК"
   },
   "position": {
     "GK": "ВР",

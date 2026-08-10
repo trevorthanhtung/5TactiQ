@@ -162,12 +162,12 @@ export default function PlayerProfile() {
               )}
               {player.isBorrowed && (
                 <span className="bg-purple-600 text-white font-display font-bold uppercase tracking-widest px-3 py-1 text-xs shadow-sm" title={t('roster.borrowed_tooltip', 'Cầu thủ mượn')}>
-                  MƯỢN
+                  {t('roster.borrowed_badge', 'MƯỢN')}
                 </span>
               )}
               {player.isYouth && (
                 <span className="bg-emerald-500 text-white font-display font-bold uppercase tracking-widest px-3 py-1 text-xs shadow-sm" title={t('roster.youth_tooltip', 'Cầu thủ đội trẻ lên')}>
-                  TRẺ LÊN
+                  {t('roster.youth_badge', 'TRẺ LÊN')}
                 </span>
               )}
               {player.healthStatus && player.healthStatus !== 'Khỏe mạnh' && (

@@ -215,7 +215,9 @@
     "note_label": "Nota",
     "note_placeholder": "Informações adicionais...",
     "call_player": "LIGAR JOGADOR",
-    "status_role_title": "FUNÇÕES E CLASSIFICAÇÕES"
+    "status_role_title": "FUNÇÕES E CLASSIFICAÇÕES",
+    "borrowed_badge": "EMPRÉSTIMO",
+    "youth_badge": "BASE"
   },
   "position": {
     "GK": "GL",

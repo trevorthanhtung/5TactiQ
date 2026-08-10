@@ -215,7 +215,9 @@
     "note_label": "ملاحظة",
     "note_placeholder": "معلومات إضافية...",
     "call_player": "الاتصال باللاعب",
-    "status_role_title": "الأدوار والتصنيفات"
+    "status_role_title": "الأدوار والتصنيفات",
+    "borrowed_badge": "إعارة",
+    "youth_badge": "ناشئ"
   },
   "position": {
     "GK": "حارس",
