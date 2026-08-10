@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useToastStore } from '../store/useToastStore';
-import { User, ArrowLeft, Trash2, Award, X, Edit2, Activity, Phone } from 'lucide-react';
+import { User, ArrowLeft, Trash2, Award, X, Edit2, Activity, Phone, Hash, FileText } from 'lucide-react';
 import { useHardwareBack } from '../hooks/useHardwareBack';
 import { PlayerProfileSkeleton } from '../components/ui/PlayerProfileSkeleton';
 import { BottomSheet } from '../components/ui/BottomSheet';
@@ -129,35 +129,49 @@ export default function PlayerProfile() {
         <ArrowLeft size={20} /> {t('roster.back_to_list')}
       </button>
 
-      <div className="hallmark-card bg-surface overflow-hidden relative mb-6">
-        {/* Large Background Number */}
-        <div className="absolute right-[-20px] top-[-20px] text-[180px] font-display text-accent/30 leading-none select-none z-0">
+      <div className="hallmark-card bg-surface overflow-hidden relative mb-6 p-6 sm:p-7 border-2 border-border-main shadow-md">
+        {/* Large Background Watermark Number */}
+        <div className="absolute right-[-10px] bottom-[-25px] text-[150px] sm:text-[180px] font-display text-primary/10 leading-none select-none pointer-events-none z-0">
           {player.jersey_number || 'X'}
         </div>
 
-        <div className="relative z-10 flex flex-col @sm:flex-row items-center @sm:items-start p-6 gap-6">
-          <div className="flex-1 text-center @sm:text-left">
-            <h1 className="text-4xl font-display uppercase leading-tight mb-3 text-primary text-center @sm:text-left">
-              {player.name}
-            </h1>
-            <div className="flex gap-2 justify-center @sm:justify-start flex-wrap mb-4">
+        <div className="relative z-10 flex flex-col gap-5">
+          {/* Top Section: Name & Badges */}
+          <div>
+            <div className="flex items-center justify-between gap-4 flex-wrap mb-3">
+              <h1 className="text-3xl sm:text-4xl font-display uppercase tracking-wide text-primary">
+                {player.name}
+              </h1>
+              
+              {/* Jersey Pill Badge */}
+              <div className="flex items-center gap-1.5 bg-surface-2 px-3 py-1 border border-border-main text-xs font-bold uppercase tracking-widest text-text-muted">
+                <Hash size={14} className="text-secondary" />
+                <span>{t('roster.jersey_number')}:</span>
+                <span className="text-primary font-display text-base font-bold ml-0.5">
+                  {player.jersey_number !== null && player.jersey_number !== undefined ? `#${player.jersey_number}` : t('roster.no_jersey')}
+                </span>
+              </div>
+            </div>
+
+            {/* Badges Row */}
+            <div className="flex gap-2 flex-wrap items-center">
               {player.isCaptain && (
-                <span className="bg-amber-500 text-white font-display font-bold uppercase tracking-widest px-3 py-1 text-sm shadow-sm" title="Đội trưởng">
+                <span className="bg-amber-500 text-white font-display font-bold uppercase tracking-widest px-3 py-1 text-xs shadow-sm" title="Đội trưởng">
                   C
                 </span>
               )}
               {player.isBorrowed && (
-                <span className="bg-purple-600 text-white font-display font-bold uppercase tracking-widest px-3 py-1 text-sm shadow-sm" title={t('roster.borrowed_tooltip', 'Cầu thủ mượn')}>
+                <span className="bg-purple-600 text-white font-display font-bold uppercase tracking-widest px-3 py-1 text-xs shadow-sm" title={t('roster.borrowed_tooltip', 'Cầu thủ mượn')}>
                   MƯỢN
                 </span>
               )}
               {player.isYouth && (
-                <span className="bg-emerald-500 text-white font-display font-bold uppercase tracking-widest px-3 py-1 text-sm shadow-sm" title={t('roster.youth_tooltip', 'Cầu thủ đội trẻ lên')}>
+                <span className="bg-emerald-500 text-white font-display font-bold uppercase tracking-widest px-3 py-1 text-xs shadow-sm" title={t('roster.youth_tooltip', 'Cầu thủ đội trẻ lên')}>
                   TRẺ LÊN
                 </span>
               )}
               {player.healthStatus && player.healthStatus !== 'Khỏe mạnh' && (
-                <span className={`font-display font-bold uppercase tracking-widest text-white px-3 py-1 text-sm shadow-sm ${player.healthStatus.includes('Chấn thương') ? 'bg-red-500' : 'bg-sky-500'}`}>
+                <span className={`font-display font-bold uppercase tracking-widest text-white px-3 py-1 text-xs shadow-sm ${player.healthStatus.includes('Chấn thương') ? 'bg-red-500' : 'bg-sky-500'}`}>
                   {player.healthStatus === 'Chấn thương nhẹ' ? t('health.light_injury', 'Chấn thương nhẹ') :
                    player.healthStatus === 'Chấn thương nặng' ? t('health.severe_injury', 'Chấn thương nặng') :
                    player.healthStatus === 'Đang hồi phục' ? t('health.recovering', 'Đang hồi phục') :
@@ -165,31 +179,43 @@ export default function PlayerProfile() {
                 </span>
               )}
               {player.positions.map(pos => (
-                <span key={pos} className="font-display font-bold uppercase tracking-widest bg-secondary text-white px-3 py-1 text-sm shadow-sm">
+                <span key={pos} className="font-display font-bold uppercase tracking-widest bg-secondary text-white px-3 py-1 text-xs shadow-sm">
                   {t(`position.${pos}`)}
                 </span>
               ))}
             </div>
-            <div className="text-sm font-bold uppercase tracking-widest text-slate-400">
-              {t('roster.jersey_number')} <span className="text-primary text-xl font-display ml-1">{player.jersey_number || t('roster.no_jersey')}</span>
-            </div>
-            {(player.phone || player.note) && (
-              <div className="mt-4 flex flex-col gap-2">
-                {player.phone && (
-                  <div className="text-sm font-bold text-slate-500 flex items-center gap-2 justify-center @sm:justify-start">
-                    <span className="uppercase tracking-widest">{t('roster.phone_label', 'Số điện thoại')}:</span>
-                    <a href={`tel:${player.phone}`} className="text-primary hover:underline">{player.phone}</a>
-                  </div>
-                )}
-                {player.note && (
-                  <div className="text-sm font-bold text-slate-500 flex items-start gap-2 justify-center @sm:justify-start text-left">
-                    <span className="uppercase tracking-widest whitespace-nowrap">{t('roster.note_label', 'Ghi chú')}:</span>
-                    <span className="text-text-main font-medium">{player.note}</span>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
+
+          {/* Details Section: Phone & Note */}
+          {(player.phone || player.note) && (
+            <div className="flex flex-col gap-2.5 pt-2 border-t border-border-main/60">
+              {player.phone && (
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/30 text-xs font-bold uppercase tracking-wider">
+                    <Phone size={13} />
+                    <span>{t('roster.phone_label', 'Số điện thoại')}</span>
+                  </span>
+                  <a href={`tel:${player.phone}`} className="font-mono font-bold text-primary hover:underline text-base tracking-wide">
+                    {player.phone}
+                  </a>
+                </div>
+              )}
+
+              {player.note && (
+                <div className="p-3 bg-surface-2/60 border-l-4 border-secondary text-sm flex items-start gap-2.5 mt-1">
+                  <FileText size={16} className="text-secondary shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <span className="font-bold text-[11px] uppercase tracking-wider block text-text-muted mb-0.5">
+                      {t('roster.note_label', 'Ghi chú')}
+                    </span>
+                    <p className="text-text-main font-medium text-sm leading-relaxed break-words">
+                      {player.note}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
