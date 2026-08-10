@@ -593,9 +593,18 @@ export default function Matchday() {
     }
 
     // Has matches but none selected — show Match List view
-    const liveMatches = matches.filter(m => m.status === 'live');
-    const upcomingMatches = matches.filter(m => m.status === 'upcoming');
-    const finishedMatches_list = matches.filter(m => m.status === 'finished');
+    const seasonStart = settings.seasonStartDate ? new Date(settings.seasonStartDate) : null;
+    const seasonEnd = settings.seasonEndDate ? new Date(settings.seasonEndDate) : null;
+
+    const filteredMatches = matches.filter(m => {
+      if (!m.date || !seasonStart || !seasonEnd) return true;
+      const matchDate = new Date(m.date);
+      return matchDate >= seasonStart && matchDate <= seasonEnd;
+    });
+
+    const liveMatches = filteredMatches.filter(m => m.status === 'live');
+    const upcomingMatches = filteredMatches.filter(m => m.status === 'upcoming');
+    const finishedMatches_list = filteredMatches.filter(m => m.status === 'finished');
 
     const MatchCard = ({ match }: { match: typeof matches[0] }) => {
       const getScore = () => {
@@ -703,7 +712,14 @@ export default function Matchday() {
       <div className="p-4 md:p-6 flex flex-col min-h-full max-w-5xl mx-auto w-full pb-8">
         {/* Header - matching Roster page style */}
         <div className="flex justify-between items-end mb-6 pt-2">
-          <h1 className="text-4xl @sm:text-5xl font-display uppercase text-primary leading-none">{t('matchday.title')}</h1>
+          <div>
+            <h1 className="text-4xl @sm:text-5xl font-display uppercase text-primary leading-none">{t('matchday.title')}</h1>
+            {(seasonStart && seasonEnd) && (
+              <p className="text-xs font-bold text-text-muted uppercase tracking-widest mt-2">
+                {t('stats.season', { year: seasonStart.getFullYear() === seasonEnd.getFullYear() ? seasonStart.getFullYear() : `${seasonStart.getFullYear()}/${seasonEnd.getFullYear()}` })}
+              </p>
+            )}
+          </div>
           <button
             onClick={() => setShowCreateModal(true)}
             className="hallmark-btn flex items-center gap-2 bg-secondary text-white shrink-0"

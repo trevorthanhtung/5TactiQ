@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useMatchStore } from '../store/useMatchStore';
+import { useSettingsStore } from '../store/useSettingsStore';
 import { ArrowLeft, Calendar, Trophy, Flame, ClipboardList } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { StatsSkeleton } from '../components/ui/StatsSkeleton';
@@ -11,6 +12,7 @@ export default function Stats() {
   const { t } = useTranslation();
   const { players, fetchPlayers } = usePlayerStore();
   const { matches } = useMatchStore();
+  const { settings } = useSettingsStore();
   const [activeTab, setActiveTab] = useState<'goals' | 'assists' | 'attendance'>('goals');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -32,7 +34,25 @@ export default function Stats() {
     playerStatsAgg[p.id] = { goals: 0, assists: 0, attendance: 0 };
   });
 
-  matches.forEach(m => {
+  const seasonStart = settings.seasonStartDate ? new Date(settings.seasonStartDate) : null;
+  const seasonEnd = settings.seasonEndDate ? new Date(settings.seasonEndDate) : null;
+
+  const filteredMatches = matches.filter(m => {
+    if (!m.date || !seasonStart || !seasonEnd) return true;
+    const matchDate = new Date(m.date);
+    return matchDate >= seasonStart && matchDate <= seasonEnd;
+  });
+
+  const getSeasonString = () => {
+    if (seasonStart && seasonEnd) {
+      const y1 = seasonStart.getFullYear();
+      const y2 = seasonEnd.getFullYear();
+      return t('stats.season', { year: y1 === y2 ? y1 : `${y1}/${y2}` });
+    }
+    return t('stats.aggregated_data', { count: filteredMatches.length });
+  };
+
+  filteredMatches.forEach(m => {
     // Attendance count across all matches
     if (m.attendance) {
       Object.entries(m.attendance).forEach(([playerId, status]) => {
@@ -98,7 +118,7 @@ export default function Stats() {
         <div>
           <h1 className="text-4xl @sm:text-5xl font-display uppercase text-primary leading-none">{t('stats.title')}</h1>
           <p className="text-xs font-bold text-text-muted uppercase tracking-widest mt-2">
-            {t('stats.aggregated_data', { count: matches.length })}
+            {getSeasonString()}
           </p>
         </div>
         <Link to="/matchday" className="hallmark-btn flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-bold bg-primary text-white shrink-0">

@@ -239,7 +239,8 @@
     "assists": "Kiến tạo",
     "attendance": "Số trận có mặt",
     "no_data": "Chưa có dữ liệu cầu thủ.",
-    "unknown_position": "Chưa rõ"
+    "unknown_position": "Chưa rõ",
+    "season": "MÙA GIẢI {{year}}"
   },
   "matchday": {
     "title": "Trận đấu",
@@ -579,7 +580,11 @@
     "founded_year": "Năm thành lập (Tùy chọn)",
     "founded_year_placeholder": "Ví dụ: 2023",
     "save_btn": "LƯU THAY ĐỔI",
-    "saved_toast": "Đã lưu cài đặt"
+    "saved_toast": "Đã lưu cài đặt",
+    "season_title": "Thời gian mùa giải",
+    "season_start": "Bắt đầu",
+    "season_end": "Kết thúc",
+    "season_note": "Dùng để lọc thống kê và trận đấu trong khoảng thời gian này."
   },
   "h2h": {
     "title": "Lịch sử đối đầu",

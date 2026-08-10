@@ -239,7 +239,8 @@
     "assists": "Assists",
     "attendance": "Appearances",
     "no_data": "No player data yet.",
-    "unknown_position": "Unknown"
+    "unknown_position": "Unknown",
+    "season": "SEASON {{year}}"
   },
   "matchday": {
     "title": "Matchday",
@@ -578,7 +579,11 @@
     "founded_year": "Founded Year (Optional)",
     "founded_year_placeholder": "e.g. 2023",
     "save_btn": "SAVE CHANGES",
-    "saved_toast": "Settings saved"
+    "saved_toast": "Settings saved",
+    "season_title": "Season Duration",
+    "season_start": "Start Date",
+    "season_end": "End Date",
+    "season_note": "Used to filter stats and matches within this period."
   },
   "h2h": {
     "title": "Head-to-Head",

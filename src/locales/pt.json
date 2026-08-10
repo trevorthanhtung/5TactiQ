@@ -234,7 +234,8 @@
     "assists": "Assistências",
     "attendance": "Presenças",
     "no_data": "Sem dados de jogadores ainda.",
-    "unknown_position": "Desconhecida"
+    "unknown_position": "Desconhecida",
+    "season": "TEMPORADA {{year}}"
   },
   "matchday": {
     "title": "Partidas",
@@ -568,7 +569,11 @@
     "founded_year": "Ano de Fundação (Opcional)",
     "founded_year_placeholder": "ex. 2023",
     "save_btn": "SALVAR ALTERAÇÕES",
-    "saved_toast": "Configurações salvas"
+    "saved_toast": "Configurações salvas",
+    "season_title": "Duração da Temporada",
+    "season_start": "Data de Início",
+    "season_end": "Data de Término",
+    "season_note": "Usado para filtrar estatísticas e partidas neste período."
   },
   "h2h": {
     "title": "Histórico",

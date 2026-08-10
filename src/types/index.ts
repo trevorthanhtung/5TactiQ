@@ -125,4 +125,6 @@ export interface TeamSettings {
   foundedYear?: number;
   primaryColor?: string;
   secondaryColor?: string;
+  seasonStartDate?: string; // ISO format YYYY-MM-DD
+  seasonEndDate?: string;   // ISO format YYYY-MM-DD
 }

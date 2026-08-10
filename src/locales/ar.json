@@ -234,7 +234,8 @@
     "assists": "التمريرات الحاسمة",
     "attendance": "المشاركات",
     "no_data": "لا توجد بيانات للاعبين بعد.",
-    "unknown_position": "غير معروف"
+    "unknown_position": "غير معروف",
+    "season": "موسم {{year}}"
   },
   "matchday": {
     "title": "المباريات",
@@ -568,7 +569,11 @@
     "founded_year": "سنة التأسيس (اختياري)",
     "founded_year_placeholder": "مثال: 2023",
     "save_btn": "حفظ التغييرات",
-    "saved_toast": "تم حفظ الإعدادات"
+    "saved_toast": "تم حفظ الإعدادات",
+    "season_title": "مدة الموسم",
+    "season_start": "تاريخ البدء",
+    "season_end": "تاريخ الانتهاء",
+    "season_note": "تستخدم لتصفية الإحصائيات والمباريات خلال هذه الفترة."
   },
   "h2h": {
     "title": "المواجهات المباشرة",

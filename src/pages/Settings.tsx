@@ -4,6 +4,7 @@ import { useToastStore } from '../store/useToastStore';
 import { ArrowLeft, Upload, Settings as SettingsIcon, X } from 'lucide-react';
 import { BottomSheet } from '../components/ui/BottomSheet';
 import { useTranslation } from 'react-i18next';
+import { CustomDatePicker } from '../components/CustomDatePicker';
 
 export default function Settings({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { settings, updateSettings } = useSettingsStore();
@@ -13,14 +14,18 @@ export default function Settings({ isOpen, onClose }: { isOpen: boolean; onClose
   const [formData, setFormData] = useState({
     teamName: '',
     logoUrl: '',
-    foundedYear: ''
+    foundedYear: '',
+    seasonStartDate: '',
+    seasonEndDate: ''
   });
 
   useEffect(() => {
     setFormData({
       teamName: settings.teamName || '',
       logoUrl: settings.logoUrl || '',
-      foundedYear: settings.foundedYear ? settings.foundedYear.toString() : ''
+      foundedYear: settings.foundedYear ? settings.foundedYear.toString() : '',
+      seasonStartDate: settings.seasonStartDate || '',
+      seasonEndDate: settings.seasonEndDate || ''
     });
   }, [settings]);
 
@@ -29,7 +34,9 @@ export default function Settings({ isOpen, onClose }: { isOpen: boolean; onClose
     updateSettings({
       teamName: formData.teamName,
       logoUrl: formData.logoUrl,
-      foundedYear: formData.foundedYear ? parseInt(formData.foundedYear) : undefined
+      foundedYear: formData.foundedYear ? parseInt(formData.foundedYear) : undefined,
+      seasonStartDate: formData.seasonStartDate || undefined,
+      seasonEndDate: formData.seasonEndDate || undefined
     });
     
     addToast({ type: 'success', message: t('settings.saved_toast', 'Đã lưu cài đặt') });
@@ -65,7 +72,6 @@ export default function Settings({ isOpen, onClose }: { isOpen: boolean; onClose
             />
           </div>
 
-          <div>
             <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">{t('settings.founded_year', 'Năm thành lập (Tùy chọn)')}</label>
             <input 
               type="text" 
@@ -77,6 +83,27 @@ export default function Settings({ isOpen, onClose }: { isOpen: boolean; onClose
               className="w-full border-2 border-border-main bg-surface p-3 rounded-none focus:border-primary outline-none font-medium"
               placeholder={t('settings.founded_year_placeholder', 'Ví dụ: 2023')}
             />
+          </div>
+          
+          <div className="pt-2 border-t-2 border-border-main">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-primary mb-3">{t('settings.season_title', 'Thời gian mùa giải')}</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <CustomDatePicker
+                label={t('settings.season_start', 'Bắt đầu')}
+                value={formData.seasonStartDate}
+                onChange={(date) => setFormData({...formData, seasonStartDate: date})}
+              />
+              <CustomDatePicker
+                label={t('settings.season_end', 'Kết thúc')}
+                value={formData.seasonEndDate}
+                onChange={(date) => setFormData({...formData, seasonEndDate: date})}
+              />
+            </div>
+            {(formData.seasonStartDate || formData.seasonEndDate) && (
+              <p className="mt-2 text-xs font-medium text-text-muted">
+                {t('settings.season_note', 'Dùng để lọc thống kê và trận đấu trong khoảng thời gian này.')}
+              </p>
+            )}
           </div>
         </div>
 
