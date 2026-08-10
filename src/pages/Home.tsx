@@ -158,12 +158,39 @@ export default function Home() {
              <div className="absolute top-0 left-[25%] right-[25%] h-6 border-b-2 border-x-2 border-emerald-800/30"></div>
              <div className="absolute bottom-0 left-[25%] right-[25%] h-6 border-t-2 border-x-2 border-emerald-800/30"></div>
              
-             {/* Formation dots (1-2-1) */}
-             <div className="absolute bottom-[10%] left-1/2 w-3 h-3 bg-secondary rounded-full -translate-x-1/2 shadow-sm border border-white/20" />
-             <div className="absolute bottom-[35%] left-[25%] w-3 h-3 bg-secondary rounded-full shadow-sm border border-white/20" />
-             <div className="absolute bottom-[35%] right-[25%] w-3 h-3 bg-secondary rounded-full shadow-sm border border-white/20" />
-             <div className="absolute top-[40%] left-1/2 w-3 h-3 bg-secondary rounded-full -translate-x-1/2 shadow-sm border border-white/20" />
-             <div className="absolute top-[15%] left-1/2 w-3 h-3 bg-secondary rounded-full -translate-x-1/2 shadow-sm border border-white/20" />
+             {/* Home Team (Orange) - 1-2-1 */}
+             <div className="absolute bottom-[10%] left-1/2 -translate-x-1/2">
+               <div className="w-3 h-3 bg-secondary rounded-full shadow-sm border border-white/20 animate-drift-1" />
+             </div>
+             <div className="absolute bottom-[35%] left-[25%] -translate-x-1/2">
+               <div className="w-3 h-3 bg-secondary rounded-full shadow-sm border border-white/20 animate-drift-2" />
+             </div>
+             <div className="absolute bottom-[35%] right-[25%] translate-x-1/2">
+               <div className="w-3 h-3 bg-secondary rounded-full shadow-sm border border-white/20 animate-drift-3" />
+             </div>
+             <div className="absolute top-[40%] left-1/2 -translate-x-1/2">
+               <div className="w-3 h-3 bg-secondary rounded-full shadow-sm border border-white/20 animate-drift-1" />
+             </div>
+             <div className="absolute top-[15%] left-1/2 -translate-x-1/2">
+               <div className="w-3 h-3 bg-secondary rounded-full shadow-sm border border-white/20 animate-drift-2" />
+             </div>
+
+             {/* Away Team (Gray) - 2-2-1 */}
+             <div className="absolute top-[8%] left-[40%] -translate-x-1/2">
+               <div className="w-3 h-3 bg-slate-400 rounded-full shadow-sm border border-white/20 animate-drift-3" />
+             </div>
+             <div className="absolute top-[8%] right-[40%] translate-x-1/2">
+               <div className="w-3 h-3 bg-slate-400 rounded-full shadow-sm border border-white/20 animate-drift-1" />
+             </div>
+             <div className="absolute top-[30%] left-[20%] -translate-x-1/2">
+               <div className="w-3 h-3 bg-slate-400 rounded-full shadow-sm border border-white/20 animate-drift-2" />
+             </div>
+             <div className="absolute top-[30%] right-[20%] translate-x-1/2">
+               <div className="w-3 h-3 bg-slate-400 rounded-full shadow-sm border border-white/20 animate-drift-1" />
+             </div>
+             <div className="absolute bottom-[45%] left-1/2 -translate-x-1/2">
+               <div className="w-3 h-3 bg-slate-400 rounded-full shadow-sm border border-white/20 animate-drift-3" />
+             </div>
 
              {/* Hover Overlay */}
              <div className="absolute inset-0 bg-surface/40 backdrop-blur-[1px] group-hover:backdrop-blur-0 transition-all flex items-center justify-center">
