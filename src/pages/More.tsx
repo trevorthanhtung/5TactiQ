@@ -120,7 +120,7 @@ export default function More() {
     { icon: <Coffee size={20} className="text-amber-500" />, title: t('more.donate_title'), action: () => setAlertInfo({ 
       title: t('more.donate_title'), 
       message: t('more.donate_msg'),
-      image: 'https://img.vietqr.io/image/mbbank-0816158215-compact2.png?accountName=TRAN%20THANH%20TUNG'
+      image: './qr.png'
     }) },
     { icon: <MessageSquare size={20} className="text-sky-500" />, title: t('more.feedback_title'), action: () => window.open('mailto:trevorthanhtung@gmail.com?subject=Góp ý ứng dụng 5TactiQ') },
     hasUpdate 
