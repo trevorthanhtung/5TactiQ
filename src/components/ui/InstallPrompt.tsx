@@ -152,7 +152,7 @@ export default function InstallPrompt() {
         className="fixed bottom-[100px] left-4 right-4 md:left-auto md:right-4 md:bottom-4 md:w-96 bg-surface border-2 border-border-main p-4 shadow-[8px_8px_0px_0px_var(--color-primary)] z-[6000] flex gap-4 items-start"
       >
         <div className="w-12 h-12 shrink-0 bg-primary/10 border-2 border-border-main flex items-center justify-center p-2">
-          <img src="/splash.png" alt="5TactiQ Logo" className="w-full h-full object-contain" />
+          <img src="./splash.png" alt="5TactiQ Logo" className="w-full h-full object-contain" />
         </div>
         
         <div className="flex-1">

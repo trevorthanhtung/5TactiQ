@@ -268,7 +268,7 @@ export default function More() {
         <div className="flex flex-col">
           {alertInfo?.isAppInfo ? (
             <div className="flex flex-col items-center text-center mb-6 mt-2">
-              <img src="/logo.png" alt="5TactiQ Logo" className="w-28 h-28 object-contain mb-4 drop-shadow-md" />
+              <img src="./logo.png" alt="5TactiQ Logo" className="w-28 h-28 object-contain mb-4 drop-shadow-md" />
               <h4 className="text-2xl font-display font-bold text-primary mb-2">5TactiQ</h4>
               <div className="bg-primary text-[#f6f4ed] px-4 py-1.5 rounded-sm text-xs font-bold tracking-widest mb-4">{t('more.version_title')} {APP_VERSION}</div>
               <p className="text-text-muted text-sm leading-relaxed mb-4">{t('more.app_info_desc')}</p>

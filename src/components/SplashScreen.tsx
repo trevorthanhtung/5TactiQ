@@ -89,7 +89,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
         className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background transition-opacity duration-500 ${isFading ? 'opacity-0' : 'opacity-100'}`}
       >
         <img 
-          src="/splash.png" 
+          src="./splash.png" 
           alt="5TactiQ Splash" 
           className="w-48 md:w-64 h-auto object-contain"
         />
@@ -299,7 +299,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
               className={`slice ${i % 3 === 0 ? 'glitch' : ''}`} 
               style={{ '--i': i } as React.CSSProperties}
             >
-              <img src="/splash.png" alt="Logo Slice" />
+              <img src="./splash.png" alt="Logo Slice" />
             </div>
           ))}
         </div>
