@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useToastStore } from '../store/useToastStore';
-import { User, ArrowLeft, Trash2, Award, X, Edit2 } from 'lucide-react';
+import { User, ArrowLeft, Trash2, Award, X, Edit2, Activity } from 'lucide-react';
 import { useHardwareBack } from '../hooks/useHardwareBack';
 import { PlayerProfileSkeleton } from '../components/ui/PlayerProfileSkeleton';
 import { BottomSheet } from '../components/ui/BottomSheet';
-import type { Position } from '../types';
+import type { Position, HealthStatus } from '../types';
 import { useTranslation, Trans } from 'react-i18next';
 
 export default function PlayerProfile() {
@@ -22,7 +22,12 @@ export default function PlayerProfile() {
   const [editNumber, setEditNumber] = useState('');
   const [editPositions, setEditPositions] = useState<string[]>([]);
   
+  const [showHealthModal, setShowHealthModal] = useState(false);
+  const [healthStatus, setHealthStatus] = useState<HealthStatus>('Khỏe mạnh');
+  const [healthNote, setHealthNote] = useState('');
+
   useHardwareBack(showEditModal, () => setShowEditModal(false));
+  useHardwareBack(showHealthModal, () => setShowHealthModal(false));
   useHardwareBack(showDeleteConfirm, () => setShowDeleteConfirm(false));
   
   useEffect(() => {
@@ -62,10 +67,33 @@ export default function PlayerProfile() {
   };
 
   const openEditModal = () => {
+    if (!player) return;
     setEditName(player.name);
-    setEditNumber(player.jersey_number ? player.jersey_number.toString() : '');
-    setEditPositions(player.positions);
+    setEditNumber(player.jersey_number ? String(player.jersey_number) : '');
+    setEditPositions(player.positions || []);
     setShowEditModal(true);
+  };
+
+  const openHealthModal = () => {
+    if (!player) return;
+    setHealthStatus(player.healthStatus || 'Khỏe mạnh');
+    setHealthNote(player.healthNote || '');
+    setShowHealthModal(true);
+  };
+
+  const handleSaveHealth = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!player) return;
+    updatePlayer(player.id, {
+      healthStatus,
+      healthNote,
+      healthUpdatedAt: new Date().toISOString()
+    });
+    addToast({ 
+      type: 'success', 
+      message: t('toast.health_updated', 'Đã cập nhật tình trạng sức khỏe cho {{name}}.', { name: player.name }) 
+    });
+    setShowHealthModal(false);
   };
 
   const handleEditPlayer = async (e: React.FormEvent) => {
@@ -120,6 +148,11 @@ export default function PlayerProfile() {
               {player.isYouth && (
                 <span className="bg-emerald-500 text-white font-display font-bold uppercase tracking-widest px-3 py-1 text-sm shadow-sm" title={t('roster.youth_tooltip', 'Cầu thủ đội trẻ lên')}>
                   TRẺ LÊN
+                </span>
+              )}
+              {player.healthStatus && player.healthStatus !== 'Khỏe mạnh' && (
+                <span className={`font-display font-bold uppercase tracking-widest text-white px-3 py-1 text-sm shadow-sm ${player.healthStatus.includes('Chấn thương') ? 'bg-red-500' : 'bg-sky-500'}`}>
+                  {player.healthStatus}
                 </span>
               )}
               {player.positions.map(pos => (
@@ -201,6 +234,14 @@ export default function PlayerProfile() {
             {t('roster.mark_youth', 'ĐÁNH DẤU LÀ CẦU THỦ TRẺ')}
           </button>
         )}
+
+        <button 
+          onClick={openHealthModal}
+          className="hallmark-btn-outline w-full flex justify-center items-center gap-2 text-rose-600 border-rose-300 hover:bg-rose-50 hover:border-rose-600"
+        >
+          <Activity size={18} />
+          <span>{t('roster.edit_health', 'TÌNH TRẠNG CHẤN THƯƠNG')}</span>
+        </button>
         
         <button 
           onClick={() => setShowDeleteConfirm(true)}
@@ -300,6 +341,66 @@ export default function PlayerProfile() {
             </button>
             <button type="submit" className="flex-1 bg-secondary text-white font-display uppercase tracking-wider py-3 border-2 border-secondary hover:bg-[#d05c21] transition-colors active:scale-95">
               {t('roster.save')}
+            </button>
+          </div>
+        </form>
+      </BottomSheet>
+
+      {/* Health Status Modal */}
+      <BottomSheet
+        isOpen={showHealthModal}
+        onClose={() => setShowHealthModal(false)}
+        title={
+          <span className="flex items-center gap-2">
+            <Activity size={20} className="text-rose-500" /> {t('roster.edit_health_title', 'TÌNH TRẠNG SỨC KHỎE / CHẤN THƯƠNG')}
+          </span>
+        }
+      >
+        <form onSubmit={handleSaveHealth} className="space-y-6">
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-3">{t('fitness.status', 'Tình trạng sức khỏe')}</label>
+            <div className="grid grid-cols-2 gap-2">
+              {(['Khỏe mạnh', 'Chấn thương nhẹ', 'Chấn thương nặng', 'Đang hồi phục'] as HealthStatus[]).map(status => {
+                const isSelected = healthStatus === status;
+                let colorClass = 'border-border-main text-text-muted hover:border-primary';
+                if (isSelected) {
+                  if (status === 'Khỏe mạnh') colorClass = 'border-emerald-500 bg-emerald-500 text-white';
+                  else if (status === 'Chấn thương nhẹ') colorClass = 'border-amber-500 bg-amber-500 text-white';
+                  else if (status === 'Chấn thương nặng') colorClass = 'border-red-500 bg-red-500 text-white';
+                  else if (status === 'Đang hồi phục') colorClass = 'border-sky-500 bg-sky-500 text-white';
+                }
+
+                return (
+                  <button
+                    key={status}
+                    type="button"
+                    onClick={() => setHealthStatus(status)}
+                    className={`p-3 font-display text-sm font-bold uppercase tracking-wider border-2 transition-colors text-center ${colorClass}`}
+                  >
+                    {status}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">{t('fitness.note', 'Ghi chú chấn thương / sức khỏe')}</label>
+            <input
+              type="text"
+              className="w-full border-2 border-border-main bg-surface p-3 rounded-none focus:border-primary outline-none font-medium text-sm"
+              value={healthNote}
+              onChange={e => setHealthNote(e.target.value)}
+              placeholder={t('fitness.note_placeholder', 'Ví dụ: Trật khớp gối, nghỉ 2 tuần...')}
+            />
+          </div>
+
+          <div className="pt-2 flex gap-3">
+            <button type="button" onClick={() => setShowHealthModal(false)} className="flex-1 bg-transparent text-text-muted font-display uppercase tracking-wider py-3 border-2 border-slate-300 hover:bg-surface transition-colors active:scale-95">
+              {t('roster.cancel', 'HỦY')}
+            </button>
+            <button type="submit" className="flex-1 bg-secondary text-white font-display uppercase tracking-wider py-3 border-2 border-secondary hover:bg-secondary/90 transition-colors active:scale-95">
+              {t('roster.save', 'LƯU TÌNH TRẠNG')}
             </button>
           </div>
         </form>
