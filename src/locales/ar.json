@@ -315,7 +315,8 @@
     "save_match_update": "حفظ التحديث",
     "delete_match": "حذف المباراة",
     "confirm_delete_match": "هل أنت متأكد أنك تريد حذف هذه المباراة؟",
-    "delete_match_warning": "تحذير: سيتم حذف جميع البيانات والنتائج نهائياً ولا يمكن التراجع."
+    "delete_match_warning": "تحذير: سيتم حذف جميع البيانات والنتائج نهائياً ولا يمكن التراجع.",
+    "search_placeholder": "البحث عن خصم..."
   },
   "tactics": {
     "rotate_screen": "قم بتدوير الشاشة",

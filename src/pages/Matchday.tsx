@@ -91,6 +91,7 @@ export default function Matchday() {
 
   const [activeTab, setActiveTab] = useState<'attendance' | 'teams' | 'summary'>('attendance');
   const [filterMode, setFilterMode] = useState<'all_time' | 'current_season'>('current_season');
+  const [searchQuery, setSearchQuery] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showEndModal, setShowEndModal] = useState(false);
@@ -599,10 +600,28 @@ export default function Matchday() {
     const hasSeasonConfig = !!(seasonStart && seasonEnd);
 
     const filteredMatches = matches.filter(m => {
-      if (filterMode === 'all_time' || !hasSeasonConfig) return true;
-      if (!m.date) return true;
-      const matchDate = new Date(m.date);
-      return matchDate >= seasonStart! && matchDate <= seasonEnd!;
+      // Season filter
+      if (filterMode === 'current_season' && hasSeasonConfig) {
+        if (m.date) {
+          const matchDate = new Date(m.date);
+          if (matchDate < seasonStart! || matchDate > seasonEnd!) return false;
+        }
+      }
+
+      // Search filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        const opponentName = m.opponent?.toLowerCase() || '';
+        const isInternalMatch = m.matchType === 'internal';
+        
+        // If it's an internal match, we might want to let them search by "internal" or translation
+        // For simplicity, just check opponent or fallback
+        if (!opponentName.includes(query) && !(isInternalMatch && 'nội bộ internal'.includes(query))) {
+          return false;
+        }
+      }
+
+      return true;
     });
 
     const liveMatches = filteredMatches.filter(m => m.status === 'live');
@@ -746,6 +765,20 @@ export default function Matchday() {
         </div>
 
         <div className="hallmark-divider"></div>
+
+        {/* Search Bar */}
+        <div className="mb-6 relative max-w-md">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search size={18} className="text-text-muted" />
+          </div>
+          <input
+            type="text"
+            placeholder={t('matchday.search_placeholder', 'Tìm đối thủ...')}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-surface border-2 border-border-main text-text-main py-2.5 pl-10 pr-3 outline-none focus:border-primary transition-colors text-sm placeholder:text-text-muted/60 placeholder:uppercase tracking-wider"
+          />
+        </div>
 
         {/* Live Matches */}
         {liveMatches.length > 0 && (

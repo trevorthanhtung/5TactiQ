@@ -326,7 +326,8 @@
     "save_match_update": "LƯU CẬP NHẬT TRẬN ĐẤU",
     "delete_match": "XÓA TRẬN ĐẤU",
     "confirm_delete_match": "Bạn có chắc chắn muốn xóa trận đấu này không?",
-    "delete_match_warning": "Cảnh báo: Tất cả dữ liệu điểm danh và kết quả của trận đấu sẽ bị xóa vĩnh viễn và không thể hoàn tác."
+    "delete_match_warning": "Cảnh báo: Tất cả dữ liệu điểm danh và kết quả của trận đấu sẽ bị xóa vĩnh viễn và không thể hoàn tác.",
+    "search_placeholder": "Tìm đối thủ..."
   },
   "tactics": {
     "rotate_screen": "Xoay ngang màn hình",

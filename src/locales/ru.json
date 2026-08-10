@@ -315,7 +315,8 @@
     "save_match_update": "СОХРАНИТЬ",
     "delete_match": "УДАЛИТЬ МАТЧ",
     "confirm_delete_match": "Вы уверены, что хотите удалить этот матч?",
-    "delete_match_warning": "Внимание: Все данные и результаты будут удалены навсегда."
+    "delete_match_warning": "Внимание: Все данные и результаты будут удалены навсегда.",
+    "search_placeholder": "Поиск соперника..."
   },
   "tactics": {
     "rotate_screen": "Поверните экран",

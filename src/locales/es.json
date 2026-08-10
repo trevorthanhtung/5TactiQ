@@ -315,7 +315,8 @@
     "save_match_update": "GUARDAR ACTUALIZACIÓN",
     "delete_match": "ELIMINAR PARTIDO",
     "confirm_delete_match": "¿Estás seguro de que deseas eliminar este partido?",
-    "delete_match_warning": "Advertencia: Todos los datos y resultados se eliminarán permanentemente."
+    "delete_match_warning": "Advertencia: Todos los datos y resultados se eliminarán permanentemente.",
+    "search_placeholder": "Buscar oponente..."
   },
   "tactics": {
     "rotate_screen": "Rotar pantalla",
