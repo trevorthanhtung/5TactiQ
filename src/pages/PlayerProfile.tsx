@@ -495,7 +495,7 @@ export default function PlayerProfile() {
                   else if (status === 'Đang hồi phục') colorClass = 'border-sky-500 bg-sky-500 text-white';
                 }
 
-                let statusLabel = status;
+                let statusLabel: string = status;
                 if (status === 'Khỏe mạnh') statusLabel = t('health.healthy', 'Khỏe mạnh');
                 if (status === 'Chấn thương nhẹ') statusLabel = t('health.light_injury', 'Chấn thương nhẹ');
                 if (status === 'Chấn thương nặng') statusLabel = t('health.severe_injury', 'Chấn thương nặng');
