@@ -243,7 +243,7 @@ export default function DataSync() {
                 </div>
                 
                 <div className="w-full max-w-xs border-2 border-dashed border-primary/30 p-6 bg-surface flex flex-col items-center justify-center mb-6">
-                  <QRCodeCanvas value={peerId} size={180} />
+                  <QRCodeCanvas value={peerId} size={200} includeMargin={true} />
                   <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted mt-4 text-center">{t('sync.host_scan_camera', 'Quét bằng Camera')}</p>
                 </div>
                 
