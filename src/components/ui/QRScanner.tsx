@@ -66,7 +66,13 @@ export function QRScanner({ onScan, isOpen, onClose }: QRScannerProps) {
 
         const config = {
           fps: 10,
-          qrbox: { width: 220, height: 220 }
+          qrbox: { width: 220, height: 220 },
+          aspectRatio: 1.0,
+          videoConstraints: {
+            facingMode: 'environment',
+            // Đảm bảo zoom mặc định không bị quá rộng
+            zoom: 1.0
+          }
         };
 
         const handleSuccess = (decodedText: string) => {
@@ -83,47 +89,11 @@ export function QRScanner({ onScan, isOpen, onClose }: QRScannerProps) {
 
         const startCamera = async () => {
           try {
-            const devices = await Html5Qrcode.getCameras();
             if (!isMounted) return;
-
-            if (devices && devices.length > 0) {
-              let backCams = devices.filter(d => 
-                d.label.toLowerCase().includes('back') || 
-                d.label.toLowerCase().includes('rear') ||
-                d.label.toLowerCase().includes('sau') ||
-                d.label.toLowerCase().includes('environment')
-              );
-              
-              if (backCams.length === 0) backCams = devices;
-
-              let mainBackCam = backCams.find(d => 
-                  !d.label.toLowerCase().includes('ultra') &&
-                  !d.label.toLowerCase().includes('wide') &&
-                  !d.label.toLowerCase().includes('góc rộng') &&
-                  !d.label.toLowerCase().includes('tele') &&
-                  !d.label.toLowerCase().includes('depth') &&
-                  !d.label.toLowerCase().includes('macro')
-              );
-
-              const selectedCameraId = mainBackCam ? mainBackCam.id : backCams[0].id;
-
-              await html5QrCode.start(
-                selectedCameraId,
-                config,
-                handleSuccess,
-                () => {}
-              );
-            } else {
-               await html5QrCode.start({ facingMode: 'environment' }, config, handleSuccess, () => {});
-            }
+            // Sử dụng facingMode: 'environment' thay vì chọn ID thủ công để trình duyệt tự lấy camera chính xác nhất
+            await html5QrCode.start({ facingMode: 'environment' }, config, handleSuccess, () => {});
           } catch (err) {
             console.error("Không thể mở Camera:", err);
-            if (!isMounted) return;
-            try {
-              await html5QrCode.start({ facingMode: 'environment' }, config, handleSuccess, () => {});
-            } catch (fallbackErr) {
-              console.error("Fallback cũng thất bại:", fallbackErr);
-            }
           }
         };
 
@@ -160,9 +130,9 @@ export function QRScanner({ onScan, isOpen, onClose }: QRScannerProps) {
           <>
             <p className="text-text-muted mb-4 text-sm text-center">{t('sync.qr_instruction', 'Hướng camera vào mã QR trên máy Phát để tự động nhận mã kết nối.')}</p>
             
-            {/* CSS ẩn hoàn toàn các nút Select Camera / Start Scanning dư thừa của thư viện */}
+            {/* CSS ẩn hoàn toàn các nút Select Camera / Start Scanning dư thừa của thư viện và set video cover */}
             <div className="w-full max-w-sm overflow-hidden border-4 border-border-main rounded-lg relative min-h-[260px] bg-black group">
-              <div id="reader" className="w-full h-full [&_button]:hidden [&_select]:hidden [&_img]:hidden"></div>
+              <div id="reader" className="w-full h-full [&_button]:hidden [&_select]:hidden [&_img]:hidden [&_video]:object-cover [&_video]:w-full [&_video]:h-full"></div>
               
               {/* Flash Toggle Button */}
               <button 
