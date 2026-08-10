@@ -165,9 +165,11 @@ export default function HeadToHead() {
             <h1 className="text-2xl @md:text-4xl font-display uppercase text-primary leading-none">{t('h2h.title', 'Lịch sử đối đầu')}</h1>
             {hasSeasonConfig && (
               <p className="text-xs font-bold text-text-muted uppercase tracking-widest mt-1">
-                {seasonStart!.getFullYear() === seasonEnd!.getFullYear() 
-                  ? `${t('stats.season', 'MÙA GIẢI')} ${seasonStart!.getFullYear()}` 
-                  : `${t('stats.season', 'MÙA GIẢI')} ${seasonStart!.getFullYear()}/${seasonEnd!.getFullYear()}`}
+                {t('stats.season', { 
+                  year: seasonStart!.getFullYear() === seasonEnd!.getFullYear() 
+                    ? seasonStart!.getFullYear() 
+                    : `${seasonStart!.getFullYear()}/${seasonEnd!.getFullYear()}` 
+                })}
               </p>
             )}
           </div>
