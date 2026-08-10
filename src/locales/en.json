@@ -218,7 +218,8 @@
     "phone_label": "Phone number",
     "phone_placeholder": "Ex: +1 234 567 890",
     "note_label": "Note",
-    "note_placeholder": "Enter additional info or injury status..."
+    "note_placeholder": "Enter additional info or injury status...",
+    "call_player": "CALL PLAYER"
   },
   "position": {
     "GK": "GK",

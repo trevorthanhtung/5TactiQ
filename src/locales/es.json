@@ -213,7 +213,8 @@
     "phone_label": "Número de teléfono",
     "phone_placeholder": "Ej: 123456...",
     "note_label": "Nota",
-    "note_placeholder": "Información adicional..."
+    "note_placeholder": "Información adicional...",
+    "call_player": "LLAMAR JUGADOR"
   },
   "position": {
     "GK": "PT",

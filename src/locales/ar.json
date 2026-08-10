@@ -213,7 +213,8 @@
     "phone_label": "رقم الهاتف",
     "phone_placeholder": "مثال: 123456...",
     "note_label": "ملاحظة",
-    "note_placeholder": "معلومات إضافية..."
+    "note_placeholder": "معلومات إضافية...",
+    "call_player": "الاتصال باللاعب"
   },
   "position": {
     "GK": "حارس",

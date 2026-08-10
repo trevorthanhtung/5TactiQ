@@ -213,7 +213,8 @@
     "phone_label": "Номер телефона",
     "phone_placeholder": "Напр.: 123456...",
     "note_label": "Заметка",
-    "note_placeholder": "Дополнительная инфо..."
+    "note_placeholder": "Дополнительная инфо...",
+    "call_player": "ПОЗВОНИТЬ ИГРОКУ"
   },
   "position": {
     "GK": "ВР",

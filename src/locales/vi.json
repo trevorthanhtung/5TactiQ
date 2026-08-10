@@ -218,7 +218,8 @@
     "phone_label": "Số điện thoại",
     "phone_placeholder": "VD: 0912 345 678",
     "note_label": "Ghi chú",
-    "note_placeholder": "Nhập thông tin hoặc tình trạng chấn thương..."
+    "note_placeholder": "Nhập thông tin hoặc tình trạng chấn thương...",
+    "call_player": "GỌI ĐIỆN"
   },
   "position": {
     "GK": "GK",
