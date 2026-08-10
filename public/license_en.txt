@@ -1,0 +1,23 @@
+﻿END USER LICENSE AGREEMENT (EULA)
+
+Welcome to 5TactiQ - Futsal Team Management & Tactical Board Software.
+By installing and using this software, you agree to the following terms:
+
+1. RIGHT TO USE
+5TactiQ is provided free of charge for the community. You have the right to install and use the software for personal purposes, team management, or coaching.
+
+2. COPYRIGHT AND INTELLECTUAL PROPERTY
+All source code, interface design, logo, and digital assets in this software are copyrighted by the author (Trevor Thanh Tung). Do not copy, modify, or redistribute for commercial purposes without permission.
+
+3. PRIVACY AND DATA
+5TactiQ is a 100% offline-first software. All your team, player, and tactical data is stored securely on your personal device. We do NOT collect, track, or send your data to any server. You are fully in control of your data.
+
+4. DISCLAIMER
+The software is provided "as is". The author is not responsible for any data loss or damage arising from the use of the software. However, 5TactiQ provides "Sync & Backup" feature, and you are encouraged to back up your data regularly to ensure safety.
+
+5. SOFTWARE UPDATES
+The software may automatically check for new versions from Github to provide the best experience. This checking process is completely transparent and safe.
+
+If you have any questions or feedback, please contact the author via email: trevorthanhtung@gmail.com.
+
+Wishing you and your team great success with 5TactiQ!

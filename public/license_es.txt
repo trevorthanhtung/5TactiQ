@@ -1,0 +1,23 @@
+﻿ACUERDO DE LICENCIA DE USUARIO FINAL (EULA)
+
+Bienvenido a 5TactiQ - Software de Gestión de Equipos de Fútsal y Pizarra Táctica.
+Al instalar y usar este software, usted acepta los siguientes términos:
+
+1. DERECHO DE USO
+5TactiQ se proporciona de forma gratuita para la comunidad. Usted tiene derecho a instalar y usar el software con fines personales, gestión de equipos o entrenamiento.
+
+2. DERECHOS DE AUTOR Y PROPIEDAD INTELECTUAL
+Todo el código fuente, diseño de interfaz, logotipo y activos digitales de este software son propiedad del autor (Trevor Thanh Tung). No copie, modifique ni redistribuya con fines comerciales sin permiso.
+
+3. PRIVACIDAD Y DATOS
+5TactiQ es un software 100% offline-first. Todos sus datos de equipo, jugadores y tácticas se almacenan de forma segura en su dispositivo personal. NO recopilamos, rastreamos ni enviamos sus datos a ningún servidor.
+
+4. DESCARGO DE RESPONSABILIDAD
+El software se proporciona "tal cual". El autor no es responsable de ninguna pérdida de datos o daño que surja del uso del software.
+
+5. ACTUALIZACIONES DE SOFTWARE
+El software puede verificar automáticamente nuevas versiones desde Github para brindar la mejor experiencia.
+
+Si tiene alguna pregunta o comentario, comuníquese con el autor por correo electrónico: trevorthanhtung@gmail.com.
+
+¡Le deseamos a usted y a su equipo mucho éxito con 5TactiQ!

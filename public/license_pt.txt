@@ -1,0 +1,23 @@
+﻿CONTRATO DE LICENÇA DE USUÁRIO FINAL (EULA)
+
+Bem-vindo ao 5TactiQ - Software de Gerenciamento de Equipes de Futsal e Prancheta Tática.
+Ao instalar e usar este software, você concorda com os seguintes termos:
+
+1. DIREITO DE USO
+O 5TactiQ é fornecido gratuitamente para a comunidade. Você tem o direito de instalar e usar o software para fins pessoais, gerenciamento de equipes ou treinamento.
+
+2. DIREITOS AUTORAIS E PROPRIEDADE INTELECTUAL
+Todo o código-fonte, design de interface, logotipo e ativos digitais deste software são protegidos por direitos autorais do autor (Trevor Thanh Tung). Não copie, modifique ou redistribua para fins comerciais sem permissão.
+
+3. PRIVACIDADE E DADOS
+O 5TactiQ é um software 100% offline-first. Todos os seus dados de equipe, jogadores e táticas são armazenados com segurança em seu dispositivo pessoal. NÃO coletamos, rastreamos ou enviamos seus dados para nenhum servidor.
+
+4. ISENÇÃO DE RESPONSABILIDADE
+O software é fornecido "como está". O autor não é responsável por qualquer perda de dados ou danos decorrentes do uso do software.
+
+5. ATUALIZAÇÕES DE SOFTWARE
+O software pode verificar automaticamente novas versões no Github para proporcionar a melhor experiência.
+
+Se você tiver alguma dúvida ou sugestão, entre em contato com o autor pelo e-mail: trevorthanhtung@gmail.com.
+
+Desejamos a você e sua equipe muito sucesso com o 5TactiQ!
