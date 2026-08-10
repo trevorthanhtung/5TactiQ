@@ -72,24 +72,8 @@ export default function DataSync() {
       return;
     }
 
-    // Web logic: Check if Native Share with Files is supported
-    if (navigator.share && navigator.canShare) {
-      try {
-        const blob = new Blob([jsonStr], { type: 'application/json' });
-        const file = new File([blob], '5tactiq_backup.5tactiq', { type: 'application/json' });
-
-        if (navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            title: t('sync.share_title', '5TactiQ Backup'),
-            text: t('sync.share_text', 'Dữ liệu sao lưu từ 5TactiQ'),
-            files: [file]
-          });
-          return;
-        }
-      } catch (err) {
-        console.log('Share canceled or failed', err);
-      }
-    }
+    // Web logic: Always use traditional download to save directly to device
+    // navigator.share is removed because users expect a direct file download for backups
 
     // Fallback to traditional download
     downloadJsonFile(jsonStr);
