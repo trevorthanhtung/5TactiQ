@@ -209,7 +209,11 @@
     "mark_youth": "MARCAR COMO JUVENIL",
     "unmark_youth": "DESMARCAR COMO JUVENIL",
     "edit_health": "ESTADO DE LESIÓN / SALUD",
-    "edit_health_title": "ESTADO DE SALUD Y LESIÓN"
+    "edit_health_title": "ESTADO DE SALUD Y LESIÓN",
+    "phone_label": "Número de teléfono",
+    "phone_placeholder": "Ej: 123456...",
+    "note_label": "Nota",
+    "note_placeholder": "Información adicional..."
   },
   "position": {
     "GK": "PT",

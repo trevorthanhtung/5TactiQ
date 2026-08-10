@@ -209,7 +209,11 @@
     "mark_youth": "تحديد كلاعب شاب",
     "unmark_youth": "إلغاء تحديد كلاعب شاب",
     "edit_health": "حالة الإصابة / الصحة",
-    "edit_health_title": "حالة الصحة والإصابة"
+    "edit_health_title": "حالة الصحة والإصابة",
+    "phone_label": "رقم الهاتف",
+    "phone_placeholder": "مثال: 123456...",
+    "note_label": "ملاحظة",
+    "note_placeholder": "معلومات إضافية..."
   },
   "position": {
     "GK": "حارس",

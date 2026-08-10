@@ -214,7 +214,11 @@
     "edit_title": "Sửa thông tin cầu thủ",
     "not_found": "Cầu thủ không tồn tại",
     "edit_health": "TÌNH TRẠNG CHẤN THƯƠNG",
-    "edit_health_title": "TÌNH TRẠNG SỨC KHỎE / CHẤN THƯƠNG"
+    "edit_health_title": "TÌNH TRẠNG SỨC KHỎE / CHẤN THƯƠNG",
+    "phone_label": "Số điện thoại",
+    "phone_placeholder": "VD: 090...",
+    "note_label": "Ghi chú",
+    "note_placeholder": "Thông tin thêm..."
   },
   "position": {
     "GK": "GK",

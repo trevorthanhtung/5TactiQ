@@ -18,6 +18,8 @@ export default function Roster() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newName, setNewName] = useState('');
   const [newNumber, setNewNumber] = useState('');
+  const [newPhone, setNewPhone] = useState('');
+  const [newNote, setNewNote] = useState('');
   const [newPositions, setNewPositions] = useState<string[]>([]);
   type FilterType = 'all' | 'injured' | 'recovering' | 'borrowed' | 'youth';
   const [filter, setFilter] = useState<FilterType>('all');
@@ -44,9 +46,13 @@ export default function Roster() {
       positions: newPositions as Position[],
       isBorrowed: newIsBorrowed,
       isYouth: newIsYouth,
+      phone: newPhone,
+      note: newNote,
     });
     setNewName('');
     setNewNumber('');
+    setNewPhone('');
+    setNewNote('');
     setNewPositions([]);
     setNewIsBorrowed(false);
     setNewIsYouth(false);
@@ -164,6 +170,32 @@ export default function Roster() {
                 value={newNumber}
                 onChange={e => setNewNumber(e.target.value.replace(/[^0-9]/g, ''))}
                 placeholder={t('roster.jersey_number_placeholder')}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 @sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">{t('roster.phone_label', 'Số điện thoại')}</label>
+              <input
+                type="tel"
+                inputMode="tel"
+                enterKeyHint="next"
+                autoComplete="tel"
+                className="w-full border-2 border-border-main bg-surface p-3 rounded-none focus:border-primary outline-none font-medium text-lg"
+                value={newPhone}
+                onChange={e => setNewPhone(e.target.value)}
+                placeholder={t('roster.phone_placeholder', 'VD: 090...')}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">{t('roster.note_label', 'Ghi chú')}</label>
+              <input
+                type="text"
+                enterKeyHint="done"
+                className="w-full border-2 border-border-main bg-surface p-3 rounded-none focus:border-primary outline-none font-medium text-lg"
+                value={newNote}
+                onChange={e => setNewNote(e.target.value)}
+                placeholder={t('roster.note_placeholder', 'Thông tin thêm...')}
               />
             </div>
           </div>

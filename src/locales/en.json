@@ -214,7 +214,11 @@
     "mark_youth": "MARK AS YOUTH PLAYER",
     "unmark_youth": "UNMARK YOUTH PLAYER",
     "edit_health": "INJURY / HEALTH STATUS",
-    "edit_health_title": "HEALTH & INJURY STATUS"
+    "edit_health_title": "HEALTH & INJURY STATUS",
+    "phone_label": "Phone number",
+    "phone_placeholder": "Ex: 123456...",
+    "note_label": "Note",
+    "note_placeholder": "Additional info..."
   },
   "position": {
     "GK": "GK",

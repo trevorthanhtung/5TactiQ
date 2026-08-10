@@ -18,6 +18,8 @@ export interface Player {
   isBorrowed?: boolean;
   isYouth?: boolean;
   tier?: 'S' | 'A' | 'B' | 'C' | null;
+  phone?: string;
+  note?: string;
 }
 
 export type MatchStatus = 'upcoming' | 'live' | 'finished';

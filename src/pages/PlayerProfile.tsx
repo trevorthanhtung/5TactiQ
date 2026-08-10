@@ -164,6 +164,22 @@ export default function PlayerProfile() {
             <div className="text-sm font-bold uppercase tracking-widest text-slate-400">
               {t('roster.jersey_number')} <span className="text-primary text-xl font-display ml-1">{player.jersey_number || t('roster.no_jersey')}</span>
             </div>
+            {(player.phone || player.note) && (
+              <div className="mt-4 flex flex-col gap-2">
+                {player.phone && (
+                  <div className="text-sm font-bold text-slate-500 flex items-center gap-2 justify-center @sm:justify-start">
+                    <span className="uppercase tracking-widest">{t('roster.phone_label', 'Số điện thoại')}:</span>
+                    <a href={`tel:${player.phone}`} className="text-primary hover:underline">{player.phone}</a>
+                  </div>
+                )}
+                {player.note && (
+                  <div className="text-sm font-bold text-slate-500 flex items-start gap-2 justify-center @sm:justify-start text-left">
+                    <span className="uppercase tracking-widest whitespace-nowrap">{t('roster.note_label', 'Ghi chú')}:</span>
+                    <span className="text-text-main font-medium">{player.note}</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

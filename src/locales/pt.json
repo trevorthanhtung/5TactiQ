@@ -209,7 +209,11 @@
     "mark_youth": "MARCAR COMO JOGADOR DA BASE",
     "unmark_youth": "DESMARCAR JOGADOR DA BASE",
     "edit_health": "STATUS DE LESÃO / SAÚDE",
-    "edit_health_title": "STATUS DE SAÚDE E LESÃO"
+    "edit_health_title": "STATUS DE SAÚDE E LESÃO",
+    "phone_label": "Número de telefone",
+    "phone_placeholder": "Ex: 123456...",
+    "note_label": "Nota",
+    "note_placeholder": "Informações adicionais..."
   },
   "position": {
     "GK": "GL",

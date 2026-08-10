@@ -209,7 +209,11 @@
     "mark_youth": "ОТМЕТИТЬ КАК МОЛОДОГО ИГРОКА",
     "unmark_youth": "СНЯТЬ ОТМЕТКУ МОЛОДОГО ИГРОКА",
     "edit_health": "СТАТУС ТРАВМЫ / ЗДОРОВЬЯ",
-    "edit_health_title": "СТАТУС ЗДОРОВЬЯ И ТРАВМ"
+    "edit_health_title": "СТАТУС ЗДОРОВЬЯ И ТРАВМ",
+    "phone_label": "Номер телефона",
+    "phone_placeholder": "Напр.: 123456...",
+    "note_label": "Заметка",
+    "note_placeholder": "Дополнительная инфо..."
   },
   "position": {
     "GK": "ВР",
