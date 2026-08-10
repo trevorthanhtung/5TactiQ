@@ -26,8 +26,18 @@ export default function Home() {
 
   const activeOrUpcomingMatch = matches.find(m => m.status === 'live') || matches.find(m => m.status === 'upcoming');
 
-  // Calculate top scorers from finished matches
-  const finishedMatches = matches.filter(m => m.status === 'finished');
+  const seasonStart = settings.seasonStartDate ? new Date(settings.seasonStartDate) : null;
+  const seasonEnd = settings.seasonEndDate ? new Date(settings.seasonEndDate) : null;
+  const hasSeasonConfig = !!(seasonStart && seasonEnd);
+
+  // Calculate top scorers from finished matches within the configured season
+  const finishedMatches = matches.filter(m => {
+    if (m.status !== 'finished') return false;
+    if (!hasSeasonConfig) return true;
+    if (!m.date) return true;
+    const matchDate = new Date(m.date);
+    return matchDate >= seasonStart! && matchDate <= seasonEnd!;
+  });
   const goalCounts: Record<string, number> = {};
   
   finishedMatches.forEach(m => {
@@ -167,7 +177,16 @@ export default function Home() {
         {/* Stats Snippet */}
         <div className="hallmark-card p-5 @md:col-span-2 @xl:col-span-2 bg-surface-2 border-border-main shadow-lg">
            <div className="flex justify-between items-center mb-4">
-             <h2 className="font-display text-xl uppercase tracking-widest text-primary">{t('home.top_scorers')}</h2>
+             <h2 className="font-display text-xl uppercase tracking-widest text-primary flex items-center gap-2">
+               <span>{t('home.top_scorers')}</span>
+               {hasSeasonConfig && (
+                 <span className="text-text-muted text-sm">
+                   {seasonStart!.getFullYear() === seasonEnd!.getFullYear() 
+                     ? seasonStart!.getFullYear() 
+                     : `${seasonStart!.getFullYear()}/${seasonEnd!.getFullYear()}`}
+                 </span>
+               )}
+             </h2>
              <Link to="/stats" className="text-xs text-text-muted hover:text-secondary uppercase font-bold tracking-widest transition-colors">
                {t('home.see_all')} &rarr;
              </Link>
