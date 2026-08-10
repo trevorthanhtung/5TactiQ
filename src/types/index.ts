@@ -16,6 +16,7 @@ export interface Player {
   healthUpdatedAt?: string;
   isCaptain?: boolean;
   isBorrowed?: boolean;
+  isYouth?: boolean;
   tier?: 'S' | 'A' | 'B' | 'C' | null;
 }
 

@@ -113,8 +113,13 @@ export default function PlayerProfile() {
                 </span>
               )}
               {player.isBorrowed && (
-                <span className="bg-purple-600 text-white font-display font-bold uppercase tracking-widest px-3 py-1 text-sm shadow-sm" title="Cầu thủ mượn">
+                <span className="bg-purple-600 text-white font-display font-bold uppercase tracking-widest px-3 py-1 text-sm shadow-sm" title={t('roster.borrowed_tooltip', 'Cầu thủ mượn')}>
                   MƯỢN
+                </span>
+              )}
+              {player.isYouth && (
+                <span className="bg-emerald-500 text-white font-display font-bold uppercase tracking-widest px-3 py-1 text-sm shadow-sm" title={t('roster.youth_tooltip', 'Cầu thủ đội trẻ lên')}>
+                  TRẺ LÊN
                 </span>
               )}
               {player.positions.map(pos => (
@@ -178,6 +183,22 @@ export default function PlayerProfile() {
             className="hallmark-btn-outline w-full flex justify-center items-center gap-2 text-purple-600 border-purple-300 hover:bg-purple-50 hover:border-purple-600"
           >
             {t('roster.mark_borrowed')}
+          </button>
+        )}
+
+        {player.isYouth ? (
+          <button 
+            onClick={() => { updatePlayer(player.id, { isYouth: false }); addToast({ type: 'info', message: t('toast.unmarked_youth', { name: player.name }) }); }}
+            className="hallmark-btn-outline w-full flex justify-center items-center gap-2 text-emerald-600 border-emerald-300 hover:bg-emerald-50 hover:border-emerald-600"
+          >
+            {t('roster.unmark_youth', 'BỎ ĐÁNH DẤU CẦU THỦ TRẺ')}
+          </button>
+        ) : (
+          <button 
+            onClick={() => { updatePlayer(player.id, { isYouth: true }); addToast({ type: 'info', message: t('toast.marked_youth', { name: player.name }) }); }}
+            className="hallmark-btn-outline w-full flex justify-center items-center gap-2 text-emerald-600 border-emerald-300 hover:bg-emerald-50 hover:border-emerald-600"
+          >
+            {t('roster.mark_youth', 'ĐÁNH DẤU LÀ CẦU THỦ TRẺ')}
           </button>
         )}
         

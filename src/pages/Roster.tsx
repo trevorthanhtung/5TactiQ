@@ -19,9 +19,10 @@ export default function Roster() {
   const [newName, setNewName] = useState('');
   const [newNumber, setNewNumber] = useState('');
   const [newPositions, setNewPositions] = useState<string[]>([]);
-  type FilterType = 'all' | 'injured' | 'recovering' | 'borrowed';
+  type FilterType = 'all' | 'injured' | 'recovering' | 'borrowed' | 'youth';
   const [filter, setFilter] = useState<FilterType>('all');
   const [newIsBorrowed, setNewIsBorrowed] = useState(false);
+  const [newIsYouth, setNewIsYouth] = useState(false);
 
   useHardwareBack(showAddForm, () => setShowAddForm(false));
 
@@ -41,11 +42,13 @@ export default function Roster() {
       jersey_number: newNumber ? parseInt(newNumber) : null,
       positions: newPositions as Position[],
       isBorrowed: newIsBorrowed,
+      isYouth: newIsYouth,
     });
     setNewName('');
     setNewNumber('');
     setNewPositions([]);
     setNewIsBorrowed(false);
+    setNewIsYouth(false);
     setShowAddForm(false);
     addToast({ type: 'success', message: t('toast.roster_added', { name: newName }) });
   };
@@ -83,6 +86,9 @@ export default function Roster() {
     }
     if (filter === 'borrowed') {
       return !!player.isBorrowed;
+    }
+    if (filter === 'youth') {
+      return !!player.isYouth;
     }
     return true;
   });
@@ -176,6 +182,20 @@ export default function Roster() {
               />
               <span className="font-bold text-text-main font-display">{t('roster.borrowed_label')}</span>
             </label>
+            <label className="flex items-center gap-3 cursor-pointer select-none group mt-3">
+              <div className={`w-5 h-5 border-2 flex items-center justify-center transition-colors ${
+                newIsYouth ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-surface border-border-main group-hover:border-emerald-500/50'
+              }`}>
+                {newIsYouth && <Check size={14} strokeWidth={3} />}
+              </div>
+              <input
+                type="checkbox"
+                className="sr-only"
+                checked={newIsYouth}
+                onChange={(e) => setNewIsYouth(e.target.checked)}
+              />
+              <span className="font-bold text-text-main font-display">{t('roster.youth_label', 'Cầu thủ đội trẻ lên')}</span>
+            </label>
           </div>
           <div className="pt-2 flex gap-3">
             <button type="button" onClick={() => setShowAddForm(false)} className="flex-1 bg-transparent text-text-muted font-display uppercase tracking-wider py-3 border-2 border-border-main hover:bg-surface transition-colors active:scale-95">
@@ -234,6 +254,17 @@ export default function Roster() {
         >
           {t('roster.filter_borrowed', 'Mượn')} ({players.filter(p => p.isBorrowed).length})
         </button>
+        <button
+          type="button"
+          onClick={() => setFilter('youth')}
+          className={`px-3.5 py-2 text-xs font-display uppercase tracking-wider font-bold border-2 transition-all shrink-0 ${
+            filter === 'youth'
+              ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+              : 'bg-surface text-text-muted border-border-main hover:border-emerald-500/50'
+          }`}
+        >
+          {t('roster.filter_youth', 'Đội trẻ')} ({players.filter(p => p.isYouth).length})
+        </button>
       </div>
 
       {/* Roster Grid */}
@@ -274,6 +305,11 @@ export default function Roster() {
                   {player.isCaptain && (
                     <div className="bg-amber-500 text-white font-display font-bold w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-sm sm:text-base border-l-2 border-slate-100/20" title={t('roster.captain_tooltip')}>
                       C
+                    </div>
+                  )}
+                  {player.isYouth && (
+                    <div className="bg-emerald-500 text-white font-display font-bold w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-sm sm:text-base border-l-2 border-slate-100/20" title={t('roster.youth_tooltip', 'Cầu thủ đội trẻ lên')}>
+                      Y
                     </div>
                   )}
                 </div>
