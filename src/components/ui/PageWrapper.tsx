@@ -46,6 +46,24 @@ export const PageWrapper: React.FC<PageWrapperProps> = ({ children, className = 
       const savedPosition = scrollPositions.get(location.pathname) || 0;
       scrollRef.current.scrollTop = savedPosition;
     }
+
+    const handleOrientationChange = () => {
+      setTimeout(() => {
+        if (scrollRef.current) {
+          const maxScroll = Math.max(0, scrollRef.current.scrollHeight - scrollRef.current.clientHeight);
+          if (scrollRef.current.scrollTop > maxScroll) {
+            scrollRef.current.scrollTop = maxScroll;
+          }
+        }
+      }, 150);
+    };
+
+    window.addEventListener('orientationchange', handleOrientationChange);
+    window.addEventListener('resize', handleOrientationChange);
+    return () => {
+      window.removeEventListener('orientationchange', handleOrientationChange);
+      window.removeEventListener('resize', handleOrientationChange);
+    };
   }, [location.pathname]);
 
   // Save scroll position on scroll

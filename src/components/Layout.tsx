@@ -41,9 +41,21 @@ export default function Layout() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [navigate]);
 
+  useEffect(() => {
+    const updateAppHeight = () => {
+      document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
+    };
+    updateAppHeight();
+    window.addEventListener('resize', updateAppHeight);
+    window.addEventListener('orientationchange', updateAppHeight);
+    return () => {
+      window.removeEventListener('resize', updateAppHeight);
+      window.removeEventListener('orientationchange', updateAppHeight);
+    };
+  }, []);
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-surface overflow-hidden font-sans">
+    <div className="flex flex-col lg:flex-row h-screen h-[100dvh] min-h-[100dvh] bg-surface overflow-hidden font-sans" style={{ height: 'var(--app-height, 100dvh)' }}>
       
       {/* Side Rail for lg+ screens (Tablet, Fold Inside) */}
       <nav className="hidden lg:flex flex-col w-24 bg-surface border-r-2 border-border-main shrink-0 z-40" style={{ paddingTop: 'var(--safe-top)' }}>
