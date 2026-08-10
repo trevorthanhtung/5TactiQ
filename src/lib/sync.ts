@@ -5,7 +5,7 @@ export const STORAGE_KEYS_META: Record<string, string> = {
   'tactic-storage': 'Dữ liệu Sa bàn (Chiến thuật)',
   'katfc-match-storage-v5': 'Dữ liệu Trận đấu & Lịch sử',
   'katfc-venues-storage': 'Danh bạ Đội bóng',
-  '5tactiq-settings-storage': 'Cài đặt Chung'
+  '5tactiq-settings-storage': 'Cài đặt Chung & Mùa giải'
 };
 
 export const STORAGE_KEYS = Object.keys(STORAGE_KEYS_META);
@@ -75,6 +75,8 @@ export const mergeZustandState = (existingRaw: string | null, incomingRaw: any):
             // Otherwise, incoming array overwrites
             newState[key] = incomingVal;
           }
+        } else if (typeof incomingVal === 'object' && incomingVal !== null && typeof existingVal === 'object' && existingVal !== null && !Array.isArray(incomingVal)) {
+          newState[key] = { ...existingVal, ...incomingVal };
         } else {
           newState[key] = incomingVal;
         }
