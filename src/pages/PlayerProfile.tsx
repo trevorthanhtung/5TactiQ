@@ -237,10 +237,9 @@ export default function PlayerProfile() {
 
         <button 
           onClick={openHealthModal}
-          className="hallmark-btn-outline w-full flex justify-center items-center gap-2 text-rose-600 border-rose-300 hover:bg-rose-50 hover:border-rose-600"
+          className="hallmark-btn-outline w-full flex justify-center items-center text-rose-600 border-rose-300 hover:bg-rose-50 hover:border-rose-600"
         >
-          <Activity size={18} />
-          <span>{t('roster.edit_health', 'TÌNH TRẠNG CHẤN THƯƠNG')}</span>
+          {t('roster.edit_health', 'TÌNH TRẠNG CHẤN THƯƠNG')}
         </button>
         
         <button 

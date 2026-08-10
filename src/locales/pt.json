@@ -157,7 +157,8 @@
     "offline": "Você está offline. Os dados serão salvos localmente.",
     "online": "Conectado novamente!",
     "unmarked_youth": "Jogador da base desmarcado para {{name}}.",
-    "marked_youth": "{{name}} marcado como jogador da base."
+    "marked_youth": "{{name}} marcado como jogador da base.",
+    "health_updated": "Status de saúde atualizado para {{name}}."
   },
   "roster": {
     "title": "Elenco",
@@ -197,7 +198,9 @@
     "youth_label": "JOGADOR DA BASE",
     "youth_tooltip": "Jogador da base",
     "mark_youth": "MARCAR COMO JOGADOR DA BASE",
-    "unmark_youth": "DESMARCAR JOGADOR DA BASE"
+    "unmark_youth": "DESMARCAR JOGADOR DA BASE",
+    "edit_health": "STATUS DE LESÃO / SAÚDE",
+    "edit_health_title": "STATUS DE SAÚDE E LESÃO"
   },
   "position": {
     "GK": "GL",

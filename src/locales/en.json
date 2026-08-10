@@ -157,7 +157,8 @@
     "offline": "You are offline. Data will be saved locally.",
     "online": "Back online!",
     "unmarked_youth": "Unmarked youth player for {{name}}.",
-    "marked_youth": "Marked {{name}} as youth player."
+    "marked_youth": "Marked {{name}} as youth player.",
+    "health_updated": "Updated health status for {{name}}."
   },
   "roster": {
     "filter_all": "All",
@@ -202,7 +203,9 @@
     "youth_label": "YOUTH ACADEMY PLAYER",
     "youth_tooltip": "Youth Academy Player",
     "mark_youth": "MARK AS YOUTH PLAYER",
-    "unmark_youth": "UNMARK YOUTH PLAYER"
+    "unmark_youth": "UNMARK YOUTH PLAYER",
+    "edit_health": "INJURY / HEALTH STATUS",
+    "edit_health_title": "HEALTH & INJURY STATUS"
   },
   "position": {
     "GK": "GK",

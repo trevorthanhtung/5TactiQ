@@ -157,7 +157,8 @@
     "update_available": "Đã có bản cập nhật mới. Làm mới để áp dụng?",
     "update_action": "LÀM MỚI",
     "offline": "Bạn đang ngoại tuyến. Dữ liệu sẽ được lưu cục bộ.",
-    "online": "Đã kết nối mạng trở lại!"
+    "online": "Đã kết nối mạng trở lại!",
+    "health_updated": "Đã cập nhật tình trạng sức khỏe cho {{name}}."
   },
   "roster": {
     "filter_all": "Tất cả",
@@ -202,7 +203,9 @@
     "cancel_delete": "HỦY BỎ",
     "delete_now": "XÓA NGAY",
     "edit_title": "Sửa thông tin cầu thủ",
-    "not_found": "Cầu thủ không tồn tại"
+    "not_found": "Cầu thủ không tồn tại",
+    "edit_health": "TÌNH TRẠNG CHẤN THƯƠNG",
+    "edit_health_title": "TÌNH TRẠNG SỨC KHỎE / CHẤN THƯƠNG"
   },
   "position": {
     "GK": "GK",

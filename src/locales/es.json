@@ -157,7 +157,8 @@
     "offline": "Estás desconectado. Los datos se guardarán localmente.",
     "online": "¡Conectado de nuevo!",
     "unmarked_youth": "Jugador juvenil desmarcado para {{name}}.",
-    "marked_youth": "{{name}} marcado como jugador juvenil."
+    "marked_youth": "{{name}} marcado como jugador juvenil.",
+    "health_updated": "Estado de salud actualizado para {{name}}."
   },
   "roster": {
     "title": "Plantilla",
@@ -197,7 +198,9 @@
     "youth_label": "JUGADOR CANTERANO",
     "youth_tooltip": "Jugador canterano",
     "mark_youth": "MARCAR COMO JUVENIL",
-    "unmark_youth": "DESMARCAR COMO JUVENIL"
+    "unmark_youth": "DESMARCAR COMO JUVENIL",
+    "edit_health": "ESTADO DE LESIÓN / SALUD",
+    "edit_health_title": "ESTADO DE SALUD Y LESIÓN"
   },
   "position": {
     "GK": "PT",
