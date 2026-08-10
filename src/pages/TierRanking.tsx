@@ -231,7 +231,6 @@ export default function TierRanking() {
           <ArrowLeft size={16} /> {t('tier.back')}
         </button>
         <h1 className="text-3xl sm:text-4xl font-display uppercase text-primary leading-none">{t('tier.title')}</h1>
-        <p className="text-xs sm:text-sm text-text-muted mt-2 font-medium">{t('tier.subtitle')}</p>
         <div className="hallmark-divider mt-4" />
       </header>
 
