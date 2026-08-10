@@ -85,32 +85,34 @@ export default function Layout() {
       </main>
 
       {/* Bottom Navigation for < lg screens (Phones, small tablets) */}
-      <nav className="lg:hidden fixed bottom-0 w-full bg-surface border-t-2 border-border-main flex justify-around items-center z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] px-1 h-[calc(64px+max(0.5rem,env(safe-area-inset-bottom)))] pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-        {navItems.map((item) => {
-          const isTactics = item.to === '/tactics';
-          return (
-            <NavLink 
-              key={item.to}
-              to={item.to} 
-              onClick={() => {
-                if (item.to === '/matchday') {
-                  useMatchStore.getState().selectMatch('');
-                }
-              }}
-              className={({ isActive }) => {
-                if (isTactics) {
-                  return `relative flex flex-col items-center justify-center w-14 h-14 rounded-full border-4 border-[#f8f8f6] shadow-lg -translate-y-5 transition-transform hover:scale-105 active:scale-95 z-50 shrink-0 bg-primary text-white ${isActive ? 'shadow-[0_0_15px_rgba(71,92,68,0.5)]' : ''}`;
-                }
-                return `flex flex-col items-center justify-center h-full transition-colors flex-1 ${isActive ? 'text-primary' : 'text-text-muted'}`;
-              }}
-            >
-              {item.icon}
-              {!isTactics && (
-                <span className="text-[10px] font-bold uppercase mt-1 font-display tracking-widest hidden min-[360px]:block ml-[0.1em] whitespace-nowrap">{item.label}</span>
-              )}
-            </NavLink>
-          );
-        })}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 w-full bg-surface border-t-2 border-border-main flex flex-col z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] pb-[env(safe-area-inset-bottom,0px)]">
+        <div className="flex justify-around items-center h-16 px-1 w-full relative">
+          {navItems.map((item) => {
+            const isTactics = item.to === '/tactics';
+            return (
+              <NavLink 
+                key={item.to}
+                to={item.to} 
+                onClick={() => {
+                  if (item.to === '/matchday') {
+                    useMatchStore.getState().selectMatch('');
+                  }
+                }}
+                className={({ isActive }) => {
+                  if (isTactics) {
+                    return `relative flex flex-col items-center justify-center w-14 h-14 rounded-full border-4 border-[#f8f8f6] shadow-lg -translate-y-5 transition-transform hover:scale-105 active:scale-95 z-50 shrink-0 bg-primary text-white ${isActive ? 'shadow-[0_0_15px_rgba(71,92,68,0.5)]' : ''}`;
+                  }
+                  return `flex flex-col items-center justify-center h-full transition-colors flex-1 py-1 ${isActive ? 'text-primary' : 'text-text-muted'}`;
+                }}
+              >
+                {item.icon}
+                {!isTactics && (
+                  <span className="text-[10px] font-bold uppercase mt-1 font-display tracking-widest hidden min-[360px]:block ml-[0.1em] whitespace-nowrap">{item.label}</span>
+                )}
+              </NavLink>
+            );
+          })}
+        </div>
       </nav>
     </div>
   );

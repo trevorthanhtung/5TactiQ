@@ -1188,7 +1188,7 @@ export default function Matchday() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 @md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Team Cards */}
             {(['A', 'B', 'C', 'D'] as const).map(team => {
               if (team === 'C' && (currentMatch.teamCount || 2) < 3) return null;
