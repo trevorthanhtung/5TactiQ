@@ -359,7 +359,12 @@ export default function Matchday() {
 
   const presentPlayers = [...players]
     .filter(p => getPlayerAttendance(p.id) === 'present')
-    .sort((a, b) => compareVietnameseNames(a.name, b.name));
+    .sort((a, b) => {
+      const aIsGuest = a.isBorrowed || a.isYouth ? 1 : 0;
+      const bIsGuest = b.isBorrowed || b.isYouth ? 1 : 0;
+      if (aIsGuest !== bIsGuest) return aIsGuest - bIsGuest;
+      return compareVietnameseNames(a.name, b.name);
+    });
   const presentCount = presentPlayers.length;
   const absentCount = players.filter(p => getPlayerAttendance(p.id) === 'absent').length;
   const pendingCount = players.filter(p => getPlayerAttendance(p.id) === 'pending').length;
@@ -1132,7 +1137,24 @@ export default function Matchday() {
           <div className="bg-surface border-2 border-border-main shadow-sm divide-y divide-border-main mt-4">
             {[...players]
               .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
-              .sort((a, b) => compareVietnameseNames(a.name, b.name))
+              .sort((a, b) => {
+                const aIsGuest = a.isBorrowed || a.isYouth ? 1 : 0;
+                const bIsGuest = b.isBorrowed || b.isYouth ? 1 : 0;
+                if (aIsGuest !== bIsGuest) return aIsGuest - bIsGuest;
+                
+                const numA = (a.jersey_number !== null && a.jersey_number !== undefined && !isNaN(Number(a.jersey_number))) ? Number(a.jersey_number) : null;
+                const numB = (b.jersey_number !== null && b.jersey_number !== undefined && !isNaN(Number(b.jersey_number))) ? Number(b.jersey_number) : null;
+                
+                if (numA !== null && numB !== null) {
+                  if (numA !== numB) return numA - numB;
+                } else if (numA !== null) {
+                  return -1;
+                } else if (numB !== null) {
+                  return 1;
+                }
+                
+                return compareVietnameseNames(a.name, b.name);
+              })
               .map((p) => {
               const status = getPlayerAttendance(p.id);
               return (

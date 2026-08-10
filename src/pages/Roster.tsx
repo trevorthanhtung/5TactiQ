@@ -64,6 +64,15 @@ export default function Roster() {
   }
 
   const sortedPlayers = [...players].sort((a, b) => {
+    // 1. Main squad first, then Youth/Borrowed
+    const aIsGuest = a.isBorrowed || a.isYouth ? 1 : 0;
+    const bIsGuest = b.isBorrowed || b.isYouth ? 1 : 0;
+    
+    if (aIsGuest !== bIsGuest) {
+      return aIsGuest - bIsGuest;
+    }
+
+    // 2. Sort by jersey number if both have one
     const numA = (a.jersey_number !== null && a.jersey_number !== undefined && !isNaN(Number(a.jersey_number))) ? Number(a.jersey_number) : null;
     const numB = (b.jersey_number !== null && b.jersey_number !== undefined && !isNaN(Number(b.jersey_number))) ? Number(b.jersey_number) : null;
 
@@ -71,9 +80,12 @@ export default function Roster() {
       if (numA !== numB) return numA - numB;
       return compareVietnameseNames(a.name, b.name);
     }
+    
+    // 3. Players with jersey numbers come before those without
     if (numA !== null) return -1;
     if (numB !== null) return 1;
 
+    // 4. Finally sort by name
     return compareVietnameseNames(a.name, b.name);
   });
 
