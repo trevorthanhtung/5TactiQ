@@ -1081,24 +1081,6 @@ export default function Tactics() {
                       </span>
                     </div>
 
-                    {/* Quick Presets */}
-                    <div className="flex items-center justify-between gap-1.5 py-0.5">
-                      {[12, 24, 40, 60].map((size) => (
-                        <button
-                          key={size}
-                          type="button"
-                          onClick={() => setEraserSize(size)}
-                          className={`flex-1 py-1 text-[11px] font-display font-bold border transition-all ${
-                            eraserSize === size
-                              ? 'bg-primary text-white border-primary shadow-sm scale-105'
-                              : 'bg-surface-2 text-text-muted border-border-main hover:text-text-main hover:bg-surface'
-                          }`}
-                        >
-                          {size}
-                        </button>
-                      ))}
-                    </div>
-
                     {/* Range Slider */}
                     <div className="flex items-center gap-2.5 px-2.5 py-2 bg-surface-2 border border-border-main">
                       <div className="w-1.5 h-1.5 rounded-full bg-primary/50 shrink-0" />
