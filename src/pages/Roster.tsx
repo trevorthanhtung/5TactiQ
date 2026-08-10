@@ -143,9 +143,9 @@ export default function Roster() {
         }
       >
         <form onSubmit={handleAddPlayer} className="space-y-6">
-          <div className="grid grid-cols-1 @sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 @sm:grid-cols-3 gap-4 items-end">
             <div className="@sm:col-span-2">
-              <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">{t('roster.player_name_label')}</label>
+              <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1 truncate" title={t('roster.player_name_label')}>{t('roster.player_name_label')}</label>
               <input
                 type="text"
                 inputMode="text"
@@ -159,7 +159,7 @@ export default function Roster() {
               />
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">{t('roster.jersey_number_label')}</label>
+              <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1 truncate" title={t('roster.jersey_number_label')}>{t('roster.jersey_number_label')}</label>
               <input
                 type="text"
                 inputMode="numeric"
