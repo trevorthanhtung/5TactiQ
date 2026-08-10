@@ -65,7 +65,11 @@
     "open_tactics": "افتح التكتيكات",
     "top_scorers": "الهدافون",
     "see_all": "عرض الكل",
-    "goals": "أهداف"
+    "goals": "أهداف",
+    "match_upcoming": "القادم",
+    "match_today": "مباراة اليوم",
+    "match_overdue": "مباراة سابقة",
+    "no_location": "لا يوجد مكان"
   },
   "nav": {
     "home": "الرئيسية",

@@ -65,7 +65,11 @@
     "open_tactics": "Открыть Тактику",
     "top_scorers": "Лучшие бомбардиры",
     "see_all": "Смотреть все",
-    "goals": "голы"
+    "goals": "голы",
+    "match_upcoming": "Предстоящий",
+    "match_today": "Сегодняшний матч",
+    "match_overdue": "Прошедший матч",
+    "no_location": "Нет места"
   },
   "nav": {
     "home": "Главная",

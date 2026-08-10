@@ -65,7 +65,11 @@
     "open_tactics": "Mở sa bàn",
     "top_scorers": "Top ghi bàn",
     "see_all": "Xem tất cả",
-    "goals": "bàn"
+    "goals": "bàn",
+    "match_upcoming": "Sắp diễn ra",
+    "match_today": "Trận hôm nay",
+    "match_overdue": "Trận đã qua",
+    "no_location": "Chưa có sân"
   },
   "nav": {
     "home": "Trang chủ",

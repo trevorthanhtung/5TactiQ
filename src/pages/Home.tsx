@@ -79,9 +79,13 @@ export default function Home() {
                     <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse shrink-0" />
                   )}
                   <span>
-                    {activeOrUpcomingMatch.status === 'live' 
-                      ? t('home.match_live') 
-                      : t('home.match_next')}
+                    {(() => {
+                      if (activeOrUpcomingMatch.status === 'live') return t('home.match_live');
+                      const today = new Date().toISOString().split('T')[0];
+                      if (activeOrUpcomingMatch.date > today) return t('home.match_upcoming');
+                      if (activeOrUpcomingMatch.date === today) return t('home.match_today');
+                      return t('home.match_overdue');
+                    })()}
                   </span>
                 </h2>
                 <div className="text-text-muted font-medium mt-1">
@@ -94,7 +98,7 @@ export default function Home() {
                     {activeOrUpcomingMatch.matchType === 'internal' ? t('home.internal_match') : `vs ${activeOrUpcomingMatch.opponent || ''}`}
                   </div>
                   <div className="text-text-muted font-medium mt-2">
-                    {activeOrUpcomingMatch.time} - {activeOrUpcomingMatch.location}
+                    {activeOrUpcomingMatch.time} - {activeOrUpcomingMatch.location || t('home.no_location')}
                   </div>
                 </div>
                 <Link to={`/matchday?id=${activeOrUpcomingMatch.id}`} className="bg-secondary text-white font-display uppercase tracking-widest px-4 py-3 @md:py-2 hover:bg-surface hover:text-secondary transition-colors text-center shrink-0 mt-2 @md:mt-0 w-full @md:w-auto">

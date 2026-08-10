@@ -65,7 +65,11 @@
     "open_tactics": "Abrir Táticas",
     "top_scorers": "Artilheiros",
     "see_all": "Ver tudo",
-    "goals": "gols"
+    "goals": "gols",
+    "match_upcoming": "Próximo",
+    "match_today": "Partida de hoje",
+    "match_overdue": "Partida passada",
+    "no_location": "Sem local"
   },
   "nav": {
     "home": "Início",

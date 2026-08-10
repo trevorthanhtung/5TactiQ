@@ -65,7 +65,11 @@
     "open_tactics": "Open Tactics",
     "top_scorers": "Top Scorers",
     "see_all": "See all",
-    "goals": "goals"
+    "goals": "goals",
+    "match_upcoming": "Upcoming",
+    "match_today": "Match Today",
+    "match_overdue": "Past Match",
+    "no_location": "No location yet"
   },
   "nav": {
     "home": "Home",
