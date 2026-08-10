@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { usePlayerStore } from '../store/usePlayerStore';
+import { useMatchStore } from '../store/useMatchStore';
 import { useToastStore } from '../store/useToastStore';
 import { User, ArrowLeft, Trash2, Award, X, Edit2, Activity, Phone, Hash, FileText } from 'lucide-react';
 import { useHardwareBack } from '../hooks/useHardwareBack';
@@ -14,6 +15,7 @@ export default function PlayerProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { players, deletePlayer, setCaptain, updatePlayer } = usePlayerStore();
+  const { matches } = useMatchStore();
   const { addToast } = useToastStore();
   const [isLoading, setIsLoading] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -59,6 +61,23 @@ export default function PlayerProfile() {
   if (!player) {
     return <div className="p-4 text-center mt-10">{t('roster.not_found')}</div>;
   }
+
+  // Calculate player goals and assists across all non-internal matches
+  const totalGoals = matches.reduce((sum, m) => {
+    if (m.matchType !== 'internal' && m.stats) {
+      const s = m.stats.find(stat => stat.playerId === player.id);
+      if (s) return sum + (s.goals || 0);
+    }
+    return sum;
+  }, 0);
+
+  const totalAssists = matches.reduce((sum, m) => {
+    if (m.matchType !== 'internal' && m.stats) {
+      const s = m.stats.find(stat => stat.playerId === player.id);
+      if (s) return sum + (s.assists || 0);
+    }
+    return sum;
+  }, 0);
 
   const handleDelete = async () => {
     const idToDelete = player.id;
@@ -222,11 +241,11 @@ export default function PlayerProfile() {
       <div className="grid grid-cols-2 gap-4 mb-8">
         <div className="hallmark-card p-4 text-center">
           <div className="text-xs font-bold uppercase tracking-widest text-text-muted mb-1">{t('roster.goals')}</div>
-          <div className="text-4xl font-display text-text-main font-bold">0</div>
+          <div className="text-4xl font-display text-text-main font-bold">{totalGoals}</div>
         </div>
         <div className="hallmark-card p-4 text-center">
           <div className="text-xs font-bold uppercase tracking-widest text-text-muted mb-1">{t('roster.assists')}</div>
-          <div className="text-4xl font-display text-text-main font-bold">0</div>
+          <div className="text-4xl font-display text-text-main font-bold">{totalAssists}</div>
         </div>
       </div>
 
