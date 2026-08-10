@@ -255,31 +255,30 @@ export default function TierRanking() {
         </div>
 
         {/* Unranked */}
-        {grouped.unranked.length > 0 && (
-          <div className="mt-5">
-            <h2 className="text-sm font-display font-bold text-text-muted uppercase tracking-widest mb-2">
-              {t('tier.unranked')} ({grouped.unranked.length})
-            </h2>
-            <DroppableUnranked isOver={overTier === 'tier-unranked'}>
-              {grouped.unranked.map(p => (
+        <div className="mt-5">
+          <h2 className="text-sm font-display font-bold text-text-muted uppercase tracking-widest mb-2">
+            {t('tier.unranked')} ({grouped.unranked.length})
+          </h2>
+          <DroppableUnranked isOver={overTier === 'tier-unranked'}>
+            {grouped.unranked.length > 0 ? (
+              grouped.unranked.map(p => (
                 <DraggableChip key={p.id} player={p} />
-              ))}
-            </DroppableUnranked>
-          </div>
-        )}
+              ))
+            ) : (
+              !activeId && (
+                <div className="w-full text-center py-4 text-sm font-bold text-emerald-500/70 uppercase tracking-wider">
+                  {t('tier.all_ranked', 'ALL PLAYERS HAVE BEEN RANKED')}
+                </div>
+              )
+            )}
+          </DroppableUnranked>
+        </div>
 
         {/* Drag Overlay — the floating chip that follows cursor/finger */}
         <DragOverlay dropAnimation={{ duration: 200, easing: 'ease' }}>
           {activePlayer ? <OverlayChip player={activePlayer} /> : null}
         </DragOverlay>
       </DndContext>
-
-      {/* All ranked */}
-      {grouped.unranked.length === 0 && players.length > 0 && (
-        <div className="mt-6 text-center py-4 text-sm font-bold text-emerald-500 uppercase tracking-wider">
-          {t('tier.all_ranked')}
-        </div>
-      )}
 
       {players.length === 0 && (
         <div className="text-center py-12 text-text-muted">
