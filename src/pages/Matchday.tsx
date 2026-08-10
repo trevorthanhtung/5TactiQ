@@ -639,62 +639,34 @@ export default function Matchday() {
 
             {/* Score (if live or finished) */}
             {match.status !== 'upcoming' && (
-              <div className="bg-surface-2 border-y border-border-main px-3 mb-3 h-[105px] flex items-center justify-center">
+              <div className="bg-surface-2 border-y border-border-main px-2.5 py-2.5 mb-3 min-h-[90px] flex items-center justify-center">
                 {match.matchType === 'internal' ? (
-                  (match.teamCount || 2) === 4 ? (
-                    <div className="flex flex-col items-center gap-1.5 w-full">
-                      {[
-                        ['A', 'B'],
-                        ['C', 'D']
-                      ].map((row, rowIdx) => (
-                        <div key={rowIdx} className="flex justify-center items-center gap-3 sm:gap-4 w-full">
-                          {row.map((team, idx) => {
-                            const scoreField = `scoreTeam${team}` as keyof typeof match;
-                            return (
-                              <div key={team} className="flex items-center gap-3 sm:gap-4">
-                                {idx > 0 && <span className="text-sm font-display text-text-muted font-bold w-4 text-center">-</span>}
-                                <div className="text-center w-20">
-                                  <div className="text-[9px] uppercase font-bold text-text-muted mb-0.5 truncate">
-                                    {t(`matchday.team_${team.toLowerCase()}`)}
-                                  </div>
-                                  <div className={`text-xl font-display font-bold ${team === 'A' ? 'text-primary' : 'text-text-main'}`}>
-                                    {Number(match[scoreField] ?? 0)}
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
+                  <div className={`grid gap-2 w-full ${
+                    (match.teamCount || 2) === 2 ? 'grid-cols-2' : 
+                    (match.teamCount || 2) === 3 ? 'grid-cols-3' : 
+                    'grid-cols-2'
+                  }`}>
+                    {(['A', 'B', 'C', 'D'] as const).slice(0, match.teamCount || 2).map((team) => {
+                      const scoreField = `scoreTeam${team}` as keyof typeof match;
+                      return (
+                        <div key={team} className="bg-surface border border-border-main p-1.5 flex flex-col items-center justify-center text-center">
+                          <span className="text-[9px] uppercase font-bold text-text-muted truncate max-w-full">
+                            {t(`matchday.team_${team.toLowerCase()}`)}
+                          </span>
+                          <span className={`text-lg sm:text-xl font-display font-bold ${team === 'A' ? 'text-primary' : 'text-text-main'}`}>
+                            {Number(match[scoreField] ?? 0)}
+                          </span>
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex flex-wrap justify-center gap-4 sm:gap-6 items-center w-full">
-                      {(['A', 'B', 'C'] as const).slice(0, match.teamCount || 2).map((team, idx) => {
-                        const scoreField = `scoreTeam${team}` as keyof typeof match;
-                        const isTwoTeams = (match.teamCount || 2) === 2;
-                        return (
-                          <div key={team} className="flex items-center gap-3 sm:gap-6">
-                            {idx > 0 && <span className={`${isTwoTeams ? 'text-2xl' : 'text-sm'} font-display text-text-muted font-bold w-4 text-center`}>-</span>}
-                            <div className="text-center w-20">
-                              <div className={`${isTwoTeams ? 'text-[10px]' : 'text-[9px]'} uppercase font-bold text-text-muted mb-0.5 truncate`}>
-                                {t(`matchday.team_${team.toLowerCase()}`)}
-                              </div>
-                              <div className={`${isTwoTeams ? 'text-3xl' : 'text-xl'} font-display font-bold ${team === 'A' ? 'text-primary' : 'text-text-main'}`}>
-                                {Number(match[scoreField] ?? 0)}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )
+                      );
+                    })}
+                  </div>
                 ) : (
                   <div className="flex items-center justify-center gap-6 sm:gap-8">
                     <div className="text-center">
                       <div className="text-[10px] uppercase font-bold text-text-muted mb-0.5">{settings.teamName || '5TactiQ'}</div>
                       <div className="text-3xl font-display font-bold text-primary">{match.scoreUs ?? 0}</div>
                     </div>
-                    <span className="text-2xl font-display text-text-muted font-bold">-</span>
+                    <span className="text-2xl font-display text-text-muted font-bold opacity-40">-</span>
                     <div className="text-center">
                       <div className="text-[9px] uppercase font-bold text-text-muted mb-0.5">{match.opponent || t('matchday.opponent_placeholder')}</div>
                       <div className="text-3xl font-display font-bold text-text-main">{match.scoreOpponent ?? 0}</div>
@@ -1015,50 +987,57 @@ export default function Matchday() {
       </div>
 
       {/* 2. Match Hero Overview Banner */}
-      <div className="bg-surface p-6 border-2 border-primary shadow-lg flex flex-col items-center text-center relative shrink-0">
-        <div className="text-xs font-display uppercase tracking-widest text-secondary mb-2 font-bold">
-          {currentMatch.matchType === 'internal' ? t('matchday.internal_match_caps') : currentMatch.matchType === 'friendly' ? t('matchday.friendly_match_caps') : t('matchday.tournament_match_caps')}
+      <div className="bg-surface p-5 sm:p-6 border-2 border-primary shadow-lg flex flex-col items-center text-center relative shrink-0">
+        <div className="text-xs font-display uppercase tracking-widest text-secondary mb-1 font-bold">
+          {currentMatch.matchType === 'internal' 
+            ? `${t('matchday.internal_match_caps')} • ${currentMatch.teamCount || 2} ĐỘI`
+            : currentMatch.matchType === 'friendly' 
+            ? t('matchday.friendly_match_caps') 
+            : t('matchday.tournament_match_caps')}
         </div>
 
         <h1 className="text-3xl md:text-5xl font-display uppercase text-primary leading-none my-1">
-          {currentMatch.matchType === 'internal' ? t('matchday.internal_match_caps') : (currentMatch.opponent ? `VS ${currentMatch.opponent}` : t('matchday.friendly_match_caps'))}
+          {currentMatch.matchType === 'internal' 
+            ? t('matchday.internal_match_caps') 
+            : (currentMatch.opponent ? `VS ${currentMatch.opponent}` : t('matchday.friendly_match_caps'))}
         </h1>
 
         {/* Live / Finished Scoreboard */}
         {(currentMatch.status === 'live' || currentMatch.status === 'finished') && (
-          <div className="flex items-center justify-center gap-6 my-4 bg-surface-2 px-8 py-3 border border-border-main">
+          <div className="w-full max-w-xl my-4">
             {currentMatch.matchType === 'internal' ? (
-              <div className="flex flex-wrap justify-center gap-4 sm:gap-6 items-center w-full pb-1">
-                {(['A', 'B', 'C', 'D'] as const).map((team, idx) => {
-                  if (team === 'C' && (currentMatch.teamCount || 2) < 3) return null;
-                  if (team === 'D' && (currentMatch.teamCount || 2) < 4) return null;
+              <div className={`grid gap-2.5 sm:gap-3.5 w-full ${
+                (currentMatch.teamCount || 2) === 2 ? 'grid-cols-2 max-w-sm mx-auto' : 
+                (currentMatch.teamCount || 2) === 3 ? 'grid-cols-3 max-w-lg mx-auto' : 
+                'grid-cols-2 sm:grid-cols-4 max-w-xl mx-auto'
+              }`}>
+                {(['A', 'B', 'C', 'D'] as const).slice(0, currentMatch.teamCount || 2).map((team) => {
                   const scoreField = `scoreTeam${team}` as keyof typeof currentMatch;
                   const colorField = `team${team}Color` as keyof typeof currentMatch;
                   return (
-                    <div key={team} className="flex items-center gap-4 sm:gap-6">
-                      {idx > 0 && <div className="text-3xl font-display text-text-muted font-bold">-</div>}
-                      <div className="text-center">
-                        <div className="text-[10px] uppercase font-bold text-text-muted">{t(`matchday.team_${team.toLowerCase()}`)} ({getBibColorLabel(currentMatch[colorField] as string)})</div>
-                        <div className={`text-4xl font-display font-bold ${team === 'A' ? 'text-primary' : 'text-text-main'}`}>
-                          {Number(currentMatch[scoreField] ?? 0)}
-                        </div>
-                      </div>
+                    <div key={team} className="bg-surface-2 border-2 border-border-main p-3 sm:p-4 flex flex-col items-center justify-center shadow-sm relative group hover:border-primary/50 transition-colors">
+                      <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-text-muted mb-1 truncate max-w-full">
+                        {t(`matchday.team_${team.toLowerCase()}`)} ({getBibColorLabel(currentMatch[colorField] as string)})
+                      </span>
+                      <span className={`text-3xl sm:text-5xl font-display font-bold ${team === 'A' ? 'text-primary' : 'text-text-main'}`}>
+                        {Number(currentMatch[scoreField] ?? 0)}
+                      </span>
                     </div>
                   );
                 })}
               </div>
             ) : (
-              <>
-                <div>
+              <div className="flex items-center justify-center gap-6 bg-surface-2 px-8 py-3.5 border-2 border-border-main shadow-sm max-w-md mx-auto">
+                <div className="text-center">
                   <div className="text-[10px] uppercase font-bold text-secondary">{(settings.teamName || '5TactiQ').toUpperCase()}</div>
                   <div className="text-4xl font-display text-primary font-bold">{currentMatch.scoreUs ?? 0}</div>
                 </div>
-                <div className="text-3xl font-display text-text-muted font-bold">-</div>
-                <div>
+                <div className="text-3xl font-display text-text-muted font-bold opacity-40">-</div>
+                <div className="text-center">
                   <div className="text-[10px] uppercase font-bold text-text-muted">{currentMatch.opponent || t('matchday.opponent_placeholder')}</div>
                   <div className="text-4xl font-display text-text-main font-bold">{currentMatch.scoreOpponent ?? 0}</div>
                 </div>
-              </>
+              </div>
             )}
           </div>
         )}
@@ -1522,21 +1501,24 @@ export default function Matchday() {
 
           {/* Read-Only Score Banner */}
           {currentMatch && (
-            <div className="bg-surface-2 p-6 border-2 border-border-main shadow-lg">
+            <div className="bg-surface-2 p-4 sm:p-5 border-2 border-border-main shadow-lg">
               {currentMatch.matchType === 'internal' ? (
-                <div className="flex flex-wrap justify-center gap-4 sm:gap-6 items-center w-full pb-2">
-                  {(['A', 'B', 'C', 'D'] as const).map((team, idx) => {
-                    if (team === 'C' && (currentMatch.teamCount || 2) < 3) return null;
-                    if (team === 'D' && (currentMatch.teamCount || 2) < 4) return null;
+                <div className={`grid gap-2.5 w-full ${
+                  (currentMatch.teamCount || 2) === 2 ? 'grid-cols-2 max-w-xs mx-auto' : 
+                  (currentMatch.teamCount || 2) === 3 ? 'grid-cols-3' : 
+                  'grid-cols-2 sm:grid-cols-4'
+                }`}>
+                  {(['A', 'B', 'C', 'D'] as const).slice(0, currentMatch.teamCount || 2).map((team) => {
                     const scoreField = `scoreTeam${team}` as keyof typeof currentMatch;
                     const colorField = `team${team}Color` as keyof typeof currentMatch;
                     return (
-                      <div key={team} className="flex items-center gap-4 sm:gap-6">
-                        {idx > 0 && <div className="text-4xl font-display text-text-muted">-</div>}
-                        <div className="text-center">
-                          <div className="text-xs font-bold text-text-muted mb-1">{t(`matchday.team_${team.toLowerCase()}`)} ({getBibColorLabel(currentMatch[colorField] as string)})</div>
-                          <div className={`text-5xl font-display ${team === 'A' ? 'text-primary' : 'text-text-main'}`}>{Number(currentMatch[scoreField] ?? 0)}</div>
-                        </div>
+                      <div key={team} className="bg-surface border-2 border-border-main p-2.5 flex flex-col items-center justify-center text-center">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted mb-0.5 truncate max-w-full">
+                          {t(`matchday.team_${team.toLowerCase()}`)} ({getBibColorLabel(currentMatch[colorField] as string)})
+                        </span>
+                        <span className={`text-3xl sm:text-4xl font-display font-bold ${team === 'A' ? 'text-primary' : 'text-text-main'}`}>
+                          {Number(currentMatch[scoreField] ?? 0)}
+                        </span>
                       </div>
                     );
                   })}
@@ -1547,7 +1529,7 @@ export default function Matchday() {
                     <div className="text-xs font-bold text-secondary mb-1">{(settings.teamName || '5TactiQ').toUpperCase()}</div>
                     <div className="text-5xl font-display text-primary">{currentMatch.scoreUs ?? 0}</div>
                   </div>
-                  <div className="text-4xl font-display text-text-muted">-</div>
+                  <div className="text-4xl font-display text-text-muted opacity-40">-</div>
                   <div>
                     <div className="text-xs font-bold text-text-muted mb-1">{currentMatch.opponent || t('matchday.opponent_placeholder')}</div>
                     <div className="text-5xl font-display text-text-main">{currentMatch.scoreOpponent ?? 0}</div>
