@@ -132,6 +132,18 @@ export default function Tactics() {
   
   const eraserBtnRef = useRef<HTMLButtonElement>(null);
 
+  // Proportional sizing for Konva elements based on board width
+  const boardScale = useMemo(() => {
+    if (!dimensions.width) return 1;
+    return Math.max(0.55, Math.min(1.1, dimensions.width / 800));
+  }, [dimensions.width]);
+
+  const homeRadius = Math.round(16 * boardScale);
+  const enemyRadius = Math.round(14 * boardScale);
+  const coneRadius = Math.round(10 * boardScale);
+  const ballSize = Math.round(24 * boardScale);
+  const labelFontSize = Math.max(7, Math.round(11 * boardScale));
+
   const updateEraserMenuPos = useCallback(() => {
     if (showEraserMenu && eraserBtnRef.current) {
       const rect = eraserBtnRef.current.getBoundingClientRect();
@@ -1418,7 +1430,7 @@ export default function Tactics() {
                           {pos.isText ? (
                             <Text
                               text={pos.text || ''}
-                              fontSize={18}
+                              fontSize={Math.max(10, Math.round(18 * boardScale))}
                               fontFamily="Arial"
                               fill="#ffffff"
                               shadowColor="black"
@@ -1426,30 +1438,30 @@ export default function Tactics() {
                               shadowOpacity={0.8}
                               shadowOffset={{ x: 1, y: 1 }}
                               fontStyle="bold"
-                              offsetX={20} // Approximate centering
-                              offsetY={10}
+                              offsetX={Math.round(20 * boardScale)}
+                              offsetY={Math.round(10 * boardScale)}
                             />
                           ) : pos.isCone ? (
                             <Group>
-                              <Circle radius={10} fill="#f97316" stroke="#ffffff" strokeWidth={2} shadowColor="black" shadowBlur={4} shadowOpacity={0.4} />
-                              <Circle radius={3} fill="#ffffff" />
+                              <Circle radius={coneRadius} fill="#f97316" stroke="#ffffff" strokeWidth={Math.max(1, 2 * boardScale)} shadowColor="black" shadowBlur={4} shadowOpacity={0.4} />
+                              <Circle radius={Math.max(2, 3 * boardScale)} fill="#ffffff" />
                             </Group>
                           ) : pos.isBall ? (
                             <Group>
                               {ballImage ? (
                                 <KonvaImage
                                   image={ballImage}
-                                  x={-12}
-                                  y={-12}
-                                  width={24}
-                                  height={24}
+                                  x={-ballSize / 2}
+                                  y={-ballSize / 2}
+                                  width={ballSize}
+                                  height={ballSize}
                                   shadowColor="black"
                                   shadowBlur={5}
                                   shadowOpacity={0.3}
                                 />
                               ) : (
                                 <Circle
-                                  radius={10}
+                                  radius={ballSize / 2}
                                   fill="#ffffff"
                                   stroke="#1e293b"
                                   strokeWidth={2}
@@ -1458,25 +1470,27 @@ export default function Tactics() {
                             </Group>
                           ) : (
                             <Circle
-                              radius={pos.isEnemy ? 14 : 16}
+                              radius={pos.isEnemy ? enemyRadius : homeRadius}
                               fill={pos.isEnemy ? "#3b82f6" : "#ef4444"}
                               stroke="#ffffff"
-                              strokeWidth={2}
+                              strokeWidth={Math.max(1.5, 2 * boardScale)}
                               shadowColor="black"
                               shadowBlur={5}
                               shadowOpacity={0.3}
                             />
                           )}
 
-                          {!pos.isEnemy && !pos.isBall && (
+                          {!pos.isEnemy && !pos.isBall && !pos.isCone && !pos.isText && (
                             <Text
                               text={pos.label || ''}
-                              fontSize={11}
+                              fontSize={labelFontSize}
                               fontFamily="Arial"
                               fill="white"
                               align="center"
                               verticalAlign="middle"
-                              x={-16} y={-5} width={32}
+                              x={-homeRadius}
+                              y={-labelFontSize / 2}
+                              width={homeRadius * 2}
                               fontStyle="bold"
                             />
                           )}
