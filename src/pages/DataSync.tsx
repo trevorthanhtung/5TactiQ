@@ -3,6 +3,7 @@ import { ArrowLeft, Upload, Download, RefreshCw, Send, QrCode, CheckCircle2, Cam
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
+import FileSaver from '../plugins/FileSaver';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { exportData, downloadJsonFile, parseBackupData, importSelectedData, STORAGE_KEYS_META } from '../lib/sync';
@@ -53,27 +54,17 @@ export default function DataSync() {
       try {
         const fileName = `5tactiq_backup_${new Date().getTime()}.5tactiq`;
         
-        // 1. Try saving directly to public Downloads folder first (Directory.ExternalStorage)
         try {
-          // Request permission explicitly (required by Capacitor on some versions before writing)
-          await Filesystem.requestPermissions();
-          
-          await Filesystem.writeFile({
-            path: `Download/${fileName}`,
-            data: jsonStr,
-            directory: Directory.ExternalStorage,
-            encoding: Encoding.UTF8
-          });
-          
+          await FileSaver.saveAs({ data: jsonStr, filename: fileName });
           useToastStore.getState().addToast({
-            message: t('sync.export_direct_success', `Đã lưu file vào thư mục Download/ của máy! (${fileName})`),
+            message: t('sync.export_direct_success', `Đã lưu file thành công!`),
             type: 'success'
           });
           return;
-        } catch (externalErr) {
-          console.warn('Lưu trực tiếp vào Download thất bại (có thể do Android 11+ hạn chế Scoped Storage), chuyển sang Share:', externalErr);
+        } catch (saveErr: any) {
+          console.warn('Lưu file bị hủy hoặc lỗi, chuyển sang Share:', saveErr);
           
-          // 2. Fallback to app's sandboxed Documents folder + Share Sheet
+          // Fallback to app's sandboxed Documents folder + Share Sheet
           const result = await Filesystem.writeFile({
             path: fileName,
             data: jsonStr,
@@ -97,8 +88,6 @@ export default function DataSync() {
 
     // Web logic: Always use traditional download to save directly to device
     // navigator.share is removed because users expect a direct file download for backups
-
-    // Fallback to traditional download
     downloadJsonFile(jsonStr);
   };
 

@@ -65,5 +65,23 @@
     "vite": "^8.2.0",
     "vite-plugin-pwa": "^1.3.0",
     "wait-on": "^9.1.0"
+  },
+  "build": {
+    "appId": "com.5tactiq.desktop",
+    "productName": "5TactiQ",
+    "directories": {
+      "output": "dist_electron"
+    },
+    "files": [
+      "dist/**/*",
+      "main.js",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
   }
 }
