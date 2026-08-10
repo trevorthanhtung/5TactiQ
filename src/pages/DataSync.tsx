@@ -52,19 +52,42 @@ export default function DataSync() {
     if (Capacitor.isNativePlatform()) {
       try {
         const fileName = `5tactiq_backup_${new Date().getTime()}.5tactiq`;
-        const result = await Filesystem.writeFile({
-          path: fileName,
-          data: jsonStr,
-          directory: Directory.Documents,
-          encoding: Encoding.UTF8
-        });
+        
+        // 1. Try saving directly to public Downloads folder first (Directory.ExternalStorage)
+        try {
+          // Request permission explicitly (required by Capacitor on some versions before writing)
+          await Filesystem.requestPermissions();
+          
+          await Filesystem.writeFile({
+            path: `Download/${fileName}`,
+            data: jsonStr,
+            directory: Directory.ExternalStorage,
+            encoding: Encoding.UTF8
+          });
+          
+          useToastStore.getState().addToast({
+            message: t('sync.export_direct_success', `Đã lưu file vào thư mục Download/ của máy! (${fileName})`),
+            type: 'success'
+          });
+          return;
+        } catch (externalErr) {
+          console.warn('Lưu trực tiếp vào Download thất bại (có thể do Android 11+ hạn chế Scoped Storage), chuyển sang Share:', externalErr);
+          
+          // 2. Fallback to app's sandboxed Documents folder + Share Sheet
+          const result = await Filesystem.writeFile({
+            path: fileName,
+            data: jsonStr,
+            directory: Directory.Documents,
+            encoding: Encoding.UTF8
+          });
 
-        await Share.share({
-          title: t('sync.share_title', '5TactiQ Backup'),
-          text: t('sync.share_text', 'Dữ liệu sao lưu từ 5TactiQ'),
-          url: result.uri,
-          dialogTitle: t('sync.share_dialog', 'Lưu hoặc chia sẻ file sao lưu')
-        });
+          await Share.share({
+            title: t('sync.share_title', '5TactiQ Backup'),
+            text: t('sync.share_text', 'Dữ liệu sao lưu từ 5TactiQ'),
+            url: result.uri,
+            dialogTitle: t('sync.share_dialog', 'Lưu hoặc chia sẻ file sao lưu')
+          });
+        }
       } catch (err) {
         console.error('Lỗi xuất file native:', err);
         setAlertInfo({ title: t('sync.err_title', 'LỖI'), message: t('sync.err_export_fail', 'Không thể tạo file sao lưu. Vui lòng thử lại.') });

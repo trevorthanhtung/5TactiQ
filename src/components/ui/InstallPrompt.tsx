@@ -6,15 +6,14 @@ import { useTranslation } from 'react-i18next';
 
 export default function InstallPrompt() {
   const { t } = useTranslation();
-  const { isInstallable, isIOS, promptInstall } = useInstallPrompt();
+  const { isInstallable, promptInstall } = useInstallPrompt();
   const [isVisible, setIsVisible] = useState(false);
-  const [isAndroidWeb, setIsAndroidWeb] = useState(false);
+  const [platform, setPlatform] = useState('unknown');
 
   useEffect(() => {
     import('@capacitor/core').then(({ Capacitor }) => {
-      const isNative = Capacitor.isNativePlatform();
-      const isAndroid = !isNative && /android/i.test(navigator.userAgent || '');
-      setIsAndroidWeb(isAndroid);
+      // Hide if already running as a native app (Capacitor or Electron)
+      const isNative = Capacitor.isNativePlatform() || navigator.userAgent.toLowerCase().includes('electron');
       const isHidden = localStorage.getItem('hideInstallPrompt') === 'true';
 
       if (isHidden || isNative) {
@@ -22,19 +21,120 @@ export default function InstallPrompt() {
         return;
       }
 
-      if (isAndroid || isInstallable) {
-        // Delay showing the prompt by a few seconds to not be too aggressive
-        const timer = setTimeout(() => {
-          setIsVisible(true);
-        }, 3000);
-        return () => clearTimeout(timer);
+      // Detect Platform
+      const ua = navigator.userAgent;
+      if (/iPhone|iPad|iPod/i.test(ua)) {
+        setPlatform('ios');
+      } else if (/Mac/i.test(ua)) {
+        setPlatform('mac');
+      } else if (/Android/i.test(ua)) {
+        setPlatform('android');
+      } else if (/Win/i.test(ua)) {
+        setPlatform('windows');
+      } else if (/Linux/i.test(ua)) {
+        setPlatform('linux');
       } else {
-        setIsVisible(false);
+        setPlatform('pwa');
       }
+
+      // Delay showing the prompt
+      const timer = setTimeout(() => {
+        setIsVisible(true);
+      }, 3000);
+      return () => clearTimeout(timer);
     });
-  }, [isInstallable]);
+  }, []);
+
+  const handleDismiss = () => {
+    setIsVisible(false);
+    localStorage.setItem('hideInstallPrompt', 'true');
+  };
+
+  const handleDownload = (url: string) => {
+    window.open(url, '_blank');
+    handleDismiss();
+  };
 
   if (!isVisible) return null;
+
+  const renderContent = () => {
+    if (platform === 'ios' || platform === 'mac') {
+      return (
+        <>
+          <p className="text-xs text-text-muted mb-3 font-sans">
+            {platform === 'ios' ? t('install_prompt.desc_ios_1') : "Mở menu trình duyệt (Safari/Chrome)"} <br/>
+            <span className="font-bold text-primary">
+              {platform === 'ios' ? t('install_prompt.desc_ios_2') : "Chọn 'Add to Dock' hoặc 'Install App' để cài đặt"}
+            </span>
+          </p>
+        </>
+      );
+    }
+
+    if (platform === 'android') {
+      return (
+        <>
+          <p className="text-xs text-text-muted mb-3 font-sans">
+            Tải bản App chính thức (APK) để có trải nghiệm cực mượt và đầy đủ tính năng nhất!
+          </p>
+          <button 
+            onClick={() => handleDownload('https://github.com/trevorthanhtung/5TactiQ/raw/main/releases/5TactiQ.apk')}
+            className="w-full hallmark-btn bg-primary text-white py-2 text-xs flex items-center justify-center gap-1"
+          >
+            <Download size={14} /> TẢI APK NGAY
+          </button>
+        </>
+      );
+    }
+
+    if (platform === 'windows') {
+      return (
+        <>
+          <p className="text-xs text-text-muted mb-3 font-sans">
+            Tải phần mềm cài đặt (.exe) độc lập dành riêng cho Windows. Tận hưởng hiệu năng tối đa!
+          </p>
+          <button 
+            onClick={() => handleDownload('https://github.com/trevorthanhtung/5TactiQ/raw/main/releases/5TactiQ-Setup.exe')}
+            className="w-full hallmark-btn bg-primary text-white py-2 text-xs flex items-center justify-center gap-1"
+          >
+            <Download size={14} /> TẢI BẢN WINDOWS (.EXE)
+          </button>
+        </>
+      );
+    }
+
+    if (platform === 'linux') {
+      return (
+        <>
+          <p className="text-xs text-text-muted mb-3 font-sans">
+            Tải phần mềm độc lập (.AppImage) dành riêng cho Linux. Tải về chạy luôn không cần cài đặt!
+          </p>
+          <button 
+            onClick={() => handleDownload('https://github.com/trevorthanhtung/5TactiQ/raw/main/releases/5TactiQ.AppImage')}
+            className="w-full hallmark-btn bg-primary text-white py-2 text-xs flex items-center justify-center gap-1"
+          >
+            <Download size={14} /> TẢI BẢN LINUX
+          </button>
+        </>
+    );
+    }
+
+    // Default / Web Fallback (PWA)
+    return (
+      <>
+        <p className="text-xs text-text-muted mb-3 font-sans">{t('install_prompt.desc_android')}</p>
+        <button 
+          onClick={async () => {
+            const accepted = await promptInstall();
+            if (accepted) handleDismiss();
+          }}
+          className="w-full hallmark-btn bg-primary text-white py-2 text-xs flex items-center justify-center gap-1"
+        >
+          <Download size={14} /> {t('install_prompt.add_now')}
+        </button>
+      </>
+    );
+  };
 
   return (
     <AnimatePresence>
@@ -50,58 +150,11 @@ export default function InstallPrompt() {
         
         <div className="flex-1">
           <h4 className="font-display font-bold text-primary uppercase text-sm mb-1">{t('install_prompt.title')}</h4>
-          
-          {isIOS ? (
-            <>
-              <p className="text-xs text-text-muted mb-3 font-sans">
-                {t('install_prompt.desc_ios_1')} <br/>
-                <span className="font-bold text-primary">{t('install_prompt.desc_ios_2')}</span>
-              </p>
-            </>
-          ) : isAndroidWeb ? (
-            <>
-              <p className="text-xs text-text-muted mb-3 font-sans">
-                Tải bản App chính thức (APK) để có trải nghiệm cực mượt và đầy đủ tính năng nhất!
-              </p>
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => {
-                    window.open('https://github.com/trevorthanhtung/5TactiQ/raw/main/releases/5TactiQ.apk', '_blank');
-                    setIsVisible(false);
-                    localStorage.setItem('hideInstallPrompt', 'true');
-                  }}
-                  className="flex-1 hallmark-btn bg-primary text-white py-2 text-xs flex items-center justify-center gap-1"
-                >
-                  <Download size={14} /> TẢI APP NGAY
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <p className="text-xs text-text-muted mb-3 font-sans">{t('install_prompt.desc_android')}</p>
-              <div className="flex gap-2">
-                <button 
-                  onClick={async () => {
-                    const accepted = await promptInstall();
-                    if (accepted) {
-                      setIsVisible(false);
-                      localStorage.setItem('hideInstallPrompt', 'true');
-                    }
-                  }}
-                  className="flex-1 hallmark-btn bg-primary text-white py-2 text-xs flex items-center justify-center gap-1"
-                >
-                  <Download size={14} /> {t('install_prompt.add_now')}
-                </button>
-              </div>
-            </>
-          )}
+          {renderContent()}
         </div>
 
         <button 
-          onClick={() => {
-            setIsVisible(false);
-            localStorage.setItem('hideInstallPrompt', 'true');
-          }}
+          onClick={handleDismiss}
           className="absolute -top-3 -right-3 w-8 h-8 bg-surface border-2 border-primary text-primary flex items-center justify-center hover:bg-secondary hover:text-white transition-colors active:scale-95"
         >
           <X size={18} strokeWidth={2.5} />
