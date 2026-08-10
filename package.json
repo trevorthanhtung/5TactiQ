@@ -81,7 +81,7 @@
     "win": {
       "target": "nsis",
       "artifactName": "5TactiQ-Setup.exe",
-      "icon": "build/icon.ico"
+      "icon": "public/logo.png"
     },
     "nsis": {
       "oneClick": false,
