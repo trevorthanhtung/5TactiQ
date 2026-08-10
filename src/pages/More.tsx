@@ -19,7 +19,7 @@ export default function More() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [isThemeOpen, setIsThemeOpen] = useState(false);
-  const [alertInfo, setAlertInfo] = useState<{title: string, message: string, image?: string, isAppInfo?: boolean} | null>(null);
+  const [alertInfo, setAlertInfo] = useState<{title: string, message: string, image?: string, isAppInfo?: boolean, isDonate?: boolean, paypalUrl?: string} | null>(null);
   const [confirmInfo, setConfirmInfo] = useState<{title: string, message: string, onConfirm: () => void, requireInput?: string} | null>(null);
   const [confirmInput, setConfirmInput] = useState('');
   
@@ -120,7 +120,9 @@ export default function More() {
     { icon: <Coffee size={20} className="text-amber-500" />, title: t('more.donate_title'), action: () => setAlertInfo({ 
       title: t('more.donate_title'), 
       message: t('more.donate_msg'),
-      image: './qr.png'
+      image: './qr.png',
+      isDonate: true,
+      paypalUrl: 'https://paypal.me/trevorthanhtung'
     }) },
     { icon: <MessageSquare size={20} className="text-sky-500" />, title: t('more.feedback_title'), action: () => window.open('mailto:trevorthanhtung@gmail.com?subject=Góp ý ứng dụng 5TactiQ') },
     hasUpdate 
@@ -284,7 +286,19 @@ export default function More() {
                   <img src={alertInfo.image} alt="QR Code" className="w-full max-w-[200px] h-auto object-contain border-2 border-border-main p-2 bg-surface rounded-lg shadow-sm" />
                 </div>
               )}
-              <p className="text-text-muted text-sm md:text-base font-sans mb-8 whitespace-pre-line leading-relaxed">{alertInfo?.message}</p>
+              <p className="text-text-muted text-sm md:text-base font-sans mb-6 whitespace-pre-line leading-relaxed">{alertInfo?.message}</p>
+              
+              {alertInfo?.isDonate && alertInfo?.paypalUrl && (
+                <a 
+                  href={alertInfo.paypalUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="w-full bg-[#0070ba] hover:bg-[#005ea6] text-white font-display uppercase tracking-wider py-3 px-4 border-2 border-[#005ea6] flex items-center justify-center gap-2 mb-4 transition-colors active:scale-95 text-sm"
+                >
+                  <Globe size={18} />
+                  <span>{t('more.donate_paypal', 'ỦNG HỘ QUA PAYPAL (QUỐC TẾ)')}</span>
+                </a>
+              )}
             </>
           )}
           <button 

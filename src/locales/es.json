@@ -44,7 +44,8 @@
     "privacy_msg_2": "Todos los datos sobre tu equipo, jugadores y tácticas se almacenan directamente en tu dispositivo (Local Storage). No recopilamos, rastreamos ni compartimos tus datos con terceros.",
     "app_info_desc": "Aplicación profesional de gestión de equipos, tácticas y estadísticas exclusiva para fútbol 5.",
     "app_info_author": "creado por thanhtungg.",
-    "donate_msg": "Si encuentras útil esta aplicación y te ahorra tiempo, puedes invitarme un café. ¡Tu apoyo es una gran motivación para seguir mejorando la aplicación!"
+    "donate_msg": "Si encuentras útil esta aplicación y te ahorra tiempo, puedes invitarme un café. ¡Tu apoyo es una gran motivación para seguir mejorando la aplicación!",
+    "donate_paypal": "Donar a través de PayPal (Internacional)"
   },
   "home": {
     "title": "GESTIÓN DE EQUIPO",

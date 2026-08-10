@@ -44,7 +44,8 @@
     "privacy_msg_2": "Todos os dados sobre sua equipe, jogadores e táticas são armazenados diretamente no seu dispositivo (Local Storage). Não coletamos, rastreamos ou compartilhamos seus dados com terceiros.",
     "app_info_desc": "Aplicativo profissional de gestão de equipes, táticas e estatísticas exclusivo para futebol society.",
     "app_info_author": "criado por thanhtungg.",
-    "donate_msg": "Se você acha este aplicativo útil e ele economiza seu tempo, pode me pagar um café. Seu apoio é uma grande motivação para eu continuar melhorando o aplicativo!"
+    "donate_msg": "Se você acha este aplicativo útil e ele economiza seu tempo, pode me pagar um café. Seu apoio é uma grande motivação para eu continuar melhorando o aplicativo!",
+    "donate_paypal": "Doar via PayPal (Internacional)"
   },
   "home": {
     "title": "GESTÃO DE EQUIPE",

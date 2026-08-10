@@ -44,7 +44,8 @@
     "privacy_msg_2": "All data about your team, players, and tactics is stored directly on your device (Local Storage). We do not collect, track, or share your data with any third parties.",
     "app_info_desc": "Professional team management, tactics, and statistics app exclusively for 5-a-side football.",
     "app_info_author": "created by thanhtungg.",
-    "donate_msg": "If you find this app useful and it saves you time, you can buy me a coffee. Your support is a great motivation for me to continue improving the app!"
+    "donate_msg": "If you find this app useful and it saves you time, you can buy me a coffee. Your support is a great motivation for me to continue improving the app!",
+    "donate_paypal": "Donate via PayPal (International)"
   },
   "home": {
     "title": "TEAM MANAGEMENT",
