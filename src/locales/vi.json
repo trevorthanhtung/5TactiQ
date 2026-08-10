@@ -9,7 +9,7 @@
     "fitness_desc": "Tình trạng sức khỏe cầu thủ",
     "h2h_title": "Lịch sử đối đầu",
     "h2h_desc": "Thống kê kết quả với các đối thủ",
-    "tier_title": "Xếp hạng Tier",
+    "tier_title": "Xếp hạng cầu thủ",
     "tier_desc": "Hỗ trợ sắp xếp đội hình cân bằng cho các trận đấu nội bộ",
     "settings_title": "Cài đặt đội bóng",
     "settings_desc": "Tùy chỉnh thông tin và hệ thống",
@@ -511,7 +511,7 @@
     "qr_instruction": "Hướng camera vào mã QR trên máy Phát để tự động nhận mã kết nối.",
     "qr_cancel": "Hủy quét",
     "storage_keys": {
-      "katfc-player-storage": "Đội hình, Chấn thương & Tier",
+      "katfc-player-storage": "Đội hình, Chấn thương & Xếp hạng",
       "tactic-storage": "Dữ liệu Sa bàn (Chiến thuật)",
       "katfc-match-storage-v5": "Dữ liệu Trận đấu & Lịch sử",
       "katfc-match-storage-v4": "Dữ liệu Trận đấu & Lịch sử (Cũ)",
@@ -610,7 +610,7 @@
   },
   "tier": {
     "back": "Quay lại",
-    "title": "Xếp Hạng Tier",
+    "title": "Xếp Hạng Cầu Thủ",
     "subtitle": "Kéo thả cầu thủ vào các hàng tier để xếp hạng",
     "tier_s": "Siêu Sao",
     "tier_a": "Xuất Sắc",

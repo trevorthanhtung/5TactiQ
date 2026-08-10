@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Stage, Layer, Rect, Circle, Text, Line, Group, Path, Image as KonvaImage, Arrow } from 'react-konva';
-import { Download, Save, MousePointer2, Pen, ArrowLeft, Trash2, Users, Settings, Undo2, Redo2, Eraser, TrendingUp, FastForward, CornerUpRight, Play, Square, Plus, Triangle, SquareDashed, Type, BookOpen, Search, Copy, X, FolderOpen, Keyboard, HelpCircle, RotateCcw, LayoutTemplate, Scissors } from 'lucide-react';
+import { Download, Save, MousePointer2, Pen, ArrowLeft, Trash2, Users, Settings, Undo2, Redo2, Eraser, TrendingUp, FastForward, CornerUpRight, Play, Square, Plus, Triangle, SquareDashed, Type, BookOpen, Search, Copy, X, FolderOpen, Keyboard, HelpCircle, RotateCcw, LayoutTemplate, Scissors, Brush } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useTacticStore } from '../store/useTacticStore';
@@ -213,7 +213,7 @@ export default function Tactics() {
       { id: 'home-pv', label: 'PV', ...getPos(0.5, 0.46) }
     ];
 
-    const initialPos = [...home, ball];
+    const initialPos = [ball];
     setPositions(initialPos);
     setLines([]);
 
@@ -603,7 +603,7 @@ export default function Tactics() {
           { id: 'home-pv', label: 'PV', ...getPos(0.5, 0.15) }
         ];
 
-        const initialPos = [...home, ball];
+        const initialPos = [ball];
         setPositions(initialPos);
 
         if (history.length === 0) {
@@ -1140,6 +1140,40 @@ export default function Tactics() {
               <button
                 onClick={() => {
                   if (dimensions.width === 0) return;
+                  const isHome = (p: any) => !p.isEnemy && !p.isBall && !p.isCone && !p.isText;
+                  const hasHome = positions.some(isHome);
+                  if (hasHome) {
+                    const newPos = positions.filter(p => !isHome(p));
+                    setPositions(newPos);
+                    setTimeout(() => saveHistory(newPos, lines), 0);
+                  } else {
+                    const w = dimensions.width;
+                    const h = dimensions.height;
+                    const l = dimensions.isLandscape;
+                    const getPos = (rx: number, ry: number) => {
+                      if (l) return { x: (1 - ry) * w, y: rx * h };
+                      return { x: rx * w, y: ry * h };
+                    };
+                    const home = [
+                      { id: `home-gk-${Date.now()}`, label: 'GK', ...getPos(0.5, 0.9) },
+                      { id: `home-fx-${Date.now()}`, label: 'FX', ...getPos(0.5, 0.65) },
+                      { id: `home-ala1-${Date.now()}`, label: 'ALA', ...getPos(0.2, 0.4) },
+                      { id: `home-ala2-${Date.now()}`, label: 'ALA', ...getPos(0.8, 0.4) },
+                      { id: `home-pv-${Date.now()}`, label: 'PV', ...getPos(0.5, 0.15) }
+                    ];
+                    const newPos = [...positions, ...home];
+                    setPositions(newPos);
+                    setTimeout(() => saveHistory(newPos, lines), 0);
+                  }
+                }}
+                className={`p-2 transition-all flex items-center justify-center w-full aspect-square border ${positions.some(p => !p.isEnemy && !p.isBall && !p.isCone && !p.isText) ? 'bg-primary text-white border-primary shadow-inner' : 'text-text-muted border-transparent hover:text-primary hover:bg-primary/10'}`}
+                title={t('tactics.tool_toggle_home', 'Đội mình')}
+              >
+                <Users size={20} />
+              </button>
+              <button
+                onClick={() => {
+                  if (dimensions.width === 0) return;
                   const hasEnemies = positions.some(p => p.isEnemy);
                   if (hasEnemies) {
                     const newPos = positions.filter(p => !p.isEnemy);
@@ -1165,10 +1199,10 @@ export default function Tactics() {
                     setTimeout(() => saveHistory(newPos, lines), 0);
                   }
                 }}
-                className={`p-2 transition-all flex items-center justify-center w-full aspect-square border ${positions.some(p => p.isEnemy) ? 'bg-secondary text-white border-secondary shadow-inner' : 'text-text-muted border-transparent hover:text-primary hover:bg-primary/10'}`}
-                title={t('tactics.tool_toggle_opponent')}
+                className={`p-2 transition-all flex items-center justify-center w-full aspect-square border ${positions.some(p => p.isEnemy) ? 'bg-secondary text-white border-secondary shadow-inner' : 'text-text-muted border-transparent hover:text-secondary hover:bg-secondary/10'}`}
+                title={t('tactics.tool_toggle_opponent', 'Đội bạn')}
               >
-                <Users size={20} />
+                <Users size={20} className="-scale-x-100" />
               </button>
               <div className="w-8 h-px bg-primary/20 mx-auto my-1"></div>
               <button
@@ -1177,10 +1211,15 @@ export default function Tactics() {
                   setEraserMode('object');
                   setShowEraserMenu(false);
                 }}
-                className={`p-2 transition-all flex items-center justify-center w-full aspect-square border ${tool === 'eraser' && eraserMode === 'object' ? 'bg-red-600 text-white border-red-600 shadow-sm' : 'text-text-muted border-transparent hover:text-red-500 hover:bg-red-50'}`}
+                className={`group p-2 transition-all flex items-center justify-center w-full aspect-square border ${tool === 'eraser' && eraserMode === 'object' ? 'bg-red-500 text-white border-red-500 shadow-sm' : 'text-text-muted border-transparent hover:text-red-500 hover:bg-red-500/10'}`}
                 title={t('tactics.eraser_object', 'Xóa theo chỉ thị')}
               >
-                <Scissors size={20} />
+                <div className="relative">
+                  <Brush size={20} />
+                  <div className={`absolute -bottom-1 -left-1 rounded-full p-[1px] transition-colors ${tool === 'eraser' && eraserMode === 'object' ? 'bg-red-500' : 'bg-surface group-hover:bg-red-500/10'}`}>
+                    <X size={10} className={tool === 'eraser' && eraserMode === 'object' ? 'text-white' : 'text-red-500'} strokeWidth={4} />
+                  </div>
+                </div>
               </button>
               <button
                 onClick={handleResetBoard}
@@ -1196,7 +1235,7 @@ export default function Tactics() {
                   setPositions(newPositions);
                   saveHistory(newPositions, []);
                 }}
-                className="p-2 transition-all flex items-center justify-center text-red-600 hover:bg-red-50 w-full aspect-square"
+                className="p-2 transition-all flex items-center justify-center text-red-500 hover:text-red-400 hover:bg-red-500/10 border border-transparent w-full aspect-square transition-colors"
                 title={`${t('tactics.tool_clear')} (Del)`}
               >
                 <Trash2 size={20} />
