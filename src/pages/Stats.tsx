@@ -119,27 +119,26 @@ export default function Stats() {
       
       <div className="flex flex-col @lg:flex-row @lg:justify-between @lg:items-end gap-4 mb-6">
         <div>
-          <div className="flex items-center gap-4 mb-2 flex-wrap">
-            <h1 className="text-4xl @sm:text-5xl font-display uppercase text-primary leading-none">{t('stats.title')}</h1>
-            
-            {hasSeasonConfig && (
-              <select 
-                value={filterMode} 
-                onChange={(e) => setFilterMode(e.target.value as 'all_time' | 'current_season')}
-                className="bg-surface border-2 border-border-main text-xs font-bold uppercase tracking-widest text-text-main py-1 px-2 outline-none focus:border-primary cursor-pointer"
-              >
-                <option value="current_season">{t('stats.filter_season', 'MÙA GIẢI HIỆN TẠI')}</option>
-                <option value="all_time">{t('stats.filter_all', 'TẤT CẢ THỜI GIAN')}</option>
-              </select>
-            )}
-          </div>
+          <h1 className="text-4xl @sm:text-5xl font-display uppercase text-primary leading-none mb-2">{t('stats.title')}</h1>
           <p className="text-xs font-bold text-text-muted uppercase tracking-widest">
             {getSeasonString()}
           </p>
         </div>
-        <Link to="/matchday" className="hallmark-btn flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-bold bg-primary text-white shrink-0">
-          <Calendar size={18} /> {t('stats.manage_match')}
-        </Link>
+        <div className="flex flex-col @sm:flex-row items-stretch @sm:items-center gap-3 shrink-0">
+          {hasSeasonConfig && (
+            <select 
+              value={filterMode} 
+              onChange={(e) => setFilterMode(e.target.value as 'all_time' | 'current_season')}
+              className="bg-surface border-2 border-border-main text-xs font-bold uppercase tracking-widest text-text-main py-2.5 px-3 outline-none focus:border-primary cursor-pointer w-full @sm:w-auto h-[44px]"
+            >
+              <option value="current_season">{t('stats.filter_season', 'MÙA GIẢI HIỆN TẠI')}</option>
+              <option value="all_time">{t('stats.filter_all', 'TẤT CẢ THỜI GIAN')}</option>
+            </select>
+          )}
+          <Link to="/matchday" className="hallmark-btn flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-bold bg-primary text-white shrink-0 h-[44px]">
+            <Calendar size={18} /> {t('stats.manage_match')}
+          </Link>
+        </div>
       </div>
 
       <div className="flex border-b-2 border-border-main mb-6 overflow-x-auto hide-scrollbar shrink-0 pb-1">

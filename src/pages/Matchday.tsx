@@ -714,33 +714,33 @@ export default function Matchday() {
     return (
       <div className="p-4 md:p-6 flex flex-col min-h-full max-w-5xl mx-auto w-full pb-8">
         {/* Header - matching Roster page style */}
-        <div className="flex justify-between items-end mb-6 pt-2">
+        <div className="flex flex-col @lg:flex-row @lg:justify-between @lg:items-end gap-4 mb-6 pt-2">
           <div>
-            <div className="flex items-center gap-4 mb-2 flex-wrap">
-              <h1 className="text-4xl @sm:text-5xl font-display uppercase text-primary leading-none">{t('matchday.title')}</h1>
-              {hasSeasonConfig && (
-                <select 
-                  value={filterMode} 
-                  onChange={(e) => setFilterMode(e.target.value as 'all_time' | 'current_season')}
-                  className="bg-surface border-2 border-border-main text-xs font-bold uppercase tracking-widest text-text-main py-1 px-2 outline-none focus:border-primary cursor-pointer"
-                >
-                  <option value="current_season">{t('stats.filter_season', 'MÙA GIẢI HIỆN TẠI')}</option>
-                  <option value="all_time">{t('stats.filter_all', 'TẤT CẢ THỜI GIAN')}</option>
-                </select>
-              )}
-            </div>
+            <h1 className="text-4xl @sm:text-5xl font-display uppercase text-primary leading-none mb-2">{t('matchday.title')}</h1>
             {(filterMode === 'current_season' && hasSeasonConfig) && (
               <p className="text-xs font-bold text-text-muted uppercase tracking-widest">
                 {t('stats.season', { year: seasonStart!.getFullYear() === seasonEnd!.getFullYear() ? seasonStart!.getFullYear() : `${seasonStart!.getFullYear()}/${seasonEnd!.getFullYear()}` })}
               </p>
             )}
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="hallmark-btn flex items-center gap-2 bg-secondary text-white shrink-0"
-          >
-            <Plus size={20} /> <span className="hidden @xl:inline">{t('matchday.create_new')}</span>
-          </button>
+          <div className="flex flex-col @sm:flex-row items-stretch @sm:items-center gap-3 shrink-0">
+            {hasSeasonConfig && (
+              <select 
+                value={filterMode} 
+                onChange={(e) => setFilterMode(e.target.value as 'all_time' | 'current_season')}
+                className="bg-surface border-2 border-border-main text-xs font-bold uppercase tracking-widest text-text-main py-2.5 px-3 outline-none focus:border-primary cursor-pointer w-full @sm:w-auto h-[44px]"
+              >
+                <option value="current_season">{t('stats.filter_season', 'MÙA GIẢI HIỆN TẠI')}</option>
+                <option value="all_time">{t('stats.filter_all', 'TẤT CẢ THỜI GIAN')}</option>
+              </select>
+            )}
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="hallmark-btn flex items-center justify-center gap-2 bg-secondary text-white shrink-0 h-[44px]"
+            >
+              <Plus size={20} /> <span className="hidden @xl:inline">{t('matchday.create_new')}</span>
+            </button>
+          </div>
         </div>
 
         <div className="hallmark-divider"></div>
