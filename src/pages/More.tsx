@@ -148,7 +148,9 @@ export default function More() {
               console.error("Failed to clear Capacitor preferences", e);
             }
             setTimeout(() => {
-              window.location.replace('/');
+              // Avoid window.location.replace('/') in Electron (file:// protocol) as it redirects to system root C:/
+              window.location.hash = '/';
+              window.location.reload();
             }, 100);
           }
         });
