@@ -4,11 +4,8 @@ export const STORAGE_KEYS_META: Record<string, string> = {
   'katfc-player-storage': 'Đội hình, Chấn thương & Tier',
   'tactic-storage': 'Dữ liệu Sa bàn (Chiến thuật)',
   'katfc-match-storage-v5': 'Dữ liệu Trận đấu & Lịch sử',
-  'katfc-match-storage-v4': 'Dữ liệu Trận đấu & Lịch sử (Cũ)',
-  'katfc-venues-storage': 'Danh bạ Sân bãi & Đội bóng',
-  '5tactiq-settings-storage': 'Cài đặt Chung',
-  'katfc-training-storage': 'Lịch tập luyện & Điểm danh',
-  'katfc-fund-storage': 'Quỹ đội & Giao dịch'
+  'katfc-venues-storage': 'Danh bạ Đội bóng',
+  '5tactiq-settings-storage': 'Cài đặt Chung'
 };
 
 export const STORAGE_KEYS = Object.keys(STORAGE_KEYS_META);
