@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Users, Trophy, Flame, ChevronDown, ChevronUp, MapPin, CalendarClock, Shield, CheckCircle2, XCircle, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { HeadToHeadSkeleton } from '../components/ui/HeadToHeadSkeleton';
+import { CustomSelect } from '../components/CustomSelect';
 
 export const normalizeOpponentName = (name: string) => {
   return name.trim().toLowerCase();
@@ -17,7 +18,12 @@ export default function HeadToHead() {
   const navigate = useNavigate();
   const [expandedOpponent, setExpandedOpponent] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterMode, setFilterMode] = useState<'all_time' | 'current_season'>('current_season');
   const [isLoading, setIsLoading] = useState(true);
+
+  const seasonStart = settings.seasonStartDate ? new Date(settings.seasonStartDate) : null;
+  const seasonEnd = settings.seasonEndDate ? new Date(settings.seasonEndDate) : null;
+  const hasSeasonConfig = !!(seasonStart && seasonEnd);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 300);
@@ -25,8 +31,16 @@ export default function HeadToHead() {
   }, []);
 
   const stats = useMemo(() => {
-    // 1. Filter out unfinished matches (include internal now)
-    const validMatches = matches.filter(m => m.status === 'finished');
+    // 1. Filter out unfinished matches (include internal now) and apply season filter
+    const validMatches = matches.filter(m => {
+      if (m.status !== 'finished') return false;
+      if (filterMode === 'current_season' && hasSeasonConfig) {
+        if (!m.date) return true;
+        const matchDate = new Date(m.date);
+        return matchDate >= seasonStart! && matchDate <= seasonEnd!;
+      }
+      return true;
+    });
 
     // 2. Group by normalized opponent name
     const grouped: Record<string, any> = {};
@@ -107,12 +121,12 @@ export default function HeadToHead() {
 
     return {
       opponentsList: sortedOpponents,
-      totalOpponents: sortedOpponents.filter((o: any) => !o.isInternalGroup).length,
-      totalMatches: totalMatchesExcludeInternal,
+      totalOpponents: sortedOpponents.length,
+      totalMatches: validMatches.length,
       totalWins,
       totalLosses
     };
-  }, [matches, t]);
+  }, [matches, t, filterMode, hasSeasonConfig, seasonStart, seasonEnd]);
 
   const formatDate = (dateStr: string) => {
     if (!dateStr) return '';
@@ -139,18 +153,38 @@ export default function HeadToHead() {
   return (
     <div className="p-4 flex flex-col min-h-full max-w-5xl mx-auto w-full pb-8">
       {/* Header */}
-      <div className="flex items-center gap-2 @sm:gap-3 mb-6 pt-2">
-        <button
-          onClick={() => navigate('/more')}
-          className="p-2 text-primary hover:bg-primary/10 border-2 border-primary/30 hover:border-primary transition-all shrink-0"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <div>
-          <div className="flex items-center gap-2">
+      <div className="flex flex-col @sm:flex-row @sm:justify-between @sm:items-center gap-4 mb-6 pt-2">
+        <div className="flex items-center gap-2 @sm:gap-3">
+          <button
+            onClick={() => navigate('/more')}
+            className="p-2 text-primary hover:bg-primary/10 border-2 border-primary/30 hover:border-primary transition-all shrink-0"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <div>
             <h1 className="text-2xl @md:text-4xl font-display uppercase text-primary leading-none">{t('h2h.title', 'Lịch sử đối đầu')}</h1>
+            {hasSeasonConfig && (
+              <p className="text-xs font-bold text-text-muted uppercase tracking-widest mt-1">
+                {seasonStart!.getFullYear() === seasonEnd!.getFullYear() 
+                  ? `${t('stats.season', 'MÙA GIẢI')} ${seasonStart!.getFullYear()}` 
+                  : `${t('stats.season', 'MÙA GIẢI')} ${seasonStart!.getFullYear()}/${seasonEnd!.getFullYear()}`}
+              </p>
+            )}
           </div>
         </div>
+
+        {hasSeasonConfig && (
+          <CustomSelect 
+            value={filterMode} 
+            onChange={(val) => setFilterMode(val as 'all_time' | 'current_season')}
+            className="relative w-full @sm:w-auto shrink-0"
+            buttonClassName="bg-surface border-2 border-border-main text-xs font-bold uppercase tracking-widest text-text-main px-3 outline-none focus:border-primary cursor-pointer w-full @sm:w-auto h-[44px] flex items-center justify-between transition-colors hover:border-primary/50"
+            options={[
+              { value: 'current_season', label: t('stats.filter_season', 'MÙA GIẢI HIỆN TẠI') },
+              { value: 'all_time', label: t('stats.filter_all', 'TẤT CẢ THỜI GIAN') }
+            ]}
+          />
+        )}
       </div>
 
       {stats.opponentsList.length === 0 ? (
