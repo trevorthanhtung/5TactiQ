@@ -392,11 +392,13 @@ export default function Matchday() {
   const handleRandomize = () => {
     if (!currentMatch) return;
     
-    const tiers = ['S', 'A', 'B', 'C', 'Other'] as const;
-    const grouped = { 'S': [], 'A': [], 'B': [], 'C': [], 'Other': [] } as Record<string, typeof presentPlayers>;
+    const tiers = ['S', 'A', 'B', 'C', 'Other', 'Youth'] as const;
+    const grouped = { 'S': [], 'A': [], 'B': [], 'C': [], 'Other': [], 'Youth': [] } as Record<string, typeof presentPlayers>;
     
     presentPlayers.forEach(p => {
-      if (p.tier && grouped[p.tier]) {
+      if (p.isYouth) {
+        grouped['Youth'].push(p);
+      } else if (p.tier && grouped[p.tier]) {
         grouped[p.tier].push(p);
       } else {
         grouped['Other'].push(p);
