@@ -91,7 +91,7 @@ export default function Matchday() {
 
   const [activeTab, setActiveTab] = useState<'attendance' | 'teams' | 'summary'>('attendance');
   const [filterMode, setFilterMode] = useState<'all_time' | 'current_season'>('current_season');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [matchSearchQuery, setMatchSearchQuery] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showEndModal, setShowEndModal] = useState(false);
@@ -609,8 +609,8 @@ export default function Matchday() {
       }
 
       // Search filter
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase();
+      if (matchSearchQuery.trim()) {
+        const query = matchSearchQuery.toLowerCase();
         const opponentName = m.opponent?.toLowerCase() || '';
         const isInternalMatch = m.matchType === 'internal';
         
@@ -774,8 +774,8 @@ export default function Matchday() {
           <input
             type="text"
             placeholder={t('matchday.search_placeholder', 'Tìm đối thủ...')}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={matchSearchQuery}
+            onChange={(e) => setMatchSearchQuery(e.target.value)}
             className="w-full bg-surface border-2 border-border-main text-text-main py-2.5 pl-10 pr-3 outline-none focus:border-primary transition-colors text-sm placeholder:text-text-muted/60 placeholder:uppercase tracking-wider"
           />
         </div>
