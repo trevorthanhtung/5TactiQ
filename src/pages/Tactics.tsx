@@ -135,14 +135,14 @@ export default function Tactics() {
   // Proportional sizing for Konva elements based on board width
   const boardScale = useMemo(() => {
     if (!dimensions.width) return 1;
-    return Math.max(0.55, Math.min(1.1, dimensions.width / 800));
+    return Math.max(0.78, Math.min(1.1, dimensions.width / 950));
   }, [dimensions.width]);
 
   const homeRadius = Math.round(16 * boardScale);
   const enemyRadius = Math.round(14 * boardScale);
   const coneRadius = Math.round(10 * boardScale);
   const ballSize = Math.round(24 * boardScale);
-  const labelFontSize = Math.max(7, Math.round(11 * boardScale));
+  const labelFontSize = Math.max(9, Math.round(11 * boardScale));
 
   const updateEraserMenuPos = useCallback(() => {
     if (showEraserMenu && eraserBtnRef.current) {
