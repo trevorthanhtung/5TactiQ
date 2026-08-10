@@ -170,7 +170,7 @@ export default function More() {
               </div>
               <div className="flex-1 text-left min-w-0">
                 <div className="flex items-center gap-2">
-                  <h3 className={`font-display font-bold uppercase tracking-wider @sm:tracking-widest text-lg @sm:text-xl leading-tight ${item.isDanger ? 'text-red-600 group-hover:text-red-700' : 'text-primary group-hover:text-secondary'} transition-colors truncate`} title={item.title}>
+                  <h3 className={`font-display font-bold uppercase tracking-wider @sm:tracking-widest text-lg @sm:text-xl leading-snug pt-0.5 ${item.isDanger ? 'text-red-600 group-hover:text-red-700' : 'text-primary group-hover:text-secondary'} transition-colors truncate`} title={item.title}>
                     {item.title}
                   </h3>
                 </div>
@@ -223,7 +223,7 @@ export default function More() {
   return (
     <div className="p-4 md:p-6 flex flex-col min-h-full max-w-5xl mx-auto w-full pb-8">
       <header className="mb-6 pt-2">
-        <h1 className="text-4xl @sm:text-5xl font-display uppercase text-primary leading-none">{t('more.title', 'THÊM')}</h1>
+        <h1 className="text-4xl @sm:text-5xl font-display uppercase text-primary leading-normal pt-0.5">{t('more.title', 'THÊM')}</h1>
         <div className="hallmark-divider"></div>
       </header>
       

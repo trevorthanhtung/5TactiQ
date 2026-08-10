@@ -196,21 +196,21 @@ export default function Tactics() {
     };
 
     const enemies = [
-      { id: 'away-gk', isEnemy: true, ...getPos(0.5, 0.12) },
-      { id: 'away-1', isEnemy: true, ...getPos(0.3, 0.25) },
-      { id: 'away-2', isEnemy: true, ...getPos(0.7, 0.25) },
-      { id: 'away-3', isEnemy: true, ...getPos(0.25, 0.42) },
-      { id: 'away-4', isEnemy: true, ...getPos(0.75, 0.42) }
+      { id: 'away-gk', isEnemy: true, ...getPos(0.5, 0.1) },
+      { id: 'away-1', isEnemy: true, ...getPos(0.5, 0.25) },
+      { id: 'away-2', isEnemy: true, ...getPos(0.2, 0.35) },
+      { id: 'away-3', isEnemy: true, ...getPos(0.8, 0.35) },
+      { id: 'away-4', isEnemy: true, ...getPos(0.5, 0.42) }
     ];
 
     const ball = { id: 'ball', isBall: true, ...getPos(0.5, 0.5) };
 
     const home = [
-      { id: 'home-gk', label: 'GK', ...getPos(0.5, 0.88) },
-      { id: 'home-fx', label: 'FX', ...getPos(0.5, 0.72) },
-      { id: 'home-ala1', label: 'ALA', ...getPos(0.25, 0.58) },
-      { id: 'home-ala2', label: 'ALA', ...getPos(0.75, 0.58) },
-      { id: 'home-pv', label: 'PV', ...getPos(0.5, 0.46) }
+      { id: 'home-gk', label: 'GK', ...getPos(0.5, 0.9) },
+      { id: 'home-fx', label: 'FX', ...getPos(0.5, 0.75) },
+      { id: 'home-ala1', label: 'ALA', ...getPos(0.2, 0.65) },
+      { id: 'home-ala2', label: 'ALA', ...getPos(0.8, 0.65) },
+      { id: 'home-pv', label: 'PV', ...getPos(0.5, 0.48) }
     ];
 
     const initialPos = [ball];
@@ -585,22 +585,21 @@ export default function Tactics() {
         };
 
         const enemies = [
-          { id: 'away-gk', isEnemy: true, ...getPos(0.5, 0.05) },
-          { id: 'away-1', isEnemy: true, ...getPos(0.3, 0.2) },
-          { id: 'away-2', isEnemy: true, ...getPos(0.7, 0.2) },
-          { id: 'away-3', isEnemy: true, ...getPos(0.4, 0.35) },
-          { id: 'away-4', isEnemy: true, ...getPos(0.6, 0.35) }
+          { id: 'away-gk', isEnemy: true, ...getPos(0.5, 0.1) },
+          { id: 'away-1', isEnemy: true, ...getPos(0.5, 0.25) },
+          { id: 'away-2', isEnemy: true, ...getPos(0.2, 0.35) },
+          { id: 'away-3', isEnemy: true, ...getPos(0.8, 0.35) },
+          { id: 'away-4', isEnemy: true, ...getPos(0.5, 0.42) }
         ];
 
         const ball = { id: 'ball', isBall: true, ...getPos(0.5, 0.5) };
 
-        const gk = getPos(0.5, 0.9);
         const home = [
-          { id: 'home-gk', label: 'GK', ...gk },
-          { id: 'home-fx', label: 'FX', ...getPos(0.5, 0.65) },
-          { id: 'home-ala1', label: 'ALA', ...getPos(0.2, 0.4) },
-          { id: 'home-ala2', label: 'ALA', ...getPos(0.8, 0.4) },
-          { id: 'home-pv', label: 'PV', ...getPos(0.5, 0.15) }
+          { id: 'home-gk', label: 'GK', ...getPos(0.5, 0.9) },
+          { id: 'home-fx', label: 'FX', ...getPos(0.5, 0.75) },
+          { id: 'home-ala1', label: 'ALA', ...getPos(0.2, 0.65) },
+          { id: 'home-ala2', label: 'ALA', ...getPos(0.8, 0.65) },
+          { id: 'home-pv', label: 'PV', ...getPos(0.5, 0.48) }
         ];
 
         const initialPos = [ball];
@@ -1156,10 +1155,10 @@ export default function Tactics() {
                     };
                     const home = [
                       { id: `home-gk-${Date.now()}`, label: 'GK', ...getPos(0.5, 0.9) },
-                      { id: `home-fx-${Date.now()}`, label: 'FX', ...getPos(0.5, 0.65) },
-                      { id: `home-ala1-${Date.now()}`, label: 'ALA', ...getPos(0.2, 0.4) },
-                      { id: `home-ala2-${Date.now()}`, label: 'ALA', ...getPos(0.8, 0.4) },
-                      { id: `home-pv-${Date.now()}`, label: 'PV', ...getPos(0.5, 0.15) }
+                      { id: `home-fx-${Date.now()}`, label: 'FX', ...getPos(0.5, 0.75) },
+                      { id: `home-ala1-${Date.now()}`, label: 'ALA', ...getPos(0.2, 0.65) },
+                      { id: `home-ala2-${Date.now()}`, label: 'ALA', ...getPos(0.8, 0.65) },
+                      { id: `home-pv-${Date.now()}`, label: 'PV', ...getPos(0.5, 0.48) }
                     ];
                     const newPos = [...positions, ...home];
                     setPositions(newPos);
@@ -1188,11 +1187,11 @@ export default function Tactics() {
                       return { x: rx * w, y: ry * h };
                     };
                     const enemies = [
-                      { id: `away-gk-${Date.now()}`, isEnemy: true, ...getPos(0.5, 0.05) },
-                      { id: `away-1-${Date.now()}`, isEnemy: true, ...getPos(0.3, 0.2) },
-                      { id: `away-2-${Date.now()}`, isEnemy: true, ...getPos(0.7, 0.2) },
-                      { id: `away-3-${Date.now()}`, isEnemy: true, ...getPos(0.4, 0.35) },
-                      { id: `away-4-${Date.now()}`, isEnemy: true, ...getPos(0.6, 0.35) }
+                      { id: `away-gk-${Date.now()}`, isEnemy: true, ...getPos(0.5, 0.1) },
+                      { id: `away-1-${Date.now()}`, isEnemy: true, ...getPos(0.5, 0.25) },
+                      { id: `away-2-${Date.now()}`, isEnemy: true, ...getPos(0.2, 0.35) },
+                      { id: `away-3-${Date.now()}`, isEnemy: true, ...getPos(0.8, 0.35) },
+                      { id: `away-4-${Date.now()}`, isEnemy: true, ...getPos(0.5, 0.42) }
                     ];
                     const newPos = [...positions, ...enemies];
                     setPositions(newPos);
