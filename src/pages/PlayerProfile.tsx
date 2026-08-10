@@ -210,7 +210,7 @@ export default function PlayerProfile() {
             href={`tel:${player.phone}`}
             className="hallmark-btn w-full flex justify-center items-center gap-2 bg-sky-600 text-white hover:bg-sky-700"
           >
-            <Phone size={20} /> {t('roster.call_player', 'GỌI ĐIỆN')}
+            {t('roster.call_player', 'GỌI ĐIỆN')}
           </a>
         )}
         
