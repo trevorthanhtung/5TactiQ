@@ -4,9 +4,15 @@ export function MatchdaySkeleton() {
   return (
     <div className="p-4 max-w-5xl mx-auto pb-8 w-full animate-pulse">
       {/* Header Skeleton */}
-      <div className="flex justify-between items-end mb-6 pt-2">
-        <div className="h-10 w-48 bg-slate-300 rounded"></div>
-        <div className="h-10 w-36 bg-slate-300 rounded"></div>
+      <div className="flex flex-col @lg:flex-row @lg:justify-between @lg:items-end gap-4 mb-6 pt-2">
+        <div>
+          <div className="h-10 @sm:h-12 w-48 bg-slate-300 rounded mb-2"></div>
+          <div className="h-4 w-32 bg-slate-300 rounded mt-2"></div>
+        </div>
+        <div className="flex flex-col @sm:flex-row items-stretch @sm:items-center gap-3 shrink-0">
+          <div className="h-[44px] w-full @sm:w-[150px] bg-slate-300 rounded"></div>
+          <div className="h-[44px] w-full @sm:w-[160px] bg-slate-300 rounded"></div>
+        </div>
       </div>
       <div className="hallmark-divider mt-0 opacity-30"></div>
 

@@ -10,12 +10,15 @@ export function StatsSkeleton() {
       </div>
       
       {/* Header */}
-      <div className="flex flex-col @sm:flex-row @sm:justify-between @sm:items-end gap-4 mb-6">
+      <div className="flex flex-col @lg:flex-row @lg:justify-between @lg:items-end gap-4 mb-6">
         <div>
-          <div className="h-10 w-48 bg-slate-300 rounded mb-2"></div>
-          <div className="h-4 w-64 bg-slate-300 rounded mt-2"></div>
+          <div className="h-10 @sm:h-12 w-48 bg-slate-300 rounded mb-2"></div>
+          <div className="h-4 w-32 bg-slate-300 rounded mt-2"></div>
         </div>
-        <div className="h-10 w-40 bg-slate-300 rounded"></div>
+        <div className="flex flex-col @sm:flex-row items-stretch @sm:items-center gap-3 shrink-0">
+          <div className="h-[44px] w-full @sm:w-[150px] bg-slate-300 rounded"></div>
+          <div className="h-[44px] w-full @sm:w-[160px] bg-slate-300 rounded"></div>
+        </div>
       </div>
 
       {/* Tabs */}
