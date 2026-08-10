@@ -1,13 +1,11 @@
 import { capacitorStorage } from '../utils/capacitorStorage';
 
 export const STORAGE_KEYS_META: Record<string, string> = {
-  'katfc-player-storage': 'Đội hình & Cầu thủ',
-  'katfc-match-storage-v4': 'Dữ liệu Trận đấu',
-  '5tactiq-settings-storage': 'Cài đặt Chung',
-  'katfc-training-storage': 'Lịch Tập luyện',
-  'katfc-fund-storage': 'Quỹ đội',
-  'katfc-venues-storage': 'Danh bạ Sân bóng',
-  'tactic-storage': 'Sơ đồ Chiến thuật'
+  'katfc-player-storage': 'Đội hình, Chấn thương & Tier',
+  'tactic-storage': 'Dữ liệu Sa bàn (Chiến thuật)',
+  'katfc-match-storage-v4': 'Dữ liệu Trận đấu & Lịch sử',
+  'katfc-venues-storage': 'Danh bạ Đội bóng',
+  '5tactiq-settings-storage': 'Cài đặt Đội bóng'
 };
 
 export const STORAGE_KEYS = Object.keys(STORAGE_KEYS_META);
