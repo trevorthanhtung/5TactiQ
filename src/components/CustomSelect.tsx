@@ -12,9 +12,11 @@ interface CustomSelectProps {
   value: string;
   onChange: (value: string) => void;
   options: Option[];
+  className?: string;
+  buttonClassName?: string;
 }
 
-export function CustomSelect({ value, onChange, options }: CustomSelectProps) {
+export function CustomSelect({ value, onChange, options, className = "relative w-full", buttonClassName }: CustomSelectProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -32,14 +34,14 @@ export function CustomSelect({ value, onChange, options }: CustomSelectProps) {
   const selectedOption = options.find(o => o.value === value) || options[0];
 
   return (
-    <div className="relative w-full" ref={wrapperRef}>
+    <div className={className} ref={wrapperRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full border-2 border-border-main bg-accent/10 p-3 pr-10 rounded-none focus:border-primary outline-none font-bold text-left flex items-center justify-between text-text-main"
+        className={buttonClassName || "w-full border-2 border-border-main bg-accent/10 p-3 pr-10 rounded-none focus:border-primary outline-none font-bold text-left flex items-center justify-between text-text-main"}
       >
         <span>{selectedOption?.label || ''}</span>
-        <ChevronDown size={20} className={`text-primary transition-transform duration-200 absolute right-3 top-1/2 -translate-y-1/2 ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown size={20} className={`text-primary transition-transform duration-200 ${buttonClassName ? 'ml-2' : 'absolute right-3 top-1/2 -translate-y-1/2'} ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {/* OPTIONS BOTTOM SHEET */}

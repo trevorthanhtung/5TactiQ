@@ -5,6 +5,7 @@ import { useSettingsStore } from '../store/useSettingsStore';
 import { ArrowLeft, Calendar, Trophy, Flame, ClipboardList } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { StatsSkeleton } from '../components/ui/StatsSkeleton';
+import { CustomSelect } from '../components/CustomSelect';
 import { useTranslation } from 'react-i18next';
 import { compareVietnameseNames } from '../utils/sortUtils';
 
@@ -126,14 +127,16 @@ export default function Stats() {
         </div>
         <div className="flex flex-col @sm:flex-row items-stretch @sm:items-center gap-3 shrink-0">
           {hasSeasonConfig && (
-            <select 
+            <CustomSelect 
               value={filterMode} 
-              onChange={(e) => setFilterMode(e.target.value as 'all_time' | 'current_season')}
-              className="bg-surface border-2 border-border-main text-xs font-bold uppercase tracking-widest text-text-main py-2.5 px-3 outline-none focus:border-primary cursor-pointer w-full @sm:w-auto h-[44px]"
-            >
-              <option value="current_season">{t('stats.filter_season', 'MÙA GIẢI HIỆN TẠI')}</option>
-              <option value="all_time">{t('stats.filter_all', 'TẤT CẢ THỜI GIAN')}</option>
-            </select>
+              onChange={(val) => setFilterMode(val as 'all_time' | 'current_season')}
+              className="relative w-full @sm:w-auto shrink-0"
+              buttonClassName="bg-surface border-2 border-border-main text-xs font-bold uppercase tracking-widest text-text-main px-3 outline-none focus:border-primary cursor-pointer w-full @sm:w-auto h-[44px] flex items-center justify-between transition-colors hover:border-primary/50"
+              options={[
+                { value: 'current_season', label: t('stats.filter_season', 'MÙA GIẢI HIỆN TẠI') },
+                { value: 'all_time', label: t('stats.filter_all', 'TẤT CẢ THỜI GIAN') }
+              ]}
+            />
           )}
           <Link to="/matchday" className="hallmark-btn flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-bold bg-primary text-white shrink-0 h-[44px]">
             <Calendar size={18} /> {t('stats.manage_match')}
