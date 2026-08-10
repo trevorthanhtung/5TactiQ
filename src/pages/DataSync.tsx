@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Upload, Download, RefreshCw, Send, QrCode, CheckCircle2, Camera } from 'lucide-react';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
+import { Capacitor } from '@capacitor/core';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { exportData, downloadJsonFile, parseBackupData, importSelectedData, STORAGE_KEYS_META } from '../lib/sync';
@@ -46,7 +49,30 @@ export default function DataSync() {
   const handleExportFile = async () => {
     const jsonStr = await exportData();
 
-    // Check if Native Share with Files is supported
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const fileName = `5tactiq_backup_${new Date().getTime()}.5tactiq`;
+        const result = await Filesystem.writeFile({
+          path: fileName,
+          data: jsonStr,
+          directory: Directory.Documents,
+          encoding: Encoding.UTF8
+        });
+
+        await Share.share({
+          title: t('sync.share_title', '5TactiQ Backup'),
+          text: t('sync.share_text', 'Dữ liệu sao lưu từ 5TactiQ'),
+          url: result.uri,
+          dialogTitle: t('sync.share_dialog', 'Lưu hoặc chia sẻ file sao lưu')
+        });
+      } catch (err) {
+        console.error('Lỗi xuất file native:', err);
+        setAlertInfo({ title: t('sync.err_title', 'LỖI'), message: 'Không thể tạo file sao lưu. Vui lòng thử lại.' });
+      }
+      return;
+    }
+
+    // Web logic: Check if Native Share with Files is supported
     if (navigator.share && navigator.canShare) {
       try {
         const blob = new Blob([jsonStr], { type: 'application/json' });
@@ -156,7 +182,7 @@ export default function DataSync() {
 
           <label className="w-full hallmark-btn-outline flex items-center justify-center gap-2 cursor-pointer py-3">
             <Upload size={18} /> {t('sync.import_btn', 'NHẬP FILE')}
-            <input type="file" accept=".5tactiq,.json" className="hidden" onChange={handleImportFile} />
+            <input type="file" accept="*/*" className="hidden" onChange={handleImportFile} />
           </label>
         </div>
       </div>
