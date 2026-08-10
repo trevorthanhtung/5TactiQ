@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Stage, Layer, Rect, Circle, Text, Line, Group, Path, Image as KonvaImage, Arrow } from 'react-konva';
-import { Download, Save, MousePointer2, Pen, ArrowLeft, Trash2, Users, Settings, Undo2, Redo2, Eraser, TrendingUp, FastForward, CornerUpRight, Play, Square, Plus, Triangle, SquareDashed, Type, BookOpen, Search, Copy, X, FolderOpen, Keyboard, HelpCircle, RotateCcw, LayoutTemplate } from 'lucide-react';
+import { Download, Save, MousePointer2, Pen, ArrowLeft, Trash2, Users, Settings, Undo2, Redo2, Eraser, TrendingUp, FastForward, CornerUpRight, Play, Square, Plus, Triangle, SquareDashed, Type, BookOpen, Search, Copy, X, FolderOpen, Keyboard, HelpCircle, RotateCcw, LayoutTemplate, Scissors } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useTacticStore } from '../store/useTacticStore';
@@ -12,7 +12,7 @@ const COURT_RATIO = 2; // Height / Width = 40/20 = 2
 
 type Position = { id: string; x: number; y: number; label?: string; isEnemy?: boolean; isBall?: boolean; isCone?: boolean; isText?: boolean; text?: string };
 export type DrawingTool = 'cursor' | 'pen' | 'eraser' | 'move' | 'run' | 'pass' | 'cone' | 'zone' | 'text';
-type DrawingLine = { points: number[]; color: string; tool: DrawingTool };
+type DrawingLine = { points: number[]; color: string; tool: DrawingTool; size?: number };
 export type TacticalFrame = { id: string; positions: Position[]; lines: DrawingLine[] };
 
 const useBallImage = () => {
@@ -99,6 +99,10 @@ export default function Tactics() {
   const [lines, setLines] = useState<DrawingLine[]>([]);
   const [isDrawing, setIsDrawing] = useState(false);
   const [tool, setTool] = useState<DrawingTool>('cursor');
+  const [eraserSize, setEraserSize] = useState(24);
+  const [eraserMode, setEraserMode] = useState<'brush' | 'object'>('brush');
+  const [showEraserMenu, setShowEraserMenu] = useState(false);
+  const [eraserMenuPos, setEraserMenuPos] = useState({ top: 0, left: 0 });
   const [activeTab, setActiveTab] = useState<'formation' | 'attack' | 'defense' | 'situations'>('formation');
   const [history, setHistory] = useState<{ positions: Position[], lines: DrawingLine[] }[]>([]);
   const [historyStep, setHistoryStep] = useState(0);
@@ -125,6 +129,26 @@ export default function Tactics() {
   const [toast, setToast] = useState<{ isVisible: boolean; message: string; variant: 'success' | 'error' }>({ isVisible: false, message: '', variant: 'success' });
   const [pendingTextPos, setPendingTextPos] = useState<{ x: number, y: number } | null>(null);
   const [textInput, setTextInput] = useState('');
+  
+  const eraserBtnRef = useRef<HTMLButtonElement>(null);
+
+  const updateEraserMenuPos = useCallback(() => {
+    if (showEraserMenu && eraserBtnRef.current) {
+      const rect = eraserBtnRef.current.getBoundingClientRect();
+      if (rect.bottom < 0 || rect.top > window.innerHeight) {
+        setShowEraserMenu(false);
+      } else {
+        setEraserMenuPos({ top: rect.top, left: rect.right + 12 });
+      }
+    }
+  }, [showEraserMenu]);
+
+  useEffect(() => {
+    if (showEraserMenu) {
+      window.addEventListener('resize', updateEraserMenuPos);
+      return () => window.removeEventListener('resize', updateEraserMenuPos);
+    }
+  }, [showEraserMenu, updateEraserMenuPos]);
 
   const showToast = (message: string, variant: 'success' | 'error' = 'success') => {
     setToast({ isVisible: true, message, variant });
@@ -820,6 +844,10 @@ export default function Tactics() {
       return;
     }
 
+    if (tool === 'eraser' && eraserMode === 'object') {
+      return;
+    }
+
     setIsDrawing(true);
     let color = '#ffea00'; // Default pen
     if (tool === 'eraser') color = '#ffffff';
@@ -827,7 +855,7 @@ export default function Tactics() {
     if (tool === 'pass') color = '#fbbf24'; // Yellow-amber for pass
     if (tool === 'zone') color = 'rgba(255, 255, 255, 0.2)'; // Semi-transparent white
 
-    setLines([...lines, { tool, points: [point.x, point.y, point.x, point.y], color }]);
+    setLines([...lines, { tool, points: [point.x, point.y, point.x, point.y], color, size: tool === 'eraser' ? eraserSize : 3 }]);
   };
 
   const handleMouseMove = (e: any) => {
@@ -983,7 +1011,10 @@ export default function Tactics() {
         <div className="flex flex-1 overflow-hidden relative p-3 sm:p-4 gap-3 sm:gap-4 max-w-[1920px] mx-auto w-full">
 
           {/* Left Vertical Toolbar */}
-          <div className="flex w-14 sm:w-16 bg-surface border-2 border-border-main p-1 sm:p-2 flex-col gap-2 sm:gap-3 relative z-10 items-center py-2 sm:py-4 shrink-0 overflow-y-auto hide-scrollbar shadow-sm">
+          <div 
+            onScroll={updateEraserMenuPos}
+            className="flex w-14 sm:w-16 bg-surface border-2 border-border-main p-1 sm:p-2 flex-col gap-2 sm:gap-3 relative z-10 items-center py-2 sm:py-4 shrink-0 overflow-y-auto hide-scrollbar shadow-sm"
+          >
 
             {/* Tools Group */}
             <div className="flex flex-col gap-1.5 sm:gap-2 w-full">
@@ -1015,13 +1046,75 @@ export default function Tactics() {
               >
                 <CornerUpRight size={20} />
               </button>
-              <button
-                onClick={() => setTool('eraser')}
-                className={`p-2 transition-all flex items-center justify-center w-full aspect-square border ${tool === 'eraser' ? 'bg-slate-900 text-white border-slate-900 shadow-sm' : 'text-primary border-transparent hover:bg-primary/10'}`}
-                title={`${t('tactics.tool_eraser')} (E)`}
-              >
-                <Eraser size={20} />
-              </button>
+              <div className="relative w-full">
+                <button
+                  ref={eraserBtnRef}
+                  onClick={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    setEraserMenuPos({ top: rect.top, left: rect.right + 12 });
+                    
+                    if (tool === 'eraser' && eraserMode === 'brush') {
+                      setShowEraserMenu(!showEraserMenu);
+                    } else {
+                      setTool('eraser');
+                      setEraserMode('brush');
+                      setShowEraserMenu(false);
+                    }
+                  }}
+                  className={`p-2 transition-all flex items-center justify-center w-full aspect-square border ${tool === 'eraser' && eraserMode === 'brush' ? 'bg-slate-900 text-white border-slate-900 shadow-sm' : 'text-primary border-transparent hover:bg-primary/10'}`}
+                  title={`${t('tactics.tool_eraser')} (E)`}
+                >
+                  <Eraser size={20} />
+                </button>
+                {showEraserMenu && tool === 'eraser' && (
+                  <div 
+                    className="fixed bg-surface border-2 border-border-main shadow-2xl p-3.5 flex flex-col gap-2.5 z-[100] w-52 text-text-main animate-in fade-in zoom-in-95 duration-150"
+                    style={{ top: Math.max(10, eraserMenuPos.top - 15), left: eraserMenuPos.left }}
+                  >
+                    {/* Header */}
+                    <div className="flex justify-between items-center pb-1 border-b border-border-main">
+                      <span className="font-display text-xs uppercase tracking-widest font-bold text-secondary">
+                        {t('tactics.eraser_size', 'KÍCH THƯỚC')}
+                      </span>
+                      <span className="font-display text-sm font-bold text-primary">
+                        {eraserSize}PX
+                      </span>
+                    </div>
+
+                    {/* Quick Presets */}
+                    <div className="flex items-center justify-between gap-1.5 py-0.5">
+                      {[12, 24, 40, 60].map((size) => (
+                        <button
+                          key={size}
+                          type="button"
+                          onClick={() => setEraserSize(size)}
+                          className={`flex-1 py-1 text-[11px] font-display font-bold border transition-all ${
+                            eraserSize === size
+                              ? 'bg-primary text-white border-primary shadow-sm scale-105'
+                              : 'bg-surface-2 text-text-muted border-border-main hover:text-text-main hover:bg-surface'
+                          }`}
+                        >
+                          {size}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Range Slider */}
+                    <div className="flex items-center gap-2.5 px-2.5 py-2 bg-surface-2 border border-border-main">
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary/50 shrink-0" />
+                      <input
+                        type="range"
+                        min="5"
+                        max="80"
+                        value={eraserSize}
+                        onChange={(e) => setEraserSize(Number(e.target.value))}
+                        className="flex-1 w-full accent-primary cursor-pointer h-1.5 bg-border-main rounded-lg"
+                      />
+                      <div className="w-3.5 h-3.5 rounded-full bg-primary shrink-0" />
+                    </div>
+                  </div>
+                )}
+              </div>
               <div className="w-8 h-px bg-primary/20 mx-auto my-1"></div>
               <button
                 onClick={handleUndo}
@@ -1097,8 +1190,19 @@ export default function Tactics() {
               </button>
               <div className="w-8 h-px bg-primary/20 mx-auto my-1"></div>
               <button
+                onClick={() => {
+                  setTool('eraser');
+                  setEraserMode('object');
+                  setShowEraserMenu(false);
+                }}
+                className={`p-2 transition-all flex items-center justify-center w-full aspect-square border ${tool === 'eraser' && eraserMode === 'object' ? 'bg-red-600 text-white border-red-600 shadow-sm' : 'text-text-muted border-transparent hover:text-red-500 hover:bg-red-50'}`}
+                title={t('tactics.eraser_object', 'Xóa theo chỉ thị')}
+              >
+                <Scissors size={20} />
+              </button>
+              <button
                 onClick={handleResetBoard}
-                className="p-2 transition-all flex items-center justify-center text-text-muted hover:text-primary hover:bg-primary/10 w-full aspect-square"
+                className="p-2 transition-all flex items-center justify-center text-text-muted hover:text-primary hover:bg-primary/10 w-full aspect-square border border-transparent"
                 title={`${t('tactics.tool_reset')} (0)`}
               >
                 <RotateCcw size={20} />
@@ -1176,6 +1280,15 @@ export default function Tactics() {
                       {lines.map((line, i) => {
                         const isArrow = line.tool === 'move' || line.tool === 'run' || line.tool === 'pass';
                         const dashPattern = line.tool === 'run' ? [10, 10] : [];
+                        
+                        const handleObjectErase = (e: any) => {
+                          if (tool === 'eraser' && eraserMode === 'object') {
+                            e.cancelBubble = true;
+                            const updatedLines = lines.filter((_, index) => index !== i);
+                            setLines(updatedLines);
+                            saveHistory(positions, updatedLines);
+                          }
+                        };
 
                         if (line.tool === 'zone' && line.points.length >= 4) {
                           const [startX, startY, endX, endY] = line.points;
@@ -1196,6 +1309,8 @@ export default function Tactics() {
                               dash={[5, 5]}
                               cornerRadius={8}
                               draggable={tool === 'cursor' && !isPlaying}
+                              onMouseDown={handleObjectErase}
+                              onTouchStart={handleObjectErase}
                               onDragEnd={(e) => {
                                 const newX = e.target.x();
                                 const newY = e.target.y();
@@ -1225,6 +1340,8 @@ export default function Tactics() {
                               dash={dashPattern}
                               lineCap="round"
                               lineJoin="round"
+                              onMouseDown={handleObjectErase}
+                              onTouchStart={handleObjectErase}
                             />
                           );
                         }
@@ -1234,11 +1351,13 @@ export default function Tactics() {
                             key={i}
                             points={line.points}
                             stroke={line.color}
-                            strokeWidth={line.tool === 'eraser' ? 24 : 3}
+                            strokeWidth={line.tool === 'eraser' ? (line.size || 24) : (line.size || 3)}
                             tension={0.5}
                             lineCap="round"
                             lineJoin="round"
                             globalCompositeOperation={line.tool === 'eraser' ? 'destination-out' : 'source-over'}
+                            onMouseDown={handleObjectErase}
+                            onTouchStart={handleObjectErase}
                           />
                         );
                       })}
