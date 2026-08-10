@@ -82,6 +82,12 @@
       "target": "nsis",
       "artifactName": "5TactiQ-Setup.exe"
     },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
     "linux": {
       "target": "AppImage",
       "artifactName": "5TactiQ.AppImage"
