@@ -630,6 +630,9 @@
     "tap_to_place": "TAP TO PLACE",
     "unranked": "Unranked",
     "all_ranked": "All players have been ranked",
+    "drag_to_unrank": "Drag and drop here to unrank",
+    "reset_all": "Reset All",
+    "confirm_reset": "Are you sure you want to reset all players' tiers?",
     "no_players": "No players in the roster yet"
   },
   "fund": {

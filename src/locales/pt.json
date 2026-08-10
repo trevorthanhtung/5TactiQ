@@ -620,7 +620,10 @@
     "tap_to_place": "TOQUE PARA COLOCAR",
     "unranked": "Sem Classificação",
     "all_ranked": "Todos os jogadores foram classificados",
-    "no_players": "Nenhum jogador no elenco ainda"
+    "no_players": "Nenhum jogador no elenco ainda",
+    "drag_to_unrank": "Arraste aqui para remover o rank",
+    "reset_all": "Redefinir",
+    "confirm_reset": "Tem certeza de que deseja redefinir os ranks de todos os jogadores?"
   },
   "fund": {
     "title": "Caixa do Time",

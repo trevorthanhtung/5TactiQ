@@ -631,6 +631,9 @@
     "tap_to_place": "BẤM ĐỂ XẾP",
     "unranked": "Chưa Xếp Hạng",
     "all_ranked": "Tất cả cầu thủ đã được xếp hạng",
+    "drag_to_unrank": "Kéo thả vào đây để gỡ xếp hạng",
+    "reset_all": "Làm mới",
+    "confirm_reset": "Bạn có chắc chắn muốn làm mới (gỡ) toàn bộ xếp hạng của cầu thủ?",
     "no_players": "Chưa có cầu thủ nào trong đội hình"
   },
   "fund": {

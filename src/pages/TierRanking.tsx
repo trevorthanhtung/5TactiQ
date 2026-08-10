@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, RotateCcw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { compareVietnameseNames } from '../utils/sortUtils';
@@ -142,6 +142,16 @@ export default function TierRanking() {
     return () => clearTimeout(timer);
   }, []);
 
+  const handleResetAll = () => {
+    if (window.confirm(t('tier.confirm_reset', 'Bạn có chắc chắn muốn làm mới toàn bộ xếp hạng?'))) {
+      players.forEach(p => {
+        if (p.tier) {
+          updatePlayer(p.id, { tier: null });
+        }
+      });
+    }
+  };
+
   const grouped = useMemo(() => {
     const result: Record<Tier | 'unranked', typeof players> = { S: [], A: [], B: [], C: [], unranked: [] };
     players.forEach(p => {
@@ -215,9 +225,21 @@ export default function TierRanking() {
     <div className="p-4 md:p-6 flex flex-col min-h-full max-w-5xl mx-auto w-full pb-24">
       {/* Header */}
       <header className="mb-5 pt-2">
-        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm font-bold text-text-muted hover:text-secondary transition-colors mb-3 uppercase tracking-wider">
-          <ArrowLeft size={16} /> {t('tier.back')}
-        </button>
+        <div className="flex justify-between items-start mb-3">
+          <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm font-bold text-text-muted hover:text-secondary transition-colors uppercase tracking-wider">
+            <ArrowLeft size={16} /> {t('tier.back')}
+          </button>
+          
+          {players.some(p => p.tier) && (
+            <button 
+              onClick={handleResetAll}
+              className="flex items-center gap-1.5 text-xs font-bold text-rose-500 hover:text-rose-400 bg-rose-500/10 px-3 py-1.5 border border-rose-500/20 transition-colors uppercase tracking-wider"
+            >
+              <RotateCcw size={14} />
+              {t('tier.reset_all', 'LÀM MỚI')}
+            </button>
+          )}
+        </div>
         <h1 className="text-4xl font-display uppercase text-primary leading-none">{t('tier.title')}</h1>
         <p className="text-sm text-text-muted mt-2 font-medium">{t('tier.subtitle')}</p>
         <div className="hallmark-divider" />
@@ -266,8 +288,8 @@ export default function TierRanking() {
               ))
             ) : (
               !activeId && (
-                <div className="w-full text-center py-4 text-sm font-bold text-emerald-500/70 uppercase tracking-wider">
-                  {t('tier.all_ranked', 'ALL PLAYERS HAVE BEEN RANKED')}
+                <div className="w-full text-center py-4 text-sm font-bold text-slate-400/70 uppercase tracking-wider border-2 border-dashed border-transparent">
+                  {t('tier.drag_to_unrank', 'KÉO THẢ VÀO ĐÂY ĐỂ GỠ HẠNG')}
                 </div>
               )
             )}

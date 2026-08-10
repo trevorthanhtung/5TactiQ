@@ -620,7 +620,10 @@
     "tap_to_place": "TOCA PARA COLOCAR",
     "unranked": "Sin Clasificar",
     "all_ranked": "Todos los jugadores han sido clasificados",
-    "no_players": "Aún no hay jugadores en el equipo"
+    "no_players": "Aún no hay jugadores en el equipo",
+    "drag_to_unrank": "Arrastra aquí para quitar el rango",
+    "reset_all": "Reiniciar",
+    "confirm_reset": "¿Estás seguro de que deseas reiniciar los rangos de todos los jugadores?"
   },
   "fund": {
     "title": "Fondo del Equipo",
