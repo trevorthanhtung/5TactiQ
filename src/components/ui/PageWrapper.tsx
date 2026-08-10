@@ -8,6 +8,7 @@ const scrollPositions = new Map<string, number>();
 interface PageWrapperProps {
   children: ReactNode;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 const pageVariants = {
@@ -35,7 +36,7 @@ const pageTransition = {
   mass: 0.8,
 };
 
-export const PageWrapper: React.FC<PageWrapperProps> = ({ children, className = '' }) => {
+export const PageWrapper: React.FC<PageWrapperProps> = ({ children, className = '', style }) => {
   const location = useLocation();
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -61,6 +62,7 @@ export const PageWrapper: React.FC<PageWrapperProps> = ({ children, className = 
       variants={pageVariants}
       transition={pageTransition}
       className={`w-full h-full ${className}`}
+      style={style}
       onScroll={handleScroll}
     >
       {children}
