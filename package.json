@@ -86,7 +86,8 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "createStartMenuShortcut": true,
+      "license": "public/license.txt"
     },
     "linux": {
       "target": "AppImage",

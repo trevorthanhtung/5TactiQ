@@ -1,0 +1,23 @@
+THỎA THUẬN CẤP PHÉP NGƯỜI DÙNG CUỐI (EULA)
+
+Chào mừng bạn đến với 5TactiQ - Phần mềm Quản lý Đội bóng Futsal & Sa bàn Chiến thuật.
+Bằng việc cài đặt và sử dụng phần mềm này, bạn đồng ý với các điều khoản dưới đây:
+
+1. QUYỀN SỬ DỤNG
+5TactiQ được cung cấp miễn phí cho cộng đồng. Bạn có quyền cài đặt, sử dụng phần mềm cho mục đích cá nhân, quản lý đội bóng, hoặc huấn luyện.
+
+2. BẢN QUYỀN VÀ SỞ HỮU TRÍ TUỆ
+Toàn bộ mã nguồn, thiết kế giao diện, logo và các tài sản kỹ thuật số trong phần mềm đều thuộc bản quyền của tác giả (Trevor Thanh Tung). Không sao chép, chỉnh sửa hoặc phân phối lại nhằm mục đích thương mại khi chưa có sự cho phép.
+
+3. QUYỀN RIÊNG TƯ VÀ DỮ LIỆU
+5TactiQ là phần mềm hoạt động 100% ngoại tuyến (Offline-first). Toàn bộ dữ liệu về đội hình, cầu thủ, và chiến thuật của bạn được lưu trữ an toàn trên thiết bị cá nhân của bạn. Chúng tôi KHÔNG thu thập, KHÔNG theo dõi và KHÔNG gửi dữ liệu của bạn lên bất kỳ máy chủ nào. Bạn hoàn toàn làm chủ dữ liệu của mình.
+
+4. TỪ CHỐI TRÁCH NHIỆM
+Phần mềm được cung cấp "như hiện trạng". Tác giả không chịu trách nhiệm cho bất kỳ tổn thất dữ liệu hoặc thiệt hại nào phát sinh trong quá trình sử dụng phần mềm. Tuy nhiên, 5TactiQ cung cấp tính năng "Đồng bộ & Sao lưu", khuyến khích bạn thường xuyên sao lưu dữ liệu để đảm bảo an toàn.
+
+5. CẬP NHẬT PHẦN MỀM
+Phần mềm có thể tự động kiểm tra phiên bản mới từ Github để mang lại trải nghiệm tốt nhất. Quá trình kiểm tra này là hoàn toàn minh bạch và an toàn.
+
+Nếu bạn có bất kỳ câu hỏi hoặc góp ý nào, vui lòng liên hệ tác giả qua email: trevorthanhtung@gmail.com.
+
+Chúc bạn và đội bóng của bạn gặt hái nhiều thành công cùng 5TactiQ!
