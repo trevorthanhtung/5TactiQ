@@ -4,15 +4,12 @@ export function HeadToHeadSkeleton() {
   return (
     <div className="p-4 flex flex-col min-h-full max-w-5xl mx-auto w-full pb-8 animate-pulse">
       {/* Header Skeleton */}
-      <div className="flex flex-col @sm:flex-row @sm:justify-between @sm:items-center gap-4 mb-6 pt-2">
-        <div className="flex items-center gap-2 @sm:gap-3">
-          <div className="w-10 h-10 bg-slate-300 rounded shrink-0"></div>
-          <div>
-            <div className="h-9 w-48 bg-slate-300 rounded mb-1"></div>
-            <div className="h-3 w-32 bg-slate-300 rounded"></div>
-          </div>
+      <div className="flex items-center gap-2 @sm:gap-3 mb-6 pt-2">
+        <div className="w-10 h-10 bg-slate-300 rounded shrink-0"></div>
+        <div>
+          <div className="h-9 w-48 bg-slate-300 rounded mb-1"></div>
+          <div className="h-3 w-32 bg-slate-300 rounded"></div>
         </div>
-        <div className="h-[44px] w-full @sm:w-[150px] bg-slate-300 rounded shrink-0"></div>
       </div>
 
       {/* Stats Grid Skeleton */}
@@ -27,6 +24,12 @@ export function HeadToHeadSkeleton() {
       </div>
 
       <div className="hallmark-divider mb-6 opacity-30"></div>
+
+      {/* Search & Filter Row Skeleton */}
+      <div className="mb-6 flex flex-col @sm:flex-row gap-3 items-stretch @sm:items-center justify-between">
+        <div className="h-[44px] w-full @sm:w-80 bg-slate-300 rounded"></div>
+        <div className="h-[44px] w-full @sm:w-[150px] bg-slate-300 rounded shrink-0"></div>
+      </div>
 
       {/* List Skeleton */}
       <div className="space-y-3">

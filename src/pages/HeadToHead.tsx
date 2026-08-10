@@ -153,40 +153,25 @@ export default function HeadToHead() {
   return (
     <div className="p-4 flex flex-col min-h-full max-w-5xl mx-auto w-full pb-8">
       {/* Header */}
-      <div className="flex flex-col @sm:flex-row @sm:justify-between @sm:items-center gap-4 mb-6 pt-2">
-        <div className="flex items-center gap-2 @sm:gap-3">
-          <button
-            onClick={() => navigate('/more')}
-            className="p-2 text-primary hover:bg-primary/10 border-2 border-primary/30 hover:border-primary transition-all shrink-0"
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div>
-            <h1 className="text-2xl @md:text-4xl font-display uppercase text-primary leading-none">{t('h2h.title', 'Lịch sử đối đầu')}</h1>
-            {hasSeasonConfig && (
-              <p className="text-xs font-bold text-text-muted uppercase tracking-widest mt-1">
-                {t('stats.season', { 
-                  year: seasonStart!.getFullYear() === seasonEnd!.getFullYear() 
-                    ? seasonStart!.getFullYear() 
-                    : `${seasonStart!.getFullYear()}/${seasonEnd!.getFullYear()}` 
-                })}
-              </p>
-            )}
-          </div>
+      <div className="flex items-center gap-2 @sm:gap-3 mb-6 pt-2">
+        <button
+          onClick={() => navigate('/more')}
+          className="p-2 text-primary hover:bg-primary/10 border-2 border-primary/30 hover:border-primary transition-all shrink-0"
+        >
+          <ArrowLeft size={20} />
+        </button>
+        <div>
+          <h1 className="text-2xl @md:text-4xl font-display uppercase text-primary leading-none">{t('h2h.title', 'Lịch sử đối đầu')}</h1>
+          {hasSeasonConfig && (
+            <p className="text-xs font-bold text-text-muted uppercase tracking-widest mt-1">
+              {t('stats.season', { 
+                year: seasonStart!.getFullYear() === seasonEnd!.getFullYear() 
+                  ? seasonStart!.getFullYear() 
+                  : `${seasonStart!.getFullYear()}/${seasonEnd!.getFullYear()}` 
+              })}
+            </p>
+          )}
         </div>
-
-        {hasSeasonConfig && (
-          <CustomSelect 
-            value={filterMode} 
-            onChange={(val) => setFilterMode(val as 'all_time' | 'current_season')}
-            className="relative w-full @sm:w-auto shrink-0"
-            buttonClassName="bg-surface border-2 border-border-main text-xs font-bold uppercase tracking-widest text-text-main px-3 outline-none focus:border-primary cursor-pointer w-full @sm:w-auto h-[44px] flex items-center justify-between transition-colors hover:border-primary/50"
-            options={[
-              { value: 'current_season', label: t('stats.filter_season', 'MÙA GIẢI HIỆN TẠI') },
-              { value: 'all_time', label: t('stats.filter_all', 'TẤT CẢ THỜI GIAN') }
-            ]}
-          />
-        )}
       </div>
 
       {stats.opponentsList.length === 0 ? (
@@ -225,18 +210,33 @@ export default function HeadToHead() {
 
           <div className="hallmark-divider mb-6"></div>
 
-          {/* Search Bar */}
-          <div className="mb-6 relative max-w-md">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search size={18} className="text-text-muted" />
+          {/* Search Bar & Season Filter Row */}
+          <div className="mb-6 flex flex-col @sm:flex-row gap-3 items-stretch @sm:items-center justify-between">
+            <div className="relative flex-1 max-w-md">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search size={18} className="text-text-muted" />
+              </div>
+              <input
+                type="text"
+                placeholder={t('h2h.search_placeholder', 'Tìm tên đối thủ...')}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-surface border-2 border-border-main text-text-main py-2.5 pl-10 pr-3 outline-none focus:border-primary transition-colors text-sm placeholder:text-text-muted/60 placeholder:uppercase tracking-wider h-[44px]"
+              />
             </div>
-            <input
-              type="text"
-              placeholder={t('h2h.search_placeholder', 'Tìm tên đối thủ...')}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-surface border-2 border-border-main text-text-main py-2.5 pl-10 pr-3 outline-none focus:border-primary transition-colors text-sm placeholder:text-text-muted/60 placeholder:uppercase tracking-wider"
-            />
+
+            {hasSeasonConfig && (
+              <CustomSelect 
+                value={filterMode} 
+                onChange={(val) => setFilterMode(val as 'all_time' | 'current_season')}
+                className="relative w-full @sm:w-auto shrink-0"
+                buttonClassName="bg-surface border-2 border-border-main text-xs font-bold uppercase tracking-widest text-text-main px-3 outline-none focus:border-primary cursor-pointer w-full @sm:w-auto h-[44px] flex items-center justify-between transition-colors hover:border-primary/50"
+                options={[
+                  { value: 'current_season', label: t('stats.filter_season', 'MÙA GIẢI HIỆN TẠI') },
+                  { value: 'all_time', label: t('stats.filter_all', 'TẤT CẢ THỜI GIAN') }
+                ]}
+              />
+            )}
           </div>
 
           {/* Opponents List */}
