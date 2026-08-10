@@ -29,8 +29,7 @@ export function QRScanner({ onScan, isOpen, onClose }: QRScannerProps) {
         localScanner = html5QrCode;
 
         const config = {
-          fps: 10,
-          qrbox: { width: 220, height: 220 }
+          fps: 10
         };
 
         const handleSuccess = (decodedText: string) => {
@@ -114,8 +113,7 @@ export function QRScanner({ onScan, isOpen, onClose }: QRScannerProps) {
       await scannerRef.current.stop();
       
       const config = {
-        fps: 10,
-        qrbox: { width: 220, height: 220 }
+        fps: 10
       };
       
       await scannerRef.current.start(cameras[nextIndex].id, config, 
