@@ -206,15 +206,16 @@
     "filter_youth": "Juvenil",
     "youth_label": "JUGADOR CANTERANO",
     "youth_tooltip": "Jugador canterano",
-    "mark_youth": "MARCAR COMO JUVENIL",
-    "unmark_youth": "DESMARCAR COMO JUVENIL",
-    "edit_health": "ESTADO DE LESIÓN / SALUD",
+    "mark_youth": "JUGADOR JUVENIL",
+    "unmark_youth": "QUITAR JUVENIL",
+    "edit_health": "ESTADO DE SALUD Y LESIÓN",
     "edit_health_title": "ESTADO DE SALUD Y LESIÓN",
     "phone_label": "Número de teléfono",
     "phone_placeholder": "Ej: 123456...",
     "note_label": "Nota",
     "note_placeholder": "Información adicional...",
-    "call_player": "LLAMAR JUGADOR"
+    "call_player": "LLAMAR JUGADOR",
+    "status_role_title": "ROLES Y CLASIFICACIONES"
   },
   "position": {
     "GK": "PT",

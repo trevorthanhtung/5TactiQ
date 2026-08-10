@@ -206,15 +206,16 @@
     "filter_youth": "Base",
     "youth_label": "JOGADOR DA BASE",
     "youth_tooltip": "Jogador da base",
-    "mark_youth": "MARCAR COMO JOGADOR DA BASE",
-    "unmark_youth": "DESMARCAR JOGADOR DA BASE",
-    "edit_health": "STATUS DE LESÃO / SAÚDE",
+    "mark_youth": "JOGADOR BASE",
+    "unmark_youth": "REMOVER BASE",
+    "edit_health": "ESTADO DE SAÚDE E LESÃO",
     "edit_health_title": "STATUS DE SAÚDE E LESÃO",
     "phone_label": "Número de telefone",
     "phone_placeholder": "Ex: 123456...",
     "note_label": "Nota",
     "note_placeholder": "Informações adicionais...",
-    "call_player": "LIGAR JOGADOR"
+    "call_player": "LIGAR JOGADOR",
+    "status_role_title": "FUNÇÕES E CLASSIFICAÇÕES"
   },
   "position": {
     "GK": "GL",

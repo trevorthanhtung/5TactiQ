@@ -211,15 +211,16 @@
     "filter_youth": "Youth",
     "youth_label": "YOUTH ACADEMY PLAYER",
     "youth_tooltip": "Youth Academy Player",
-    "mark_youth": "MARK AS YOUTH PLAYER",
-    "unmark_youth": "UNMARK YOUTH PLAYER",
-    "edit_health": "INJURY / HEALTH STATUS",
+    "mark_youth": "YOUTH PLAYER",
+    "unmark_youth": "UNMARK YOUTH",
+    "edit_health": "INJURY & HEALTH STATUS",
     "edit_health_title": "HEALTH & INJURY STATUS",
     "phone_label": "Phone number",
     "phone_placeholder": "Ex: +1 234 567 890",
     "note_label": "Note",
     "note_placeholder": "Enter additional info or injury status...",
-    "call_player": "CALL PLAYER"
+    "call_player": "CALL PLAYER",
+    "status_role_title": "ROLES & CLASSIFICATIONS"
   },
   "position": {
     "GK": "GK",

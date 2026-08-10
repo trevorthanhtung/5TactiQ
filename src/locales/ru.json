@@ -206,15 +206,16 @@
     "filter_youth": "Молодежь",
     "youth_label": "ИГРОК МОЛОДЕЖНОЙ АКАДЕМИИ",
     "youth_tooltip": "Игрок молодежной академии",
-    "mark_youth": "ОТМЕТИТЬ КАК МОЛОДОГО ИГРОКА",
-    "unmark_youth": "СНЯТЬ ОТМЕТКУ МОЛОДОГО ИГРОКА",
-    "edit_health": "СТАТУС ТРАВМЫ / ЗДОРОВЬЯ",
+    "mark_youth": "МОЛОДОЙ ИГРОК",
+    "unmark_youth": "СНЯТЬ МОЛОДОЙ",
+    "edit_health": "СТАТУС ТРАВМЫ И ЗДОРОВЬЯ",
     "edit_health_title": "СТАТУС ЗДОРОВЬЯ И ТРАВМ",
     "phone_label": "Номер телефона",
     "phone_placeholder": "Напр.: 123456...",
     "note_label": "Заметка",
     "note_placeholder": "Дополнительная инфо...",
-    "call_player": "ПОЗВОНИТЬ ИГРОКУ"
+    "call_player": "ПОЗВОНИТЬ ИГРОКУ",
+    "status_role_title": "РОЛИ И КЛАССИФИКАЦИИ"
   },
   "position": {
     "GK": "ВР",

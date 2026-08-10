@@ -204,8 +204,8 @@
     "remove_captain": "HỦY ĐỘI TRƯỞNG",
     "mark_borrowed": "ĐÁNH DẤU MƯỢN TỪ ĐỘI KHÁC",
     "unmark_borrowed": "HỦY ĐÁNH DẤU MƯỢN",
-    "mark_youth": "ĐÁNH DẤU LÀ CẦU THỦ TRẺ",
-    "unmark_youth": "BỎ ĐÁNH DẤU CẦU THỦ TRẺ",
+    "mark_youth": "CẦU THỦ TRẺ",
+    "unmark_youth": "BỎ CẦU THỦ TRẺ",
     "delete_player": "XÓA KHỎI ĐỘI",
     "delete_confirm_title": "Xóa cầu thủ?",
     "delete_confirm_desc": "Bạn có chắc chắn muốn xóa <1>{{name}}</1> khỏi danh sách đội? Hành động này không thể hoàn tác.",
@@ -219,7 +219,8 @@
     "phone_placeholder": "VD: 0912 345 678",
     "note_label": "Ghi chú",
     "note_placeholder": "Nhập thông tin hoặc tình trạng chấn thương...",
-    "call_player": "GỌI ĐIỆN"
+    "call_player": "GỌI ĐIỆN",
+    "status_role_title": "VAI TRÒ & PHÂN LOẠI"
   },
   "position": {
     "GK": "GK",

@@ -206,15 +206,16 @@
     "filter_youth": "شباب",
     "youth_label": "لاعب أكاديمية الشباب",
     "youth_tooltip": "لاعب أكاديمية الشباب",
-    "mark_youth": "تحديد كلاعب شاب",
-    "unmark_youth": "إلغاء تحديد كلاعب شاب",
-    "edit_health": "حالة الإصابة / الصحة",
+    "mark_youth": "لاعب شاب",
+    "unmark_youth": "إلغاء الشاب",
+    "edit_health": "حالة الإصابة والصحة",
     "edit_health_title": "حالة الصحة والإصابة",
     "phone_label": "رقم الهاتف",
     "phone_placeholder": "مثال: 123456...",
     "note_label": "ملاحظة",
     "note_placeholder": "معلومات إضافية...",
-    "call_player": "الاتصال باللاعب"
+    "call_player": "الاتصال باللاعب",
+    "status_role_title": "الأدوار والتصنيفات"
   },
   "position": {
     "GK": "حارس",
