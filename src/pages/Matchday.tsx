@@ -714,7 +714,7 @@ export default function Matchday() {
               <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
               {t('matchday.live', { count: liveMatches.length })}
             </h2>
-            <div className="grid grid-cols-1 @sm:grid-cols-2 @lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 @md:grid-cols-2 @xl:grid-cols-3 gap-4">
               {liveMatches.map(m => <MatchCard key={m.id} match={m} />)}
             </div>
           </div>
@@ -726,7 +726,7 @@ export default function Matchday() {
             <h2 className="font-display text-sm uppercase tracking-widest text-primary mb-4 font-bold">
               {t('matchday.upcoming', { count: upcomingMatches.length })}
             </h2>
-            <div className="grid grid-cols-1 @sm:grid-cols-2 @lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 @md:grid-cols-2 @xl:grid-cols-3 gap-4">
               {upcomingMatches.map(m => <MatchCard key={m.id} match={m} />)}
             </div>
           </div>
@@ -738,7 +738,7 @@ export default function Matchday() {
             <h2 className="font-display text-sm uppercase tracking-widest text-slate-400 mb-4 font-bold">
               {t('matchday.finished', { count: finishedMatches_list.length })}
             </h2>
-            <div className="grid grid-cols-1 @sm:grid-cols-2 @lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 @md:grid-cols-2 @xl:grid-cols-3 gap-4">
               {finishedMatches_list.map(m => <MatchCard key={m.id} match={m} />)}
             </div>
           </div>

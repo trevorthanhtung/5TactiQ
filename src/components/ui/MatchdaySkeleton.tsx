@@ -13,7 +13,7 @@ export function MatchdaySkeleton() {
       {/* Section Skeleton */}
       <div className="mb-8 mt-6">
         <div className="h-5 w-32 bg-slate-300 rounded mb-4"></div>
-        <div className="grid grid-cols-1 @sm:grid-cols-2 @lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 @md:grid-cols-2 @xl:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
             <div key={i} className="hallmark-card p-0 overflow-hidden bg-slate-200 flex flex-col h-[180px]">
               {/* Card Top Accent */}
