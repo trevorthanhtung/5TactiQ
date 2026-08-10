@@ -296,7 +296,7 @@ export default function More() {
                   className="w-full bg-[#0070ba] hover:bg-[#005ea6] text-white font-display uppercase tracking-wider py-3 px-4 border-2 border-[#005ea6] flex items-center justify-center gap-2 mb-4 transition-colors active:scale-95 text-sm"
                 >
                   <Globe size={18} />
-                  <span>{t('more.donate_paypal', 'ỦNG HỘ QUA PAYPAL (QUỐC TẾ)')}</span>
+                  <span>{t('more.donate_paypal', 'ỦNG HỘ QUA PAYPAL')}</span>
                 </a>
               )}
             </>
