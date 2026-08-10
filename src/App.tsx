@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter } from 'react-router-dom';
+import { HashRouter } from 'react-router-dom';
 import SplashScreen from './components/SplashScreen';
 import Onboarding from './components/Onboarding';
 import { AnimatedRoutes } from './components/AnimatedRoutes';
@@ -12,6 +12,8 @@ import { usePageVisibility } from './hooks/usePageVisibility';
 import { usePersistentStorage } from './hooks/usePersistentStorage';
 import { useBackgroundSync } from './hooks/useBackgroundSync';
 import { useThemeStore } from './store/useThemeStore';
+import { useAppUpdateStore } from './store/useAppUpdateStore';
+import { useToastStore } from './store/useToastStore';
 import { Capacitor } from '@capacitor/core';
 
 function App() {
@@ -19,6 +21,27 @@ function App() {
   useBackgroundSync();
 
   const theme = useThemeStore((state) => state.theme);
+  const { checkUpdate, hasUpdate, latestVersion, setShowUpdateModal } = useAppUpdateStore();
+  const addToast = useToastStore((state) => state.addToast);
+
+  useEffect(() => {
+    // Check for updates on startup
+    checkUpdate().then(() => {
+      const currentHasUpdate = useAppUpdateStore.getState().hasUpdate;
+      const currentLatest = useAppUpdateStore.getState().latestVersion;
+      if (currentHasUpdate) {
+        addToast({
+          type: 'info',
+          message: `Đã có bản cập nhật mới (${currentLatest}). Tải ngay để trải nghiệm tính năng mới!`,
+          duration: 0, // Keep it visible until dismissed or acted upon
+          action: {
+            label: 'CẬP NHẬT NGAY',
+            onClick: () => setShowUpdateModal(true)
+          }
+        });
+      }
+    });
+  }, []);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -126,13 +149,13 @@ function App() {
       {!showSplash && showOnboarding && <Onboarding onComplete={handleOnboardingComplete} />}
       
       {/* App Content */}
-      <BrowserRouter>
+      <HashRouter>
         <InAppBrowserWarning />
         <AppStatusNotifier />
         <ToastContainer />
         <AnimatedRoutes />
         <InstallPrompt />
-      </BrowserRouter>
+      </HashRouter>
     </div>
   );
 }

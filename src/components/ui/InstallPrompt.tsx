@@ -3,12 +3,16 @@ import { useInstallPrompt } from '../../hooks/useInstallPrompt';
 import { X, Download, Share } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { useAppUpdateStore } from '../../store/useAppUpdateStore';
 
 export default function InstallPrompt() {
   const { t } = useTranslation();
   const { isInstallable, promptInstall } = useInstallPrompt();
   const [isVisible, setIsVisible] = useState(false);
   const [platform, setPlatform] = useState('unknown');
+  
+  const { showUpdateModal, setShowUpdateModal, latestVersion } = useAppUpdateStore();
+  const isUpdate = showUpdateModal;
 
   useEffect(() => {
     import('@capacitor/core').then(({ Capacitor }) => {
@@ -46,8 +50,12 @@ export default function InstallPrompt() {
   }, []);
 
   const handleDismiss = () => {
-    setIsVisible(false);
-    localStorage.setItem('hideInstallPrompt', 'true');
+    if (isUpdate) {
+      setShowUpdateModal(false);
+    } else {
+      setIsVisible(false);
+      localStorage.setItem('hideInstallPrompt', 'true');
+    }
   };
 
   const handleDownload = (url: string) => {
@@ -55,7 +63,7 @@ export default function InstallPrompt() {
     handleDismiss();
   };
 
-  if (!isVisible) return null;
+  if (!isVisible && !isUpdate) return null;
 
   const renderContent = () => {
     if (platform === 'ios' || platform === 'mac') {
@@ -149,7 +157,9 @@ export default function InstallPrompt() {
         </div>
         
         <div className="flex-1">
-          <h4 className="font-display font-bold text-primary uppercase text-sm mb-1">{t('install_prompt.title')}</h4>
+          <h4 className="font-display font-bold text-primary uppercase text-sm mb-1">
+            {isUpdate ? `CẬP NHẬT ỨNG DỤNG (v${latestVersion})` : t('install_prompt.title')}
+          </h4>
           {renderContent()}
         </div>
 

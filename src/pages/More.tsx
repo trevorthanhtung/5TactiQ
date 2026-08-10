@@ -11,6 +11,8 @@ import SettingsModal from './Settings';
 
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useThemeStore } from '../store/useThemeStore';
+import { useAppUpdateStore } from '../store/useAppUpdateStore';
+import { APP_VERSION } from '../config/version';
 
 export default function More() {
   const { t, i18n } = useTranslation();
@@ -26,6 +28,7 @@ export default function More() {
   const addToast = useToastStore(state => state.addToast);
   const teamName = useSettingsStore(state => state.settings.teamName);
   const { theme, setTheme } = useThemeStore();
+  const { hasUpdate, latestVersion, setShowUpdateModal } = useAppUpdateStore();
   const [badgeCount, setBadgeCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -120,7 +123,9 @@ export default function More() {
       image: 'https://img.vietqr.io/image/mbbank-0816158215-compact2.png?accountName=TRAN%20THANH%20TUNG'
     }) },
     { icon: <MessageSquare size={20} className="text-sky-500" />, title: t('more.feedback_title'), action: () => window.open('mailto:trevorthanhtung@gmail.com?subject=Góp ý ứng dụng 5TactiQ') },
-    { icon: <Package size={20} className="text-text-muted" />, title: t('more.version_title'), value: '1.0' },
+    hasUpdate 
+      ? { icon: <Package size={20} className="text-blue-500" />, title: `CẬP NHẬT PHIÊN BẢN (v${latestVersion})`, action: () => setShowUpdateModal(true) }
+      : { icon: <Package size={20} className="text-text-muted" />, title: t('more.version_title'), value: APP_VERSION },
   ];
 
   const dangerItems = [
@@ -265,7 +270,7 @@ export default function More() {
             <div className="flex flex-col items-center text-center mb-6 mt-2">
               <img src="/logo.png" alt="5TactiQ Logo" className="w-28 h-28 object-contain mb-4 drop-shadow-md" />
               <h4 className="text-2xl font-display font-bold text-primary mb-2">5TactiQ</h4>
-              <div className="bg-primary text-[#f6f4ed] px-4 py-1.5 rounded-sm text-xs font-bold tracking-widest mb-4">{t('more.version_title')} 1.0</div>
+              <div className="bg-primary text-[#f6f4ed] px-4 py-1.5 rounded-sm text-xs font-bold tracking-widest mb-4">{t('more.version_title')} {APP_VERSION}</div>
               <p className="text-text-muted text-sm leading-relaxed mb-4">{t('more.app_info_desc')}</p>
               <div className="w-12 h-1 bg-primary/20 mb-4 rounded-full"></div>
               <a href="https://www.youtube.com/@kat.thanhtungg" target="_blank" rel="noopener noreferrer" className="text-gray-400 text-xs font-medium uppercase tracking-wider hover:text-primary transition-colors cursor-pointer">{t('more.app_info_author')}</a>

@@ -1,7 +1,7 @@
 {
   "name": "5tactiq",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "main": "main.js",
   "scripts": {
@@ -69,6 +69,7 @@
   "build": {
     "appId": "com.5tactiq.desktop",
     "productName": "5TactiQ",
+    "icon": "public/logo.png",
     "directories": {
       "output": "dist_electron"
     },
