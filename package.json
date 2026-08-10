@@ -90,7 +90,6 @@
       "license": "public/license.txt",
       "uninstallDisplayName": "5TactiQ",
       "shortcutName": "5TactiQ",
-      "installerLanguages": ["English", "Spanish", "PortugueseBR", "Arabic", "Russian"],
       "include": "build/installer.nsh"
     },
     "linux": {
