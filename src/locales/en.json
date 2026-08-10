@@ -499,7 +499,7 @@
     "err_restore_fail": "Could not restore data.",
     "understood": "Got it",
     "import_title": "SELECT DATA TO RESTORE",
-    "import_desc": "Please select the items you want to import. Existing data for selected items will be overwritten.",
+    "import_desc": "Please select the items you want to import to this device.",
     "import_cancel": "Cancel",
     "import_confirm": "Confirm",
     "copied_connect_code": "Connection code copied",
@@ -510,13 +510,14 @@
     "qr_instruction": "Point camera at the QR code on the Host device to connect automatically.",
     "qr_cancel": "Cancel scan",
     "storage_keys": {
-      "katfc-player-storage": "Squad & Players",
-      "katfc-match-storage-v4": "Match Data",
+      "katfc-player-storage": "Squad, Injuries & Tier",
+      "tactic-storage": "Tactical Diagrams",
+      "katfc-match-storage-v5": "Match Data & History",
+      "katfc-match-storage-v4": "Match Data & History (Legacy)",
+      "katfc-venues-storage": "Venues & Opponents Directory",
       "5tactiq-settings-storage": "General Settings",
-      "katfc-training-storage": "Training Schedule",
-      "katfc-fund-storage": "Team Fund",
-      "katfc-venues-storage": "Venues Directory",
-      "tactic-storage": "Tactical Diagrams"
+      "katfc-training-storage": "Training Schedule & Attendance",
+      "katfc-fund-storage": "Team Fund & Transactions"
     },
     "err_peer_unavailable": "Could not connect to this peer code. Please check the code or host status.",
     "err_browser_incompatible": "Your browser does not support P2P connection.",
@@ -524,7 +525,11 @@
     "err_socket_closed": "P2P connection closed.",
     "err_generic_p2p": "Failed to establish P2P connection.",
     "err_export_fail": "Could not create backup file. Please try again.",
-    "share_dialog": "Save or share backup file"
+    "share_dialog": "Save or share backup file",
+    "mode_overwrite": "Overwrite",
+    "mode_merge": "Merge",
+    "mode_overwrite_desc": "* Old data of the selected items will be COMPLETELY DELETED and replaced.",
+    "mode_merge_desc": "* Old data will be KEPT and new data will be merged."
   },
   "settings": {
     "title": "Team Settings",

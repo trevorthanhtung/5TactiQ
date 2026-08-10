@@ -49,7 +49,7 @@ export default function Layout() {
       <nav className="hidden lg:flex flex-col w-24 bg-surface border-r-2 border-border-main shrink-0 z-40" style={{ paddingTop: 'var(--safe-top)' }}>
         <div className="p-4 flex justify-center border-b-2 border-border-main" title={settings.teamName || '5TactiQ'}>
           {settings.logoUrl ? (
-            <img src={settings.logoUrl} alt="Logo" className="w-12 h-12 object-contain" />
+            <img src={settings.logoUrl.startsWith('/') ? '.' + settings.logoUrl : settings.logoUrl} alt="Logo" className="w-12 h-12 object-contain" />
           ) : (
             <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
                <span className="font-display font-bold text-xl text-white">{settings.teamName ? settings.teamName.substring(0, 2).toUpperCase() : '5T'}</span>

@@ -489,7 +489,7 @@
     "err_restore_fail": "Не удалось восстановить данные.",
     "understood": "Понятно",
     "import_title": "ВЫБЕРИТЕ ДАННЫЕ ДЛЯ ВОССТАНОВЛЕНИЯ",
-    "import_desc": "Пожалуйста, выберите элементы для импорта. Существующие данные будут перезаписаны.",
+    "import_desc": "Please select the items you want to import to this device.",
     "import_cancel": "Отмена",
     "import_confirm": "Подтвердить",
     "copied_connect_code": "Код подключения скопирован",
@@ -500,13 +500,14 @@
     "qr_instruction": "Наведите камеру на QR-код на устройстве Хоста для автоматического подключения.",
     "qr_cancel": "Отменить сканирование",
     "storage_keys": {
-      "katfc-player-storage": "Состав и Игроки",
-      "katfc-match-storage-v4": "Данные Матчей",
+      "katfc-player-storage": "Состав, Травмы и Ранг",
+      "tactic-storage": "Тактическая Доска",
+      "katfc-match-storage-v5": "Матчи и История",
+      "katfc-match-storage-v4": "Матчи и История (Старое)",
+      "katfc-venues-storage": "Поля и Соперники",
       "5tactiq-settings-storage": "Общие Настройки",
-      "katfc-training-storage": "График Тренировок",
-      "katfc-fund-storage": "Фонд Команды",
-      "katfc-venues-storage": "Справочник Полей",
-      "tactic-storage": "Тактические Схемы"
+      "katfc-training-storage": "Тренировки и Посещаемость",
+      "katfc-fund-storage": "Фонд Команды и Транзакции"
     },
     "err_peer_unavailable": "Не удалось подключиться к этому коду. Проверьте код или статус хоста.",
     "err_browser_incompatible": "Ваш браузер не поддерживает P2P-соединение.",
@@ -514,7 +515,11 @@
     "err_socket_closed": "P2P-соединение закрыто.",
     "err_generic_p2p": "Не удалось установить P2P-соединение.",
     "err_export_fail": "Не удалось создать файл резервной копии. Пожалуйста, попробуйте снова.",
-    "share_dialog": "Сохранить или поделиться файлом резервной копии"
+    "share_dialog": "Сохранить или поделиться файлом резервной копии",
+    "mode_overwrite": "Overwrite",
+    "mode_merge": "Merge",
+    "mode_overwrite_desc": "* Old data of the selected items will be COMPLETELY DELETED and replaced.",
+    "mode_merge_desc": "* Old data will be KEPT and new data will be merged."
   },
   "settings": {
     "title": "Настройки команды",

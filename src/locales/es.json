@@ -489,7 +489,7 @@
     "err_restore_fail": "No se pudo restaurar los datos.",
     "understood": "Entendido",
     "import_title": "SELECCIONAR DATOS",
-    "import_desc": "Seleccione los elementos a importar. Los datos existentes se sobrescribirán.",
+    "import_desc": "Please select the items you want to import to this device.",
     "import_cancel": "Cancelar",
     "import_confirm": "Confirmar",
     "copied_connect_code": "Código de conexión copiado",
@@ -500,13 +500,14 @@
     "qr_instruction": "Apunta la cámara al código QR del Anfitrión para conectarte automáticamente.",
     "qr_cancel": "Cancelar escaneo",
     "storage_keys": {
-      "katfc-player-storage": "Plantilla y Jugadores",
-      "katfc-match-storage-v4": "Datos de Partidos",
+      "katfc-player-storage": "Plantilla, Lesiones y Nivel",
+      "tactic-storage": "Pizarra Táctica",
+      "katfc-match-storage-v5": "Datos de Partidos y Historial",
+      "katfc-match-storage-v4": "Datos de Partidos (Antiguo)",
+      "katfc-venues-storage": "Directorio de Canchas y Rivales",
       "5tactiq-settings-storage": "Configuración General",
-      "katfc-training-storage": "Calendario de Entrenamientos",
-      "katfc-fund-storage": "Fondo del Equipo",
-      "katfc-venues-storage": "Directorio de Canchas",
-      "tactic-storage": "Esquemas Tácticos"
+      "katfc-training-storage": "Entrenamientos y Asistencia",
+      "katfc-fund-storage": "Fondo del Equipo y Transacciones"
     },
     "err_peer_unavailable": "No se pudo conectar a este código. Verifique el código o el estado del anfitrión.",
     "err_browser_incompatible": "Su navegador no admite la conexión P2P.",
@@ -514,7 +515,11 @@
     "err_socket_closed": "Conexión P2P cerrada.",
     "err_generic_p2p": "Error al establecer la conexión P2P.",
     "err_export_fail": "No se pudo crear el archivo de copia de seguridad. Por favor intente de nuevo.",
-    "share_dialog": "Guardar o compartir archivo de copia de seguridad"
+    "share_dialog": "Guardar o compartir archivo de copia de seguridad",
+    "mode_overwrite": "Overwrite",
+    "mode_merge": "Merge",
+    "mode_overwrite_desc": "* Old data of the selected items will be COMPLETELY DELETED and replaced.",
+    "mode_merge_desc": "* Old data will be KEPT and new data will be merged."
   },
   "settings": {
     "title": "Configuración del Equipo",

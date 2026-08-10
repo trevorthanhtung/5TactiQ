@@ -19,7 +19,7 @@ const useBallImage = () => {
   const [image, setImage] = useState<HTMLImageElement | undefined>(undefined);
   useEffect(() => {
     const img = new window.Image();
-    img.src = '/ball.png';
+    img.src = './ball.png';
     img.onload = () => setImage(img);
   }, []);
   return image;
@@ -123,6 +123,8 @@ export default function Tactics() {
   const [confirmDialog, setConfirmDialog] = useState<{ isOpen: boolean; title: string; message: string; onConfirm: () => void; onCancel?: () => void; variant: 'danger' | 'warning' | 'info'; confirmText?: string; cancelText?: string }>({ isOpen: false, title: '', message: '', onConfirm: () => { }, variant: 'danger' });
   const [isExporting, setIsExporting] = useState(false);
   const [toast, setToast] = useState<{ isVisible: boolean; message: string; variant: 'success' | 'error' }>({ isVisible: false, message: '', variant: 'success' });
+  const [pendingTextPos, setPendingTextPos] = useState<{ x: number, y: number } | null>(null);
+  const [textInput, setTextInput] = useState('');
 
   const showToast = (message: string, variant: 'success' | 'error' = 'success') => {
     setToast({ isVisible: true, message, variant });
@@ -787,6 +789,17 @@ export default function Tactics() {
     saveHistory(newPositions, lines);
   };
 
+  const handleTextSubmit = () => {
+    if (pendingTextPos && textInput.trim()) {
+      const newPos = { id: `text-${Date.now()}`, x: pendingTextPos.x, y: pendingTextPos.y, isText: true, text: textInput.trim() };
+      const updatedPositions = [...positions, newPos];
+      setPositions(updatedPositions);
+      saveHistory(updatedPositions, lines);
+    }
+    setPendingTextPos(null);
+    setTextInput('');
+  };
+
   const handleMouseDown = (e: any) => {
     if (tool === 'cursor') return;
 
@@ -802,13 +815,8 @@ export default function Tactics() {
     }
 
     if (tool === 'text') {
-      const text = window.prompt(t('tactics.prompt_text'));
-      if (text && text.trim()) {
-        const newPos = { id: `text-${Date.now()}`, x: point.x, y: point.y, isText: true, text: text.trim() };
-        const updatedPositions = [...positions, newPos];
-        setPositions(updatedPositions);
-        saveHistory(updatedPositions, lines);
-      }
+      setPendingTextPos({ x: point.x, y: point.y });
+      setTextInput('');
       return;
     }
 
@@ -1770,11 +1778,11 @@ export default function Tactics() {
                     <h4 className="font-display text-sm font-bold uppercase tracking-widest text-primary mb-3 mt-6">{t('tactics.action_controls', 'THAO TÁC & ĐIỀU KHIỂN')}</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                       <div className="flex items-center justify-between p-2.5 bg-surface border border-border-main">
-                        <span className="text-text-main font-bold">{t('tactics.action_undo', 'Hoàn tác (Undo)')}</span>
+                        <span className="text-text-main font-bold">{t('tactics.action_undo', 'Hoàn tác')}</span>
                         <kbd className="px-1.5 py-0.5 bg-surface-2 border border-border-main text-text-muted font-mono font-bold shadow-sm">Ctrl + Z</kbd>
                       </div>
                       <div className="flex items-center justify-between p-2.5 bg-surface border border-border-main">
-                        <span className="text-text-main font-bold">{t('tactics.action_redo', 'Làm lại (Redo)')}</span>
+                        <span className="text-text-main font-bold">{t('tactics.action_redo', 'Làm lại')}</span>
                         <kbd className="px-1.5 py-0.5 bg-surface-2 border border-border-main text-text-muted font-mono font-bold shadow-sm">Ctrl + Y</kbd>
                       </div>
                       <div className="flex items-center justify-between p-2.5 bg-surface border border-border-main">
@@ -1897,6 +1905,35 @@ export default function Tactics() {
           </button>
         </div>
       )}
+
+      {/* Text Input Modal */}
+      <BottomSheet
+        isOpen={pendingTextPos !== null}
+        onClose={() => setPendingTextPos(null)}
+        title={t('tactics.prompt_text')}
+        maxWidth="sm"
+      >
+        <div className="flex flex-col gap-4">
+          <input
+            autoFocus
+            type="text"
+            value={textInput}
+            onChange={(e) => setTextInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleTextSubmit();
+            }}
+            className="w-full px-4 py-3 bg-background border-2 border-border-main focus:outline-none focus:ring-0 focus:border-primary transition-colors text-sm font-bold placeholder:font-normal"
+            placeholder={t('tactics.prompt_text')}
+          />
+          <button 
+            onClick={handleTextSubmit}
+            disabled={!textInput.trim()}
+            className="w-full mt-2 bg-primary text-white font-display uppercase tracking-wider py-3 border-2 border-primary hover:bg-[#323d29] transition-colors active:scale-95 disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
+          >
+            {t('common.ok', 'OK')}
+          </button>
+        </div>
+      </BottomSheet>
 
       {/* Exporting Overlay */}
       {isExporting && (

@@ -396,11 +396,11 @@
     "draw_tools": "CÔNG CỤ VẼ & SA BÀN",
     "tool_pointer": "Con trỏ",
     "action_controls": "THAO TÁC & ĐIỀU KHIỂN",
-    "action_undo": "Hoàn tác (Undo)",
+    "action_undo": "Hoàn tác",
     "action_play": "Phát / Dừng mô phỏng",
     "action_clear": "Xóa tất cả nét vẽ",
     "action_toggle_shortcuts": "Bật/tắt Bảng Phím tắt",
-    "action_redo": "Làm lại (Redo)",
+    "action_redo": "Làm lại",
     "action_reset": "Làm mới sa bàn"
   },
   "common": {
@@ -500,7 +500,7 @@
     "err_restore_fail": "Không thể phục hồi dữ liệu.",
     "understood": "Đã hiểu",
     "import_title": "CHỌN DỮ LIỆU PHỤC HỒI",
-    "import_desc": "Vui lòng chọn các mục bạn muốn nhập vào máy này. Dữ liệu cũ của các mục được chọn sẽ bị ghi đè.",
+    "import_desc": "Vui lòng chọn các mục bạn muốn nhập vào máy này.",
     "import_cancel": "Hủy",
     "import_confirm": "Xác nhận",
     "copied_connect_code": "Đã sao chép mã kết nối",
@@ -511,13 +511,14 @@
     "qr_instruction": "Hướng camera vào mã QR trên máy Phát để tự động nhận mã kết nối.",
     "qr_cancel": "Hủy quét",
     "storage_keys": {
-      "katfc-player-storage": "Đội hình & Cầu thủ",
-      "katfc-match-storage-v4": "Dữ liệu Trận đấu",
+      "katfc-player-storage": "Đội hình, Chấn thương & Tier",
+      "tactic-storage": "Dữ liệu Sa bàn (Chiến thuật)",
+      "katfc-match-storage-v5": "Dữ liệu Trận đấu & Lịch sử",
+      "katfc-match-storage-v4": "Dữ liệu Trận đấu & Lịch sử (Cũ)",
+      "katfc-venues-storage": "Danh bạ Sân bãi & Đội bóng",
       "5tactiq-settings-storage": "Cài đặt Chung",
-      "katfc-training-storage": "Lịch Tập luyện",
-      "katfc-fund-storage": "Quỹ đội",
-      "katfc-venues-storage": "Danh bạ Sân bóng",
-      "tactic-storage": "Sơ đồ Chiến thuật"
+      "katfc-training-storage": "Lịch tập luyện & Điểm danh",
+      "katfc-fund-storage": "Quỹ đội & Giao dịch"
     },
     "err_peer_unavailable": "Không tìm thấy thiết bị với mã này. Vui lòng kiểm tra lại mã hoặc máy Phát đã tắt.",
     "err_browser_incompatible": "Trình duyệt không hỗ trợ kết nối P2P.",
@@ -525,7 +526,11 @@
     "err_socket_closed": "Kết nối P2P bị ngắt.",
     "err_generic_p2p": "Không thể thiết lập kết nối P2P.",
     "err_export_fail": "Không thể tạo file sao lưu. Vui lòng thử lại.",
-    "share_dialog": "Lưu hoặc chia sẻ file sao lưu"
+    "share_dialog": "Lưu hoặc chia sẻ file sao lưu",
+    "mode_overwrite": "Ghi đè",
+    "mode_merge": "Gộp",
+    "mode_overwrite_desc": "* Dữ liệu cũ của các mục được chọn sẽ bị XÓA SẠCH và thay thế.",
+    "mode_merge_desc": "* Dữ liệu cũ sẽ được GIỮ LẠI và gộp thêm dữ liệu mới."
   },
   "settings": {
     "title": "Cài đặt đội bóng",

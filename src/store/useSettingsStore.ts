@@ -13,7 +13,7 @@ export const useSettingsStore = create<SettingsState>()(
     (set) => ({
       settings: {
         teamName: '5TactiQ',
-        logoUrl: '/splash.png',
+        logoUrl: './splash.png',
       },
       updateSettings: (updates) => set((state) => ({
         settings: { ...state.settings, ...updates }

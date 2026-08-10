@@ -37,6 +37,7 @@ export default function DataSync() {
   const { peerId, status: peerStatus, errorMsg, initHost, connectToHost, reset: resetPeer, setStatus: setPeerStatus } = usePeerSync(handleDataReceived);
   const [pendingImportData, setPendingImportData] = useState<Record<string, any> | null>(null);
   const [selectedImportKeys, setSelectedImportKeys] = useState<string[]>([]);
+  const [importMode, setImportMode] = useState<'overwrite' | 'merge'>('overwrite');
   const [connectCode, setConnectCode] = useState('');
   const [syncMode, setSyncMode] = useState<'none' | 'host' | 'client'>('none');
   const [alertInfo, setAlertInfo] = useState<{ title: string, message: string, onClose?: () => void } | null>(null);
@@ -117,9 +118,11 @@ export default function DataSync() {
 
   const confirmImport = async () => {
     if (!pendingImportData) return;
-    const success = await importSelectedData(pendingImportData, selectedImportKeys);
+    const success = await importSelectedData(pendingImportData, selectedImportKeys, importMode);
     if (success) {
-      window.location.replace('/');
+      // Avoid window.location.replace('/') in Electron (file:// protocol) as it redirects to system root C:/
+      window.location.hash = '/';
+      window.location.reload();
     } else {
       setAlertInfo({ title: t('sync.err_title', 'LỖI'), message: t('sync.err_restore_fail', 'Không thể phục hồi dữ liệu.') });
       setPendingImportData(null);
@@ -347,9 +350,29 @@ export default function DataSync() {
         title={t('sync.import_title', 'CHỌN DỮ LIỆU PHỤC HỒI')}
       >
         <div className="flex flex-col">
-          <p className="text-text-muted text-sm mb-4">{t('sync.import_desc', 'Vui lòng chọn các mục bạn muốn nhập vào máy này. Dữ liệu cũ của các mục được chọn sẽ bị ghi đè.')}</p>
+          <p className="text-text-muted text-sm mb-4">{t('sync.import_desc', 'Vui lòng chọn các mục bạn muốn nhập vào máy này.')}</p>
           
-          <div className="space-y-3 mb-6 max-h-[60vh] overflow-y-auto pr-1">
+          <div className="flex bg-surface-2 p-1 border-2 border-border-main mb-2">
+            <button
+              onClick={() => setImportMode('overwrite')}
+              className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${importMode === 'overwrite' ? 'bg-primary text-white shadow-sm' : 'text-text-muted hover:bg-surface'}`}
+            >
+              {t('sync.mode_overwrite', 'Ghi đè')}
+            </button>
+            <button
+              onClick={() => setImportMode('merge')}
+              className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${importMode === 'merge' ? 'bg-secondary text-white shadow-sm' : 'text-text-muted hover:bg-surface'}`}
+            >
+              {t('sync.mode_merge', 'Gộp')}
+            </button>
+          </div>
+          {importMode === 'overwrite' ? (
+             <p className="text-rose-500 text-[11px] mb-4 font-medium italic">{t('sync.mode_overwrite_desc', '* Dữ liệu cũ của các mục được chọn sẽ bị XÓA SẠCH và thay thế.')}</p>
+          ) : (
+             <p className="text-emerald-600 text-[11px] mb-4 font-medium italic">{t('sync.mode_merge_desc', '* Dữ liệu cũ sẽ được GIỮ LẠI và gộp thêm dữ liệu mới.')}</p>
+          )}
+          
+          <div className="space-y-3 mb-6 max-h-[50vh] overflow-y-auto pr-1">
             {pendingImportData && Object.keys(pendingImportData).filter(k => STORAGE_KEYS_META[k]).map(key => (
               <div 
                 key={key} 

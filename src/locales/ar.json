@@ -489,7 +489,7 @@
     "err_restore_fail": "لا يمكن استعادة البيانات.",
     "understood": "مفهوم",
     "import_title": "تحديد البيانات للاستعادة",
-    "import_desc": "يرجى تحديد العناصر التي تريد استيرادها. ستتم الكتابة فوق البيانات الحالية.",
+    "import_desc": "Please select the items you want to import to this device.",
     "import_cancel": "إلغاء",
     "import_confirm": "تأكيد",
     "copied_connect_code": "تم نسخ رمز الاتصال",
@@ -500,13 +500,14 @@
     "qr_instruction": "وجّه الكاميرا نحو رمز QR على جهاز المضيف للاتصال تلقائيًا.",
     "qr_cancel": "إلغاء المسح",
     "storage_keys": {
-      "katfc-player-storage": "التشكيلة واللاعبون",
-      "katfc-match-storage-v4": "بيانات المباريات",
+      "katfc-player-storage": "التشكيلة، الإصابات والتصنيف",
+      "tactic-storage": "السبورة التكتيكية",
+      "katfc-match-storage-v5": "بيانات المباريات والسجل",
+      "katfc-match-storage-v4": "بيانات المباريات (قديم)",
+      "katfc-venues-storage": "دليل الملاعب والخصوم",
       "5tactiq-settings-storage": "الإعدادات العامة",
-      "katfc-training-storage": "جدول التدريبات",
-      "katfc-fund-storage": "صندوق الفريق",
-      "katfc-venues-storage": "دليل الملاعب",
-      "tactic-storage": "المخططات التكتيكية"
+      "katfc-training-storage": "جدول التدريب والحضور",
+      "katfc-fund-storage": "صندوق الفريق والمعاملات"
     },
     "err_peer_unavailable": "تعذر الاتصال برمز الجهاز. يرجى التحقق من الرمز أو حالة المضيف.",
     "err_browser_incompatible": "متصفحك لا يدعم اتصال P2P.",
@@ -514,7 +515,11 @@
     "err_socket_closed": "تم إغلاق اتصال P2P.",
     "err_generic_p2p": "فشل في إنشاء اتصال P2P.",
     "err_export_fail": "تعذر إنشاء ملف النسخ الاحتياطي. يرجى المحاولة مرة أخرى.",
-    "share_dialog": "حفظ أو مشاركة ملف النسخ الاحتياطي"
+    "share_dialog": "حفظ أو مشاركة ملف النسخ الاحتياطي",
+    "mode_overwrite": "Overwrite",
+    "mode_merge": "Merge",
+    "mode_overwrite_desc": "* Old data of the selected items will be COMPLETELY DELETED and replaced.",
+    "mode_merge_desc": "* Old data will be KEPT and new data will be merged."
   },
   "settings": {
     "title": "إعدادات الفريق",
