@@ -593,7 +593,8 @@
     "away": "خارج الأرض",
     "badge_win": "ف",
     "badge_loss": "خ",
-    "badge_draw": "ت"
+    "badge_draw": "ت",
+    "search_placeholder": "البحث عن اسم الخصم..."
   },
   "fitness": {
     "title": "الإصابات واللياقة البدنية",
@@ -609,7 +610,8 @@
     "status_recovering": "يتعافى",
     "status": "الحالة الصحية",
     "note": "ملاحظة صحية / إصابة",
-    "note_placeholder": "مثال: إصابة في الركبة، راحة لمدة أسبوعين..."
+    "note_placeholder": "مثال: إصابة في الركبة، راحة لمدة أسبوعين...",
+    "search_placeholder": "البحث عن اسم اللاعب..."
   },
   "venues": {
     "title": "دليل الملاعب",
@@ -633,7 +635,8 @@
     "delete_msg": "هل أنت متأكد من أنك تريد حذف هذا الملعب من الدليل؟ لا يمكن التراجع عن هذا الإجراء.",
     "delete_cancel": "إلغاء",
     "delete_confirm": "تأكيد",
-    "delete_tooltip": "حذف الملعب"
+    "delete_tooltip": "حذف الملعب",
+    "search_placeholder": "البحث عن اسم الملعب، العنوان..."
   },
   "onboarding": {
     "skip": "تخطي",

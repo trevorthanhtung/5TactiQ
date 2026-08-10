@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
-import { ArrowLeft, Activity, X } from 'lucide-react';
+import { ArrowLeft, Activity, X, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { FitnessSkeleton } from '../components/ui/FitnessSkeleton';
 import { BottomSheet } from '../components/ui/BottomSheet';
@@ -13,6 +13,7 @@ export default function Fitness() {
   const { players, updatePlayer } = usePlayerStore();
   const navigate = useNavigate();
   const [selectedPlayer, setSelectedPlayer] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -94,8 +95,26 @@ export default function Fitness() {
 
       <div className="hallmark-divider mb-6"></div>
 
+      {/* Search Bar */}
+      {players.length > 0 && (
+        <div className="mb-6 relative max-w-md">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search size={18} className="text-text-muted" />
+          </div>
+          <input
+            type="text"
+            placeholder={t('fitness.search_placeholder', 'Tìm tên cầu thủ...')}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-surface border-2 border-border-main text-text-main py-2.5 pl-10 pr-3 outline-none focus:border-primary transition-colors text-sm placeholder:text-text-muted/60 placeholder:uppercase tracking-wider"
+          />
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {sortedPlayers.map(player => {
+        {sortedPlayers
+          .filter(player => player.name.toLowerCase().includes(searchQuery.toLowerCase()))
+          .map(player => {
           const status = player.healthStatus || 'Khỏe mạnh';
           const dotColor = getStatusColor(status);
           

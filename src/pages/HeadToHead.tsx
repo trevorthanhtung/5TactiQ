@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useMatchStore } from '../store/useMatchStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Users, Trophy, Flame, ChevronDown, ChevronUp, MapPin, CalendarClock, Shield, CheckCircle2, XCircle } from 'lucide-react';
+import { ArrowLeft, Users, Trophy, Flame, ChevronDown, ChevronUp, MapPin, CalendarClock, Shield, CheckCircle2, XCircle, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { HeadToHeadSkeleton } from '../components/ui/HeadToHeadSkeleton';
 
@@ -16,6 +16,7 @@ export default function HeadToHead() {
   const { settings } = useSettingsStore();
   const navigate = useNavigate();
   const [expandedOpponent, setExpandedOpponent] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -188,9 +189,25 @@ export default function HeadToHead() {
 
           <div className="hallmark-divider mb-6"></div>
 
+          {/* Search Bar */}
+          <div className="mb-6 relative max-w-md">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search size={18} className="text-text-muted" />
+            </div>
+            <input
+              type="text"
+              placeholder={t('h2h.search_placeholder', 'Tìm tên đối thủ...')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-surface border-2 border-border-main text-text-main py-2.5 pl-10 pr-3 outline-none focus:border-primary transition-colors text-sm placeholder:text-text-muted/60 placeholder:uppercase tracking-wider"
+            />
+          </div>
+
           {/* Opponents List */}
           <div className="space-y-3">
-            {stats.opponentsList.map((opp: any) => {
+            {stats.opponentsList
+              .filter((opp: any) => opp.opponentName.toLowerCase().includes(searchQuery.toLowerCase()))
+              .map((opp: any) => {
               const isExpanded = expandedOpponent === opp.normalizedName;
               const lastMatch = opp.matches[0];
               const diffSign = opp.goalDifference > 0 ? '+' : '';

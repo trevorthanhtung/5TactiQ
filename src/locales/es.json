@@ -593,7 +593,8 @@
     "away": "Visitante",
     "badge_win": "V",
     "badge_loss": "D",
-    "badge_draw": "E"
+    "badge_draw": "E",
+    "search_placeholder": "Buscar nombre del oponente..."
   },
   "fitness": {
     "title": "Lesiones y Estado Físico",
@@ -609,7 +610,8 @@
     "status_recovering": "Recuperando",
     "status": "Estado de salud",
     "note": "Nota de salud / lesión",
-    "note_placeholder": "Ejemplo: Lesión de rodilla, baja por 2 semanas..."
+    "note_placeholder": "Ejemplo: Lesión de rodilla, baja por 2 semanas...",
+    "search_placeholder": "Buscar nombre del jugador..."
   },
   "venues": {
     "title": "Directorio de Canchas",
@@ -633,7 +635,8 @@
     "delete_msg": "¿Estás seguro de que deseas eliminar esta cancha del directorio? Esta acción no se puede deshacer.",
     "delete_cancel": "CANCELAR",
     "delete_confirm": "CONFIRMAR",
-    "delete_tooltip": "Eliminar cancha"
+    "delete_tooltip": "Eliminar cancha",
+    "search_placeholder": "Buscar nombre de cancha, dirección..."
   },
   "onboarding": {
     "skip": "Omitir",

@@ -604,7 +604,8 @@
     "away": "Sân khách",
     "badge_win": "T",
     "badge_loss": "B",
-    "badge_draw": "H"
+    "badge_draw": "H",
+    "search_placeholder": "Tìm tên đối thủ..."
   },
   "fitness": {
     "title": "Chấn thương & Thể lực",
@@ -620,7 +621,8 @@
     "status_recovering": "Đang hồi phục",
     "status": "Tình trạng sức khỏe",
     "note": "Ghi chú chấn thương / sức khỏe",
-    "note_placeholder": "Ví dụ: Trật khớp gối, nghỉ 2 tuần..."
+    "note_placeholder": "Ví dụ: Trật khớp gối, nghỉ 2 tuần...",
+    "search_placeholder": "Tìm tên cầu thủ..."
   },
   "venues": {
     "title": "Danh bạ Sân bóng",
@@ -644,7 +646,8 @@
     "delete_msg": "Bạn có chắc chắn muốn xóa sân bóng này khỏi danh bạ không? Hành động này không thể hoàn tác.",
     "delete_cancel": "HỦY BỎ",
     "delete_confirm": "XÁC NHẬN",
-    "delete_tooltip": "Xóa sân bóng"
+    "delete_tooltip": "Xóa sân bóng",
+    "search_placeholder": "Tìm tên sân, địa chỉ..."
   },
   "onboarding": {
     "skip": "Bỏ qua",

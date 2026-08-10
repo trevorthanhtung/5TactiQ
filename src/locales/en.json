@@ -603,7 +603,8 @@
     "away": "Away",
     "badge_win": "W",
     "badge_loss": "L",
-    "badge_draw": "D"
+    "badge_draw": "D",
+    "search_placeholder": "Search opponent name..."
   },
   "fitness": {
     "title": "Injuries & Fitness",
@@ -619,7 +620,8 @@
     "status_recovering": "Recovering",
     "status": "Health Status",
     "note": "Injury / Health Note",
-    "note_placeholder": "Example: Knee injury, out for 2 weeks..."
+    "note_placeholder": "Example: Knee injury, out for 2 weeks...",
+    "search_placeholder": "Search player name..."
   },
   "venues": {
     "title": "Venues Directory",
@@ -643,7 +645,8 @@
     "delete_msg": "Are you sure you want to delete this venue from the directory? This action cannot be undone.",
     "delete_cancel": "CANCEL",
     "delete_confirm": "CONFIRM",
-    "delete_tooltip": "Delete venue"
+    "delete_tooltip": "Delete venue",
+    "search_placeholder": "Search venue name, address..."
   },
   "onboarding": {
     "skip": "Skip",

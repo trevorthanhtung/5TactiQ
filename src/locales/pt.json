@@ -593,7 +593,8 @@
     "away": "Visitante",
     "badge_win": "V",
     "badge_loss": "D",
-    "badge_draw": "E"
+    "badge_draw": "E",
+    "search_placeholder": "Procurar nome do oponente..."
   },
   "fitness": {
     "title": "Lesões e Condição Física",
@@ -609,7 +610,8 @@
     "status_recovering": "Em Recuperação",
     "status": "Estado de saúde",
     "note": "Nota de lesão / saúde",
-    "note_placeholder": "Exemplo: Lesão no joelho, fora por 2 semanas..."
+    "note_placeholder": "Exemplo: Lesão no joelho, fora por 2 semanas...",
+    "search_placeholder": "Procurar nome do jogador..."
   },
   "venues": {
     "title": "Diretório de Quadras",
@@ -633,7 +635,8 @@
     "delete_msg": "Tem certeza que deseja excluir esta quadra do diretório? Esta ação não pode ser desfeita.",
     "delete_cancel": "CANCELAR",
     "delete_confirm": "CONFIRMAR",
-    "delete_tooltip": "Excluir quadra"
+    "delete_tooltip": "Excluir quadra",
+    "search_placeholder": "Procurar nome do campo, endereço..."
   },
   "onboarding": {
     "skip": "Pular",

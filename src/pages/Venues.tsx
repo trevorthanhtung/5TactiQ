@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useVenueStore } from '../store/useVenueStore';
-import { ArrowLeft, MapPin, Phone, Plus, Map, X, Trash2, Edit2 } from 'lucide-react';
+import { ArrowLeft, MapPin, Phone, Plus, Map, X, Trash2, Edit2, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useHardwareBack } from '../hooks/useHardwareBack';
 import { VenuesSkeleton } from '../components/ui/VenuesSkeleton';
@@ -16,6 +16,7 @@ export default function Venues() {
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -98,6 +99,22 @@ export default function Venues() {
 
       <div className="hallmark-divider mb-6"></div>
 
+      {/* Search Bar */}
+      {venues.length > 0 && (
+        <div className="mb-6 relative max-w-md">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search size={18} className="text-text-muted" />
+          </div>
+          <input
+            type="text"
+            placeholder={t('venues.search_placeholder', 'Tìm tên sân, địa chỉ...')}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-surface border-2 border-border-main text-text-main py-2.5 pl-10 pr-3 outline-none focus:border-primary transition-colors text-sm placeholder:text-text-muted/60 placeholder:uppercase tracking-wider"
+          />
+        </div>
+      )}
+
       {venues.length === 0 ? (
         <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-primary/30 bg-primary/5 text-primary text-center">
           <Map className="mb-4 opacity-50" size={48} />
@@ -112,7 +129,12 @@ export default function Venues() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {venues.map(venue => (
+          {venues
+            .filter(v => 
+              v.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+              (v.address && v.address.toLowerCase().includes(searchQuery.toLowerCase()))
+            )
+            .map(venue => (
             <div
               key={venue.id}
               onClick={() => handleOpenModal(venue)}
