@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useToastStore } from '../store/useToastStore';
-import { Plus, X, BarChart2, Check, Cross, Activity } from 'lucide-react';
+import { Plus, X, BarChart2, Check, Cross, Activity, Search } from 'lucide-react';
 import { useHardwareBack } from '../hooks/useHardwareBack';
 import { RosterSkeleton } from '../components/ui/RosterSkeleton';
 import { BottomSheet } from '../components/ui/BottomSheet';
@@ -21,6 +21,7 @@ export default function Roster() {
   const [newPositions, setNewPositions] = useState<string[]>([]);
   type FilterType = 'all' | 'injured' | 'recovering' | 'borrowed' | 'youth';
   const [filter, setFilter] = useState<FilterType>('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [newIsBorrowed, setNewIsBorrowed] = useState(false);
   const [newIsYouth, setNewIsYouth] = useState(false);
 
@@ -90,6 +91,9 @@ export default function Roster() {
   });
 
   const filteredPlayers = sortedPlayers.filter(player => {
+    if (searchQuery && !player.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return false;
+    }
     if (filter === 'injured') {
       return player.healthStatus && player.healthStatus.includes('Chấn thương');
     }
@@ -220,9 +224,26 @@ export default function Roster() {
         </form>
       </BottomSheet>
 
-      {/* Filter Tabs */}
-      <div className="flex items-center gap-2 mb-6 overflow-x-auto hide-scrollbar shrink-0 py-1">
-        <button
+      <div className="flex flex-col gap-4 mb-6">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder={t('roster.search_placeholder', 'Tìm kiếm cầu thủ...')}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-surface border-2 border-border-main focus:border-primary rounded-none px-4 py-2.5 pl-10 text-text-main focus:outline-none transition-colors font-medium placeholder:text-text-muted/60 shadow-sm"
+          />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-main transition-colors">
+              <X size={18} />
+            </button>
+          )}
+        </div>
+
+        {/* Filter Tabs */}
+        <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar shrink-0 py-1">
+          <button
           type="button"
           onClick={() => setFilter('all')}
           className={`px-3.5 py-2 text-xs font-display uppercase tracking-wider font-bold border-2 transition-all shrink-0 ${
@@ -277,6 +298,7 @@ export default function Roster() {
         >
           {t('roster.filter_youth', 'Đội trẻ')} ({players.filter(p => p.isYouth).length})
         </button>
+        </div>
       </div>
 
       {/* Roster Grid */}
