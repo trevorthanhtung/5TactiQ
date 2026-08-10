@@ -16,11 +16,11 @@ export default function InstallPrompt() {
 
   useEffect(() => {
     import('@capacitor/core').then(({ Capacitor }) => {
-      // Hide if already running as a native app (Capacitor or Electron)
-      const isNative = Capacitor.isNativePlatform() || navigator.userAgent.toLowerCase().includes('electron');
-      const isHidden = localStorage.getItem('hideInstallPrompt') === 'true';
+      // Hide if already running as an installed app (Capacitor, Electron, or PWA Standalone)
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || ('standalone' in navigator && (navigator as any).standalone === true);
+      const isNative = Capacitor.isNativePlatform() || navigator.userAgent.toLowerCase().includes('electron') || isStandalone;
 
-      if (isHidden || isNative) {
+      if (isNative) {
         setIsVisible(false);
         return;
       }
@@ -54,7 +54,6 @@ export default function InstallPrompt() {
       setShowUpdateModal(false);
     } else {
       setIsVisible(false);
-      localStorage.setItem('hideInstallPrompt', 'true');
     }
   };
 
