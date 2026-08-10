@@ -21,6 +21,8 @@ export default function PlayerProfile() {
   const [editName, setEditName] = useState('');
   const [editNumber, setEditNumber] = useState('');
   const [editPositions, setEditPositions] = useState<string[]>([]);
+  const [editPhone, setEditPhone] = useState('');
+  const [editNote, setEditNote] = useState('');
   
   const [showHealthModal, setShowHealthModal] = useState(false);
   const [healthStatus, setHealthStatus] = useState<HealthStatus>('Khỏe mạnh');
@@ -71,6 +73,8 @@ export default function PlayerProfile() {
     setEditName(player.name);
     setEditNumber(player.jersey_number ? String(player.jersey_number) : '');
     setEditPositions(player.positions || []);
+    setEditPhone(player.phone || '');
+    setEditNote(player.note || '');
     setShowEditModal(true);
   };
 
@@ -103,6 +107,8 @@ export default function PlayerProfile() {
       name: editName,
       jersey_number: editNumber ? parseInt(editNumber) : null,
       positions: editPositions as Position[],
+      phone: editPhone,
+      note: editNote,
     });
     setShowEditModal(false);
     addToast({ type: 'success', message: t('toast.player_updated', { name: editName }) });
@@ -332,6 +338,32 @@ export default function PlayerProfile() {
                 value={editNumber}
                 onChange={e => setEditNumber(e.target.value)}
                 placeholder={t('roster.jersey_number_placeholder')}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 @sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">{t('roster.phone_label', 'Số điện thoại')}</label>
+              <input
+                type="tel"
+                inputMode="tel"
+                enterKeyHint="next"
+                autoComplete="tel"
+                className="w-full border-2 border-border-main bg-surface p-3 rounded-none focus:border-primary outline-none font-medium text-lg"
+                value={editPhone}
+                onChange={e => setEditPhone(e.target.value)}
+                placeholder={t('roster.phone_placeholder', 'VD: 0912 345 678')}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">{t('roster.note_label', 'Ghi chú')}</label>
+              <input
+                type="text"
+                enterKeyHint="done"
+                className="w-full border-2 border-border-main bg-surface p-3 rounded-none focus:border-primary outline-none font-medium text-lg"
+                value={editNote}
+                onChange={e => setEditNote(e.target.value)}
+                placeholder={t('roster.note_placeholder', 'Nhập thông tin hoặc tình trạng chấn thương...')}
               />
             </div>
           </div>
