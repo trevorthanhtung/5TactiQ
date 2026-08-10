@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useToastStore } from '../store/useToastStore';
-import { Plus, X, BarChart2, Check } from 'lucide-react';
+import { Plus, X, BarChart2, Check, Cross, Activity } from 'lucide-react';
 import { useHardwareBack } from '../hooks/useHardwareBack';
 import { RosterSkeleton } from '../components/ui/RosterSkeleton';
 import { BottomSheet } from '../components/ui/BottomSheet';
@@ -254,12 +254,16 @@ export default function Roster() {
                     <div
                       className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center border-l-2 border-border-main ${
                         player.healthStatus.includes('Chấn thương') 
-                          ? 'bg-white text-red-600' 
-                          : 'bg-blue-500 text-white'
+                          ? 'bg-rose-600 text-white' 
+                          : 'bg-blue-600 text-white'
                       }`}
                       title={player.healthStatus}
                     >
-                      <Plus size={16} strokeWidth={4} />
+                      {player.healthStatus.includes('Chấn thương') ? (
+                        <Cross size={16} className="fill-current" />
+                      ) : (
+                        <Activity size={16} />
+                      )}
                     </div>
                   )}
                   {player.isBorrowed && (
