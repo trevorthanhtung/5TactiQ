@@ -80,6 +80,7 @@
     ],
     "win": {
       "target": "nsis",
+      "icon": "public/logo.png",
       "artifactName": "5TactiQ-Setup.exe"
     },
     "nsis": {
@@ -87,7 +88,11 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "license": "public/license.txt"
+      "installerIcon": "public/logo.png",
+      "uninstallerIcon": "public/logo.png",
+      "license": "public/license.txt",
+      "uninstallDisplayName": "5TactiQ",
+      "shortcutName": "5TactiQ"
     },
     "linux": {
       "target": "AppImage",

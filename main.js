@@ -7,8 +7,11 @@ const __dirname = path.dirname(__filename);
 
 function createWindow() {
   const win = new BrowserWindow({
-    width: 1200,
+    width: 1280,
     height: 800,
+    minWidth: 1024,
+    minHeight: 768,
+    icon: path.join(__dirname, process.env.VITE_DEV_SERVER_URL ? 'public' : 'dist', 'logo.png'),
     title: "5TactiQ",
     webPreferences: {
       nodeIntegration: true,
