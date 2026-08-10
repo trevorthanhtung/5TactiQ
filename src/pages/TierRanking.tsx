@@ -225,24 +225,26 @@ export default function TierRanking() {
     <div className="p-4 md:p-6 flex flex-col min-h-full max-w-5xl mx-auto w-full pb-24">
       {/* Header */}
       <header className="mb-5 pt-2">
-        <div className="flex justify-between items-start mb-3">
-          <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm font-bold text-text-muted hover:text-secondary transition-colors uppercase tracking-wider">
-            <ArrowLeft size={16} /> {t('tier.back')}
-          </button>
-          
+        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm font-bold text-text-muted hover:text-secondary transition-colors mb-4 uppercase tracking-wider">
+          <ArrowLeft size={16} /> {t('tier.back')}
+        </button>
+        <div className="flex justify-between items-end gap-4">
+          <div>
+            <h1 className="text-4xl font-display uppercase text-primary leading-none">{t('tier.title')}</h1>
+            <p className="text-sm text-text-muted mt-2 font-medium">{t('tier.subtitle')}</p>
+          </div>
+
           {players.some(p => p.tier) && (
             <button 
               onClick={handleResetAll}
-              className="flex items-center gap-1.5 text-xs font-bold text-rose-500 hover:text-rose-400 bg-rose-500/10 px-3 py-1.5 border border-rose-500/20 transition-colors uppercase tracking-wider"
+              className="hallmark-btn flex items-center gap-2 bg-secondary text-white text-sm py-2 px-4 shrink-0"
             >
-              <RotateCcw size={14} />
-              {t('tier.reset_all', 'LÀM MỚI')}
+              <RotateCcw size={18} />
+              <span>{t('tier.reset_all', 'LÀM MỚI')}</span>
             </button>
           )}
         </div>
-        <h1 className="text-4xl font-display uppercase text-primary leading-none">{t('tier.title')}</h1>
-        <p className="text-sm text-text-muted mt-2 font-medium">{t('tier.subtitle')}</p>
-        <div className="hallmark-divider" />
+        <div className="hallmark-divider mt-4" />
       </header>
 
       <DndContext
