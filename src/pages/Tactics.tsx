@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Stage, Layer, Rect, Circle, Text, Line, Group, Path, Image as KonvaImage, Arrow } from 'react-konva';
 import { Download, Save, MousePointer2, Pen, ArrowLeft, Trash2, Users, Settings, Undo2, Redo2, Eraser, TrendingUp, FastForward, CornerUpRight, Play, Square, Plus, Triangle, SquareDashed, Type, BookOpen, Search, Copy, X, FolderOpen, Keyboard, HelpCircle, RotateCcw, LayoutTemplate, Scissors, Brush } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
