@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
-import { Camera, Zap, ZapOff, RefreshCcw } from 'lucide-react';
-import { Torch } from '@capawesome/capacitor-torch';
+import { Camera, RefreshCcw } from 'lucide-react';
 import { BottomSheet } from './BottomSheet';
 import { useTranslation } from 'react-i18next';
 
@@ -14,45 +13,8 @@ interface QRScannerProps {
 export function QRScanner({ onScan, isOpen, onClose }: QRScannerProps) {
   const { t } = useTranslation();
   const scannerRef = useRef<Html5Qrcode | null>(null);
-  const [flashEnabled, setFlashEnabled] = useState(false);
   const [cameras, setCameras] = useState<{ id: string, label: string }[]>([]);
   const [currentCamIndex, setCurrentCamIndex] = useState(0);
-
-  const toggleFlash = async () => {
-    import('@capacitor/core').then(async ({ Capacitor }) => {
-      try {
-        if (Capacitor.isNativePlatform()) {
-          if (flashEnabled) {
-            await Torch.disable();
-            setFlashEnabled(false);
-          } else {
-            await Torch.enable();
-            setFlashEnabled(true);
-          }
-        } else {
-          // WebRTC fallback for PWA/Web
-          if (scannerRef.current) {
-            try {
-              await scannerRef.current.applyVideoConstraints({
-                advanced: [{ torch: !flashEnabled } as any]
-              });
-              setFlashEnabled(!flashEnabled);
-            } catch (weberr) {
-              console.error("WebRTC Flash fallback cũng thất bại:", weberr);
-              import('../../store/useToastStore').then(({ useToastStore }) => {
-                useToastStore.getState().addToast({
-                  type: 'error',
-                  message: 'Trình duyệt/thiết bị này không cho phép bật Flash trên Web. Vui lòng dùng app Native (APK) hoặc bật đèn thủ công.'
-                });
-              });
-            }
-          }
-        }
-      } catch (err) {
-        console.error("Lỗi khi bật tắt Flash:", err);
-      }
-    });
-  };
 
   useEffect(() => {
     let isMounted = true;
@@ -138,8 +100,6 @@ export function QRScanner({ onScan, isOpen, onClose }: QRScannerProps) {
             }).catch(() => {});
           } catch (e) {}
         }
-        Torch.disable().catch(() => {});
-        setFlashEnabled(false);
         setCameras([]);
       };
     }
@@ -200,17 +160,6 @@ export function QRScanner({ onScan, isOpen, onClose }: QRScannerProps) {
                   <RefreshCcw size={20} />
                 </button>
               )}
-
-              {/* Flash Toggle Button */}
-              <button 
-                onClick={toggleFlash}
-                className={`absolute bottom-4 right-4 p-3 rounded-full transition-all shadow-lg border border-white/20 z-10 ${
-                  flashEnabled ? 'bg-primary text-white scale-110' : 'bg-black/50 text-white/80 hover:bg-black/70'
-                }`}
-                title="Bật/Tắt Flash"
-              >
-                {flashEnabled ? <Zap size={24} /> : <ZapOff size={24} />}
-              </button>
             </div>
           </>
         )}
