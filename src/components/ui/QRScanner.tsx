@@ -17,28 +17,39 @@ export function QRScanner({ onScan, isOpen, onClose }: QRScannerProps) {
   const [flashEnabled, setFlashEnabled] = useState(false);
 
   const toggleFlash = async () => {
-    try {
-      if (flashEnabled) {
-        await Torch.disable();
-        setFlashEnabled(false);
-      } else {
-        await Torch.enable();
-        setFlashEnabled(true);
-      }
-    } catch (err) {
-      console.error("Lỗi khi bật đèn Flash Native:", err);
-      // Fallback sử dụng WebRTC nếu plugin Native không hoạt động (trên Web)
-      if (scannerRef.current) {
-        try {
-          await scannerRef.current.applyVideoConstraints({
-            advanced: [{ torch: !flashEnabled } as any]
-          });
-          setFlashEnabled(!flashEnabled);
-        } catch (weberr) {
-          console.error("WebRTC Flash fallback cũng thất bại:", weberr);
+    import('@capacitor/core').then(async ({ Capacitor }) => {
+      try {
+        if (Capacitor.isNativePlatform()) {
+          if (flashEnabled) {
+            await Torch.disable();
+            setFlashEnabled(false);
+          } else {
+            await Torch.enable();
+            setFlashEnabled(true);
+          }
+        } else {
+          // WebRTC fallback for PWA/Web
+          if (scannerRef.current) {
+            try {
+              await scannerRef.current.applyVideoConstraints({
+                advanced: [{ torch: !flashEnabled } as any]
+              });
+              setFlashEnabled(!flashEnabled);
+            } catch (weberr) {
+              console.error("WebRTC Flash fallback cũng thất bại:", weberr);
+              import('../../store/useToastStore').then(({ useToastStore }) => {
+                useToastStore.getState().addToast({
+                  type: 'error',
+                  message: 'Trình duyệt/thiết bị này không cho phép bật Flash trên Web. Vui lòng dùng app Native (APK) hoặc bật đèn thủ công.'
+                });
+              });
+            }
+          }
         }
+      } catch (err) {
+        console.error("Lỗi khi bật tắt Flash:", err);
       }
-    }
+    });
   };
 
   useEffect(() => {
