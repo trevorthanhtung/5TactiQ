@@ -124,7 +124,16 @@
       "p2_desc": " لحفظ تفضيلاتك.",
       "p3_title": "3. الخيارات:",
       "p3_desc": " يمكنك مسحها."
-    }
+    },
+    "desc_mac_1": "افتح قائمة المتصفح (Safari/Chrome)",
+    "desc_mac_2": "حدد 'Add to Dock' أو 'Install App' للتثبيت",
+    "desc_apk": "قم بتنزيل التطبيق الرسمي (APK) للحصول على تجربة أكثر سلاسة وميزات كاملة!",
+    "download_apk": "تنزيل APK الآن",
+    "desc_windows": "قم بتنزيل المثبت المستقل (.exe) لنظام التشغيل Windows. استمتع بأقصى أداء!",
+    "download_windows": "تنزيل ويندوز (.EXE)",
+    "desc_linux": "قم بتنزيل التطبيق المستقل (AppImage) لنظام Linux. قم بتشغيله مباشرة بدون تثبيت!",
+    "download_linux": "تنزيل لينكس",
+    "update_title": "تحديث التطبيق (v{{version}})"
   },
   "toast": {
     "settings_saved": "تم حفظ الإعدادات!",

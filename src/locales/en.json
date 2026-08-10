@@ -124,7 +124,16 @@
       "p2_desc": " To save your preferences and speed up the app.",
       "p3_title": "3. Your options:",
       "p3_desc": " You can clear cookies, but you may need to set up your team again."
-    }
+    },
+    "desc_mac_1": "Open browser menu (Safari/Chrome)",
+    "desc_mac_2": "Select 'Add to Dock' or 'Install App' to install",
+    "desc_apk": "Download the official App (APK) for the smoothest and most full-featured experience!",
+    "download_apk": "DOWNLOAD APK NOW",
+    "desc_windows": "Download the standalone installer (.exe) for Windows. Enjoy maximum performance!",
+    "download_windows": "DOWNLOAD WINDOWS (.EXE)",
+    "desc_linux": "Download the standalone AppImage for Linux. Run it directly without installation!",
+    "download_linux": "DOWNLOAD LINUX",
+    "update_title": "APP UPDATE (v{{version}})"
   },
   "toast": {
     "settings_saved": "Settings saved!",

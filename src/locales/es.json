@@ -124,7 +124,16 @@
       "p2_desc": " Para guardar tus preferencias.",
       "p3_title": "3. Opciones:",
       "p3_desc": " Puedes borrarlas."
-    }
+    },
+    "desc_mac_1": "Abrir el menú del navegador (Safari/Chrome)",
+    "desc_mac_2": "Selecciona 'Add to Dock' o 'Install App' para instalar",
+    "desc_apk": "¡Descarga la aplicación oficial (APK) para la experiencia más fluida y completa!",
+    "download_apk": "DESCARGAR APK AHORA",
+    "desc_windows": "Descarga el instalador independiente (.exe) para Windows. ¡Disfruta del máximo rendimiento!",
+    "download_windows": "DESCARGAR WINDOWS (.EXE)",
+    "desc_linux": "Descarga la aplicación independiente (AppImage) para Linux. ¡Ejecútalo directamente sin instalación!",
+    "download_linux": "DESCARGAR LINUX",
+    "update_title": "ACTUALIZACIÓN DE LA APLICACIÓN (v{{version}})"
   },
   "toast": {
     "settings_saved": "¡Configuración guardada!",

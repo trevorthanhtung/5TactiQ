@@ -69,9 +69,9 @@ export default function InstallPrompt() {
       return (
         <>
           <p className="text-xs text-text-muted mb-3 font-sans">
-            {platform === 'ios' ? t('install_prompt.desc_ios_1') : "Mở menu trình duyệt (Safari/Chrome)"} <br/>
+            {platform === 'ios' ? t('install_prompt.desc_ios_1') : t('install_prompt.desc_mac_1', 'Mở menu trình duyệt (Safari/Chrome)')} <br/>
             <span className="font-bold text-primary">
-              {platform === 'ios' ? t('install_prompt.desc_ios_2') : "Chọn 'Add to Dock' hoặc 'Install App' để cài đặt"}
+              {platform === 'ios' ? t('install_prompt.desc_ios_2') : t('install_prompt.desc_mac_2', 'Chọn \\\'Add to Dock\\\' hoặc \\\'Install App\\\' để cài đặt')}
             </span>
           </p>
         </>
@@ -82,13 +82,13 @@ export default function InstallPrompt() {
       return (
         <>
           <p className="text-xs text-text-muted mb-3 font-sans">
-            Tải bản App chính thức (APK) để có trải nghiệm cực mượt và đầy đủ tính năng nhất!
+            {t('install_prompt.desc_apk', 'Tải bản App chính thức (APK) để có trải nghiệm cực mượt và đầy đủ tính năng nhất!')}
           </p>
           <button 
             onClick={() => handleDownload('https://github.com/trevorthanhtung/5TactiQ/releases/download/latest/5TactiQ.apk')}
             className="w-full hallmark-btn bg-primary text-white py-2 text-xs flex items-center justify-center gap-1"
           >
-            <Download size={14} /> TẢI APK NGAY
+            <Download size={14} /> {t('install_prompt.download_apk', 'TẢI APK NGAY')}
           </button>
         </>
       );
@@ -98,13 +98,13 @@ export default function InstallPrompt() {
       return (
         <>
           <p className="text-xs text-text-muted mb-3 font-sans">
-            Tải phần mềm cài đặt (.exe) độc lập dành riêng cho Windows. Tận hưởng hiệu năng tối đa!
+            {t('install_prompt.desc_windows', 'Tải phần mềm cài đặt (.exe) độc lập dành riêng cho Windows. Tận hưởng hiệu năng tối đa!')}
           </p>
           <button 
             onClick={() => handleDownload('https://github.com/trevorthanhtung/5TactiQ/releases/download/latest/5TactiQ-Setup.exe')}
             className="w-full hallmark-btn bg-primary text-white py-2 text-xs flex items-center justify-center gap-1"
           >
-            <Download size={14} /> TẢI BẢN WINDOWS (.EXE)
+            <Download size={14} /> {t('install_prompt.download_windows', 'TẢI BẢN WINDOWS (.EXE)')}
           </button>
         </>
       );
@@ -114,13 +114,13 @@ export default function InstallPrompt() {
       return (
         <>
           <p className="text-xs text-text-muted mb-3 font-sans">
-            Tải phần mềm độc lập (.AppImage) dành riêng cho Linux. Tải về chạy luôn không cần cài đặt!
+            {t('install_prompt.desc_linux', 'Tải phần mềm độc lập (.AppImage) dành riêng cho Linux. Tải về chạy luôn không cần cài đặt!')}
           </p>
           <button 
             onClick={() => handleDownload('https://github.com/trevorthanhtung/5TactiQ/releases/download/latest/5TactiQ.AppImage')}
             className="w-full hallmark-btn bg-primary text-white py-2 text-xs flex items-center justify-center gap-1"
           >
-            <Download size={14} /> TẢI BẢN LINUX
+            <Download size={14} /> {t('install_prompt.download_linux', 'TẢI BẢN LINUX')}
           </button>
         </>
     );
@@ -157,7 +157,7 @@ export default function InstallPrompt() {
         
         <div className="flex-1">
           <h4 className="font-display font-bold text-primary uppercase text-sm mb-1">
-            {isUpdate ? `CẬP NHẬT ỨNG DỤNG (v${latestVersion})` : t('install_prompt.title')}
+            {isUpdate ? t('install_prompt.update_title', { version: latestVersion, defaultValue: `CẬP NHẬT ỨNG DỤNG (v{{version}})` }) : t('install_prompt.title')}
           </h4>
           {renderContent()}
         </div>
