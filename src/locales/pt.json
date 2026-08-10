@@ -235,7 +235,9 @@
     "attendance": "Presenças",
     "no_data": "Sem dados de jogadores ainda.",
     "unknown_position": "Desconhecida",
-    "season": "TEMPORADA {{year}}"
+    "season": "TEMPORADA {{year}}",
+    "filter_season": "TEMPORADA ATUAL",
+    "filter_all": "TODO O TEMPO"
   },
   "matchday": {
     "title": "Partidas",

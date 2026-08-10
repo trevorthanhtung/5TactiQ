@@ -14,6 +14,7 @@ export default function Stats() {
   const { matches } = useMatchStore();
   const { settings } = useSettingsStore();
   const [activeTab, setActiveTab] = useState<'goals' | 'assists' | 'attendance'>('goals');
+  const [filterMode, setFilterMode] = useState<'all_time' | 'current_season'>('current_season');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -36,17 +37,19 @@ export default function Stats() {
 
   const seasonStart = settings.seasonStartDate ? new Date(settings.seasonStartDate) : null;
   const seasonEnd = settings.seasonEndDate ? new Date(settings.seasonEndDate) : null;
+  const hasSeasonConfig = !!(seasonStart && seasonEnd);
 
   const filteredMatches = matches.filter(m => {
-    if (!m.date || !seasonStart || !seasonEnd) return true;
+    if (filterMode === 'all_time' || !hasSeasonConfig) return true;
+    if (!m.date) return true;
     const matchDate = new Date(m.date);
-    return matchDate >= seasonStart && matchDate <= seasonEnd;
+    return matchDate >= seasonStart! && matchDate <= seasonEnd!;
   });
 
   const getSeasonString = () => {
-    if (seasonStart && seasonEnd) {
-      const y1 = seasonStart.getFullYear();
-      const y2 = seasonEnd.getFullYear();
+    if (filterMode === 'current_season' && hasSeasonConfig) {
+      const y1 = seasonStart!.getFullYear();
+      const y2 = seasonEnd!.getFullYear();
       return t('stats.season', { year: y1 === y2 ? y1 : `${y1}/${y2}` });
     }
     return t('stats.aggregated_data', { count: filteredMatches.length });
@@ -116,8 +119,21 @@ export default function Stats() {
       
       <div className="flex flex-col @lg:flex-row @lg:justify-between @lg:items-end gap-4 mb-6">
         <div>
-          <h1 className="text-4xl @sm:text-5xl font-display uppercase text-primary leading-none">{t('stats.title')}</h1>
-          <p className="text-xs font-bold text-text-muted uppercase tracking-widest mt-2">
+          <div className="flex items-center gap-4 mb-2 flex-wrap">
+            <h1 className="text-4xl @sm:text-5xl font-display uppercase text-primary leading-none">{t('stats.title')}</h1>
+            
+            {hasSeasonConfig && (
+              <select 
+                value={filterMode} 
+                onChange={(e) => setFilterMode(e.target.value as 'all_time' | 'current_season')}
+                className="bg-surface border-2 border-border-main text-xs font-bold uppercase tracking-widest text-text-main py-1 px-2 outline-none focus:border-primary cursor-pointer"
+              >
+                <option value="current_season">{t('stats.filter_season', 'MÙA GIẢI HIỆN TẠI')}</option>
+                <option value="all_time">{t('stats.filter_all', 'TẤT CẢ THỜI GIAN')}</option>
+              </select>
+            )}
+          </div>
+          <p className="text-xs font-bold text-text-muted uppercase tracking-widest">
             {getSeasonString()}
           </p>
         </div>

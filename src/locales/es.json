@@ -235,7 +235,9 @@
     "attendance": "Apariciones",
     "no_data": "Sin datos de jugadores.",
     "unknown_position": "Desconocida",
-    "season": "TEMPORADA {{year}}"
+    "season": "TEMPORADA {{year}}",
+    "filter_season": "TEMPORADA ACTUAL",
+    "filter_all": "TODO EL TIEMPO"
   },
   "matchday": {
     "title": "Partidos",

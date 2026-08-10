@@ -90,6 +90,7 @@ export default function Matchday() {
   const currentMatch = getMatchInfo();
 
   const [activeTab, setActiveTab] = useState<'attendance' | 'teams' | 'summary'>('attendance');
+  const [filterMode, setFilterMode] = useState<'all_time' | 'current_season'>('current_season');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showEndModal, setShowEndModal] = useState(false);
@@ -595,11 +596,13 @@ export default function Matchday() {
     // Has matches but none selected — show Match List view
     const seasonStart = settings.seasonStartDate ? new Date(settings.seasonStartDate) : null;
     const seasonEnd = settings.seasonEndDate ? new Date(settings.seasonEndDate) : null;
+    const hasSeasonConfig = !!(seasonStart && seasonEnd);
 
     const filteredMatches = matches.filter(m => {
-      if (!m.date || !seasonStart || !seasonEnd) return true;
+      if (filterMode === 'all_time' || !hasSeasonConfig) return true;
+      if (!m.date) return true;
       const matchDate = new Date(m.date);
-      return matchDate >= seasonStart && matchDate <= seasonEnd;
+      return matchDate >= seasonStart! && matchDate <= seasonEnd!;
     });
 
     const liveMatches = filteredMatches.filter(m => m.status === 'live');
@@ -713,10 +716,22 @@ export default function Matchday() {
         {/* Header - matching Roster page style */}
         <div className="flex justify-between items-end mb-6 pt-2">
           <div>
-            <h1 className="text-4xl @sm:text-5xl font-display uppercase text-primary leading-none">{t('matchday.title')}</h1>
-            {(seasonStart && seasonEnd) && (
-              <p className="text-xs font-bold text-text-muted uppercase tracking-widest mt-2">
-                {t('stats.season', { year: seasonStart.getFullYear() === seasonEnd.getFullYear() ? seasonStart.getFullYear() : `${seasonStart.getFullYear()}/${seasonEnd.getFullYear()}` })}
+            <div className="flex items-center gap-4 mb-2 flex-wrap">
+              <h1 className="text-4xl @sm:text-5xl font-display uppercase text-primary leading-none">{t('matchday.title')}</h1>
+              {hasSeasonConfig && (
+                <select 
+                  value={filterMode} 
+                  onChange={(e) => setFilterMode(e.target.value as 'all_time' | 'current_season')}
+                  className="bg-surface border-2 border-border-main text-xs font-bold uppercase tracking-widest text-text-main py-1 px-2 outline-none focus:border-primary cursor-pointer"
+                >
+                  <option value="current_season">{t('stats.filter_season', 'MÙA GIẢI HIỆN TẠI')}</option>
+                  <option value="all_time">{t('stats.filter_all', 'TẤT CẢ THỜI GIAN')}</option>
+                </select>
+              )}
+            </div>
+            {(filterMode === 'current_season' && hasSeasonConfig) && (
+              <p className="text-xs font-bold text-text-muted uppercase tracking-widest">
+                {t('stats.season', { year: seasonStart!.getFullYear() === seasonEnd!.getFullYear() ? seasonStart!.getFullYear() : `${seasonStart!.getFullYear()}/${seasonEnd!.getFullYear()}` })}
               </p>
             )}
           </div>

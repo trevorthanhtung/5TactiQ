@@ -240,7 +240,9 @@
     "attendance": "Số trận có mặt",
     "no_data": "Chưa có dữ liệu cầu thủ.",
     "unknown_position": "Chưa rõ",
-    "season": "MÙA GIẢI {{year}}"
+    "season": "MÙA GIẢI {{year}}",
+    "filter_season": "MÙA GIẢI HIỆN TẠI",
+    "filter_all": "TẤT CẢ THỜI GIAN"
   },
   "matchday": {
     "title": "Trận đấu",

@@ -235,7 +235,9 @@
     "attendance": "المشاركات",
     "no_data": "لا توجد بيانات للاعبين بعد.",
     "unknown_position": "غير معروف",
-    "season": "موسم {{year}}"
+    "season": "موسم {{year}}",
+    "filter_season": "الموسم الحالي",
+    "filter_all": "كل الأوقات"
   },
   "matchday": {
     "title": "المباريات",

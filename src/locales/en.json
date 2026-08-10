@@ -240,7 +240,9 @@
     "attendance": "Appearances",
     "no_data": "No player data yet.",
     "unknown_position": "Unknown",
-    "season": "SEASON {{year}}"
+    "season": "SEASON {{year}}",
+    "filter_season": "CURRENT SEASON",
+    "filter_all": "ALL TIME"
   },
   "matchday": {
     "title": "Matchday",

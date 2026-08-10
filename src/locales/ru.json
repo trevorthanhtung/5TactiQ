@@ -235,7 +235,9 @@
     "attendance": "Сыграно матчей",
     "no_data": "Пока нет данных об игроках.",
     "unknown_position": "Неизвестно",
-    "season": "СЕЗОН {{year}}"
+    "season": "СЕЗОН {{year}}",
+    "filter_season": "ТЕКУЩИЙ СЕЗОН",
+    "filter_all": "ВСЕ ВРЕМЯ"
   },
   "matchday": {
     "title": "Матчи",
