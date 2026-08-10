@@ -136,11 +136,32 @@ export default function Home() {
         </div>
 
         {/* Quick Tactics */}
-        <div className="hallmark-card p-5 @md:col-span-1 @xl:col-span-1">
-           <h2 className="font-display text-xl uppercase tracking-widest text-primary mb-4">{t('home.tactics_title')}</h2>
-           <p className="text-sm text-text-muted mb-6">{t('home.tactics_desc')}</p>
-           <Link to="/tactics" className="hallmark-btn w-full flex justify-center">
-             {t('home.open_tactics')}
+        <div className="hallmark-card p-5 @md:col-span-1 @xl:col-span-1 flex flex-col justify-between">
+           <div>
+             <h2 className="font-display text-xl uppercase tracking-widest text-primary mb-2">{t('home.tactics_title')}</h2>
+             <p className="text-sm text-text-muted mb-4">{t('home.tactics_desc')}</p>
+           </div>
+           
+           <Link to="/tactics" className="relative flex-1 bg-emerald-900/10 border-2 border-emerald-900/20 rounded-lg overflow-hidden min-h-[160px] hover:border-secondary transition-colors group cursor-pointer block mt-2">
+             {/* Field lines */}
+             <div className="absolute inset-x-0 top-1/2 h-0.5 bg-emerald-800/30 -translate-y-1/2"></div>
+             <div className="absolute top-1/2 left-1/2 w-12 h-12 rounded-full border-2 border-emerald-800/30 -translate-x-1/2 -translate-y-1/2"></div>
+             <div className="absolute top-0 left-[25%] right-[25%] h-6 border-b-2 border-x-2 border-emerald-800/30"></div>
+             <div className="absolute bottom-0 left-[25%] right-[25%] h-6 border-t-2 border-x-2 border-emerald-800/30"></div>
+             
+             {/* Formation dots (1-2-1) */}
+             <div className="absolute bottom-[10%] left-1/2 w-3 h-3 bg-secondary rounded-full -translate-x-1/2 shadow-sm border border-white/20" />
+             <div className="absolute bottom-[35%] left-[25%] w-3 h-3 bg-secondary rounded-full shadow-sm border border-white/20" />
+             <div className="absolute bottom-[35%] right-[25%] w-3 h-3 bg-secondary rounded-full shadow-sm border border-white/20" />
+             <div className="absolute top-[40%] left-1/2 w-3 h-3 bg-secondary rounded-full -translate-x-1/2 shadow-sm border border-white/20" />
+             <div className="absolute top-[15%] left-1/2 w-3 h-3 bg-secondary rounded-full -translate-x-1/2 shadow-sm border border-white/20" />
+
+             {/* Hover Overlay */}
+             <div className="absolute inset-0 bg-surface/40 backdrop-blur-[1px] group-hover:backdrop-blur-0 transition-all flex items-center justify-center">
+                <span className="bg-secondary text-white font-display uppercase tracking-widest text-xs px-4 py-2 opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all shadow-md">
+                  {t('home.open_tactics')}
+                </span>
+             </div>
            </Link>
         </div>
 
