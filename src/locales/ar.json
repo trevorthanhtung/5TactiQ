@@ -69,7 +69,12 @@
     "match_upcoming": "القادم",
     "match_today": "مباراة اليوم",
     "match_overdue": "مباراة سابقة",
-    "no_location": "لا يوجد مكان"
+    "no_location": "لا يوجد مكان",
+    "total_players": "إجمالي اللاعبين",
+    "confirmed_players": "مؤكدون للمباراة",
+    "total_short": "إجمالي",
+    "injured": "مصاب",
+    "absent": "غائب"
   },
   "nav": {
     "home": "الرئيسية",

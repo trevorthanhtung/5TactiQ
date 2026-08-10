@@ -69,7 +69,12 @@
     "match_upcoming": "Próximamente",
     "match_today": "Partido de hoy",
     "match_overdue": "Partido pasado",
-    "no_location": "Sin ubicación"
+    "no_location": "Sin ubicación",
+    "total_players": "jugadores totales",
+    "confirmed_players": "confirmados para el partido",
+    "total_short": "total",
+    "injured": "lesionados",
+    "absent": "ausentes"
   },
   "nav": {
     "home": "Inicio",

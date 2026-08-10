@@ -69,7 +69,12 @@
     "match_upcoming": "Sắp diễn ra",
     "match_today": "Trận hôm nay",
     "match_overdue": "Trận đã qua",
-    "no_location": "Chưa có sân"
+    "no_location": "Chưa có sân",
+    "total_players": "tổng số cầu thủ",
+    "confirmed_players": "đã xác nhận đá",
+    "total_short": "tổng",
+    "injured": "chấn thương",
+    "absent": "vắng"
   },
   "nav": {
     "home": "Trang chủ",

@@ -69,7 +69,12 @@
     "match_upcoming": "Предстоящий",
     "match_today": "Сегодняшний матч",
     "match_overdue": "Прошедший матч",
-    "no_location": "Нет места"
+    "no_location": "Нет места",
+    "total_players": "всего игроков",
+    "confirmed_players": "подтверждено на матч",
+    "total_short": "всего",
+    "injured": "травмированы",
+    "absent": "отсутствуют"
   },
   "nav": {
     "home": "Главная",

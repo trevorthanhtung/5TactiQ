@@ -69,7 +69,12 @@
     "match_upcoming": "Upcoming",
     "match_today": "Match Today",
     "match_overdue": "Past Match",
-    "no_location": "No location yet"
+    "no_location": "No location yet",
+    "total_players": "total players",
+    "confirmed_players": "confirmed for match",
+    "total_short": "total",
+    "injured": "injured",
+    "absent": "absent"
   },
   "nav": {
     "home": "Home",

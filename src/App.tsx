@@ -16,6 +16,9 @@ import { useAppUpdateStore } from './store/useAppUpdateStore';
 import { useToastStore } from './store/useToastStore';
 import { Capacitor } from '@capacitor/core';
 
+import { App as CapacitorApp } from '@capacitor/app';
+import { useTranslation } from 'react-i18next';
+
 function App() {
   usePersistentStorage();
   useBackgroundSync();
@@ -23,6 +26,7 @@ function App() {
   const theme = useThemeStore((state) => state.theme);
   const { checkUpdate, hasUpdate, latestVersion, setShowUpdateModal } = useAppUpdateStore();
   const addToast = useToastStore((state) => state.addToast);
+  const { t } = useTranslation();
 
   useEffect(() => {
     // Check for updates on startup
@@ -32,16 +36,45 @@ function App() {
       if (currentHasUpdate) {
         addToast({
           type: 'info',
-          message: `Đã có bản cập nhật mới (${currentLatest}). Tải ngay để trải nghiệm tính năng mới!`,
-          duration: 0, // Keep it visible until dismissed or acted upon
+          message: t('app.update_available', `Đã có bản cập nhật mới ({{version}}). Tải ngay để trải nghiệm tính năng mới!`, { version: currentLatest }),
+          duration: 0,
           action: {
-            label: 'CẬP NHẬT NGAY',
+            label: t('app.update_now', 'CẬP NHẬT NGAY'),
             onClick: () => setShowUpdateModal(true)
           }
         });
       }
     });
-  }, []);
+
+    if (Capacitor.isNativePlatform()) {
+      let backPressedOnce = false;
+      
+      const backListener = CapacitorApp.addListener('backButton', () => {
+        const currentPath = window.location.hash;
+        if (currentPath === '#/' || currentPath === '' || currentPath === '#') {
+          if (backPressedOnce) {
+            CapacitorApp.exitApp();
+          } else {
+            backPressedOnce = true;
+            useToastStore.getState().addToast({
+              message: t('app.exit_prompt', 'Bấm Trở về lần nữa để thoát'),
+              type: 'info',
+              duration: 2000
+            });
+            setTimeout(() => {
+              backPressedOnce = false;
+            }, 2000);
+          }
+        } else {
+          window.history.back();
+        }
+      });
+      
+      return () => {
+        backListener.then(listener => listener.remove());
+      };
+    }
+  }, [t, checkUpdate, setShowUpdateModal, addToast]);
 
   useEffect(() => {
     const root = window.document.documentElement;

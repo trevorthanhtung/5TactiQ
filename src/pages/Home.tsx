@@ -126,8 +126,46 @@ export default function Home() {
               <h2 className="font-display text-xl uppercase tracking-widest text-primary">{t('home.roster_title')}</h2>
               <Users className="text-secondary" />
             </div>
-            <div className="text-5xl font-display text-primary">{players.length}</div>
-            <div className="text-sm text-text-muted font-medium">{t('home.players_ready')}</div>
+            {(() => {
+              const totalPlayers = players.length;
+              const injuredCount = players.filter(p => p.healthStatus && p.healthStatus.includes('Chấn thương')).length;
+              
+              let displayCount = totalPlayers;
+              let displayLabel = t('home.total_players', 'tổng số cầu thủ');
+              let absentCount = 0;
+
+              if (activeOrUpcomingMatch) {
+                displayCount = Object.values(activeOrUpcomingMatch.attendance || {}).filter(a => a === 'present').length;
+                absentCount = Object.values(activeOrUpcomingMatch.attendance || {}).filter(a => a === 'absent').length;
+                displayLabel = t('home.confirmed_players', 'đã xác nhận đá');
+              }
+
+              const subTexts = [];
+              if (activeOrUpcomingMatch) {
+                subTexts.push(`${totalPlayers} ${t('home.total_short', 'tổng')}`);
+              }
+              if (injuredCount > 0) {
+                subTexts.push(`${injuredCount} ${t('home.injured', 'chấn thương')}`);
+              }
+              if (absentCount > 0) {
+                subTexts.push(`${absentCount} ${t('home.absent', 'vắng')}`);
+              }
+              const subTextStr = subTexts.join(' • ');
+
+              return (
+                <>
+                  <div className="flex items-baseline gap-2">
+                    <div className="text-5xl font-display text-primary">{displayCount}</div>
+                  </div>
+                  <div className="text-sm text-text-main font-medium mt-1">{displayLabel}</div>
+                  {subTextStr && (
+                    <div className="text-xs text-text-muted mt-2 font-medium bg-surface-2 inline-block px-2 py-1 rounded">
+                      {subTextStr}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
           <Link to="/roster" className="mt-6 flex items-center justify-between text-secondary font-bold group">
             <span>{t('home.manage_team')}</span>
