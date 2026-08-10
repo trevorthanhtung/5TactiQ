@@ -67,12 +67,7 @@ export function QRScanner({ onScan, isOpen, onClose }: QRScannerProps) {
         const config = {
           fps: 10,
           qrbox: { width: 220, height: 220 },
-          aspectRatio: 1.0,
-          videoConstraints: {
-            facingMode: 'environment',
-            // Đảm bảo zoom mặc định không bị quá rộng
-            zoom: 1.0
-          }
+          aspectRatio: 1.0
         };
 
         const handleSuccess = (decodedText: string) => {
