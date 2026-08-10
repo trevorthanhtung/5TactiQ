@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { BottomSheet } from './ui/BottomSheet';
@@ -19,22 +19,11 @@ interface CustomSelectProps {
 export function CustomSelect({ value, onChange, options, className = "relative w-full", buttonClassName }: CustomSelectProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const selectedOption = options.find(o => o.value === value) || options[0];
 
   return (
-    <div className={className} ref={wrapperRef}>
+    <div className={className}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
