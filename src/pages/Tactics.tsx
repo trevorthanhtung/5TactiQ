@@ -982,7 +982,7 @@ export default function Tactics() {
 
       <div className="min-h-screen h-screen bg-background flex flex-col font-sans overflow-hidden">
         {/* Header */}
-        <div className="bg-surface px-4 sm:px-8 py-3 sm:py-4 flex items-center justify-between border-b-2 border-border-main shadow-sm relative z-20 shrink-0">
+        <div className="bg-surface px-3 sm:px-8 py-1.5 sm:py-4 flex items-center justify-between border-b-2 border-border-main shadow-sm relative z-20 shrink-0">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate(-1)}
@@ -1007,12 +1007,12 @@ export default function Tactics() {
         </div>
 
         {/* Main Content Area */}
-        <div className="flex flex-1 overflow-hidden relative p-3 sm:p-4 gap-3 sm:gap-4 max-w-[1920px] mx-auto w-full">
+        <div className="flex flex-1 overflow-hidden relative p-1 sm:p-4 gap-1.5 sm:gap-4 max-w-[1920px] mx-auto w-full">
 
           {/* Left Vertical Toolbar */}
           <div 
             onScroll={updateEraserMenuPos}
-            className="flex w-14 sm:w-16 bg-surface border-2 border-border-main p-1 sm:p-2 flex-col gap-2 sm:gap-3 relative z-10 items-center py-2 sm:py-4 shrink-0 overflow-y-auto hide-scrollbar shadow-sm"
+            className="flex w-10 sm:w-16 bg-surface border-2 border-border-main p-0.5 sm:p-2 flex-col gap-1 sm:gap-2 relative z-10 items-center py-1 sm:py-4 shrink-0 overflow-y-auto hide-scrollbar shadow-sm"
           >
 
             {/* Tools Group */}
@@ -1279,7 +1279,7 @@ export default function Tactics() {
           <div className="flex-1 flex flex-col gap-3 sm:gap-4 min-w-0">
 
             {/* Center Canvas */}
-            <div className="flex-1 bg-surface border-2 border-border-main p-2 sm:p-4 flex justify-center items-center relative min-h-0 min-w-0 overflow-hidden shadow-sm" ref={containerRef} id="tactical-board-container">
+            <div className="flex-1 bg-surface border-2 border-border-main p-0.5 sm:p-4 flex justify-center items-center relative min-h-0 min-w-0 overflow-hidden shadow-sm" ref={containerRef} id="tactical-board-container">
               {dimensions.width > 0 && (
                 <div className="overflow-hidden shadow-2xl rounded-xl sm:rounded-2xl relative bg-[#15803d]">
                   <Stage
@@ -1571,11 +1571,11 @@ export default function Tactics() {
           </div>
 
           {/* Right Panel: Animation Timeline (Desktop & Landscape Mobile) */}
-          <div className="flex bg-surface border-2 border-border-main p-1 sm:p-2 py-2 sm:py-4 flex-col gap-2 sm:gap-3 overflow-y-auto overflow-x-hidden hide-scrollbar shrink-0 w-14 sm:w-[72px] h-full items-center relative z-10 shadow-sm">
+          <div className="flex bg-surface border-2 border-border-main p-0.5 sm:p-2 py-1 sm:py-4 flex-col gap-1 sm:gap-2 overflow-y-auto overflow-x-hidden hide-scrollbar shrink-0 w-10 sm:w-[72px] h-full items-center relative z-10 shadow-sm">
             <button
               onClick={isPlaying ? handleStop : handlePlay}
               disabled={frames.length < 2}
-              className={`w-10 h-10 flex justify-center items-center font-semibold transition-all shrink-0 mt-2 border ${isPlaying ? 'bg-red-600 text-white border-red-600 shadow-sm' : frames.length < 2 ? 'bg-background text-text-muted border-border-main' : 'bg-primary text-white border-primary shadow-sm hover:bg-primary/90'}`}
+              className={`w-8 h-8 sm:w-10 sm:h-10 flex justify-center items-center font-semibold transition-all shrink-0 mt-1 sm:mt-2 border ${isPlaying ? 'bg-red-600 text-white border-red-600 shadow-sm' : frames.length < 2 ? 'bg-background text-text-muted border-border-main' : 'bg-primary text-white border-primary shadow-sm hover:bg-primary/90'}`}
               title={isPlaying ? t('tactics.stop') : t('tactics.play')}
             >
               {isPlaying ? <Square fill="currentColor" size={16} /> : <Play fill="currentColor" size={18} className="ml-0.5" />}
@@ -1588,14 +1588,14 @@ export default function Tactics() {
                 <div key={frame.id} className="relative group shrink-0 w-full flex justify-center">
                   <button
                     onClick={() => handleSelectFrame(idx)}
-                    className={`w-10 h-10 font-display font-bold text-sm transition-all flex justify-center items-center border overflow-hidden ${currentFrameIndex === idx && !isPlaying ? 'bg-primary text-white border-primary shadow-sm scale-110' : 'bg-surface text-text-muted border-border-main hover:bg-primary/5 hover:text-primary'} ${isPlaying ? 'opacity-50 pointer-events-none' : ''}`}
+                    className={`w-8 h-8 sm:w-10 sm:h-10 font-display font-bold text-xs sm:text-sm transition-all flex justify-center items-center border overflow-hidden ${currentFrameIndex === idx && !isPlaying ? 'bg-primary text-white border-primary shadow-sm scale-110' : 'bg-surface text-text-muted border-border-main hover:bg-primary/5 hover:text-primary'} ${isPlaying ? 'opacity-50 pointer-events-none' : ''}`}
                     title={`${t('tactics.step')} ${idx + 1}`}
                   >
                     {idx + 1}
                     {frames.length > 1 && !isPlaying && (
                       <div
                         onClick={(e) => { e.stopPropagation(); handleDeleteFrame(idx); }}
-                        className="absolute top-0 right-0 bg-red-600 text-white p-1 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-700 flex justify-center items-center z-10"
+                        className="absolute top-0 right-0 bg-red-600 text-white p-0.5 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-700 flex justify-center items-center z-10"
                         title={t('tactics.delete_step')}
                       >
                         <Trash2 size={10} />
@@ -1608,7 +1608,7 @@ export default function Tactics() {
               <button
                 onClick={handleAddFrame}
                 disabled={isPlaying}
-                className="w-10 h-10 transition-all border-2 border-dashed border-primary/40 text-primary hover:bg-primary/5 flex items-center justify-center shrink-0 disabled:opacity-50 group mt-1"
+                className="w-8 h-8 sm:w-10 sm:h-10 transition-all border-2 border-dashed border-primary/40 text-primary hover:bg-primary/5 flex items-center justify-center shrink-0 disabled:opacity-50 group mt-1"
                 title={t('tactics.next_step')}
               >
                 <Plus size={20} className="group-hover:scale-110 transition-transform" />
