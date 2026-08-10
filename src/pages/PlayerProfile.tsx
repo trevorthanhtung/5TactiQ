@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useToastStore } from '../store/useToastStore';
-import { User, ArrowLeft, Trash2, Award, X, Edit2, Activity } from 'lucide-react';
+import { User, ArrowLeft, Trash2, Award, X, Edit2, Activity, Phone } from 'lucide-react';
 import { useHardwareBack } from '../hooks/useHardwareBack';
 import { PlayerProfileSkeleton } from '../components/ui/PlayerProfileSkeleton';
 import { BottomSheet } from '../components/ui/BottomSheet';
@@ -202,6 +202,15 @@ export default function PlayerProfile() {
       </div>
 
       <div className="flex flex-col gap-3">
+        {player.phone && (
+          <a 
+            href={`tel:${player.phone}`}
+            className="hallmark-btn w-full flex justify-center items-center gap-2 bg-sky-600 text-white hover:bg-sky-700"
+          >
+            <Phone size={20} /> {t('roster.call_player', 'GỌI ĐIỆN')}
+          </a>
+        )}
+        
         <button 
           onClick={openEditModal}
           className="hallmark-btn w-full flex justify-center items-center gap-2 bg-primary text-white hover:bg-primary/90"
