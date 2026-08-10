@@ -78,7 +78,7 @@ export default function InstallPrompt() {
             Tải bản App chính thức (APK) để có trải nghiệm cực mượt và đầy đủ tính năng nhất!
           </p>
           <button 
-            onClick={() => handleDownload('https://github.com/trevorthanhtung/5TactiQ/raw/main/releases/5TactiQ.apk')}
+            onClick={() => handleDownload('https://github.com/trevorthanhtung/5TactiQ/releases/download/latest/5TactiQ.apk')}
             className="w-full hallmark-btn bg-primary text-white py-2 text-xs flex items-center justify-center gap-1"
           >
             <Download size={14} /> TẢI APK NGAY
@@ -94,7 +94,7 @@ export default function InstallPrompt() {
             Tải phần mềm cài đặt (.exe) độc lập dành riêng cho Windows. Tận hưởng hiệu năng tối đa!
           </p>
           <button 
-            onClick={() => handleDownload('https://github.com/trevorthanhtung/5TactiQ/raw/main/releases/5TactiQ-Setup.exe')}
+            onClick={() => handleDownload('https://github.com/trevorthanhtung/5TactiQ/releases/download/latest/5TactiQ-Setup.exe')}
             className="w-full hallmark-btn bg-primary text-white py-2 text-xs flex items-center justify-center gap-1"
           >
             <Download size={14} /> TẢI BẢN WINDOWS (.EXE)
@@ -110,7 +110,7 @@ export default function InstallPrompt() {
             Tải phần mềm độc lập (.AppImage) dành riêng cho Linux. Tải về chạy luôn không cần cài đặt!
           </p>
           <button 
-            onClick={() => handleDownload('https://github.com/trevorthanhtung/5TactiQ/raw/main/releases/5TactiQ.AppImage')}
+            onClick={() => handleDownload('https://github.com/trevorthanhtung/5TactiQ/releases/download/latest/5TactiQ.AppImage')}
             className="w-full hallmark-btn bg-primary text-white py-2 text-xs flex items-center justify-center gap-1"
           >
             <Download size={14} /> TẢI BẢN LINUX

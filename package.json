@@ -78,10 +78,12 @@
       "package.json"
     ],
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "artifactName": "5TactiQ-Setup.exe"
     },
     "linux": {
-      "target": "AppImage"
+      "target": "AppImage",
+      "artifactName": "5TactiQ.AppImage"
     }
   }
 }
