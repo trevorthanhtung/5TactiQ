@@ -4,6 +4,7 @@ import { ArrowLeft, RotateCcw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { compareVietnameseNames } from '../utils/sortUtils';
+import { BottomSheet } from '../components/ui/BottomSheet';
 import {
   DndContext,
   DragOverlay,
@@ -142,14 +143,15 @@ export default function TierRanking() {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleResetAll = () => {
-    if (window.confirm(t('tier.confirm_reset', 'Bạn có chắc chắn muốn làm mới toàn bộ xếp hạng?'))) {
-      players.forEach(p => {
-        if (p.tier) {
-          updatePlayer(p.id, { tier: null });
-        }
-      });
-    }
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+
+  const confirmResetAll = () => {
+    players.forEach(p => {
+      if (p.tier) {
+        updatePlayer(p.id, { tier: null });
+      }
+    });
+    setShowResetConfirm(false);
   };
 
   const grouped = useMemo(() => {
@@ -272,7 +274,7 @@ export default function TierRanking() {
             </h2>
             {players.some(p => p.tier) && (
               <button 
-                onClick={handleResetAll}
+                onClick={() => setShowResetConfirm(true)}
                 className="hallmark-btn flex items-center gap-1.5 bg-secondary text-white text-xs py-1 px-3"
               >
                 <RotateCcw size={13} />
@@ -306,6 +308,33 @@ export default function TierRanking() {
           <p className="font-medium">{t('tier.no_players')}</p>
         </div>
       )}
+
+      {/* Reset Confirmation BottomSheet Modal */}
+      <BottomSheet
+        isOpen={showResetConfirm}
+        onClose={() => setShowResetConfirm(false)}
+        title={t('tier.reset_all', 'LÀM MỚI XẾP HẠNG')}
+      >
+        <div className="flex flex-col">
+          <p className="text-text-muted text-sm md:text-base font-sans mb-8 leading-relaxed">
+            {t('tier.confirm_reset', 'Bạn có chắc chắn muốn làm mới (gỡ) toàn bộ xếp hạng của cầu thủ?')}
+          </p>
+          <div className="flex gap-3">
+            <button 
+              onClick={() => setShowResetConfirm(false)}
+              className="flex-1 bg-transparent text-text-muted font-display uppercase tracking-wider py-3 border-2 border-border-main hover:bg-surface transition-colors active:scale-95"
+            >
+              {t('common.cancel', 'HỦY')}
+            </button>
+            <button 
+              onClick={confirmResetAll}
+              className="flex-1 bg-secondary text-white font-display uppercase tracking-wider py-3 border-2 border-secondary hover:bg-secondary/90 transition-colors active:scale-95"
+            >
+              {t('tier.reset_all', 'LÀM MỚI')}
+            </button>
+          </div>
+        </div>
+      </BottomSheet>
     </div>
   );
 }
