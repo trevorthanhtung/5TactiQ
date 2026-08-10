@@ -134,8 +134,14 @@ export default function More() {
           title: t('more.reset_alert_title', 'CẢNH BÁO NGUY HIỂM'),
           message: t('more.reset_alert_msg', { teamName, defaultValue: `Hành động này sẽ xóa TOÀN BỘ dữ liệu đội bóng, cầu thủ và trận đấu của bạn.\nKhông thể khôi phục lại.\n\nVui lòng nhập đúng tên đội bóng "{{teamName}}" để xác nhận:` }),
           requireInput: teamName,
-          onConfirm: () => {
+          onConfirm: async () => {
             localStorage.clear();
+            try {
+              const { Preferences } = await import('@capacitor/preferences');
+              await Preferences.clear();
+            } catch (e) {
+              console.error("Failed to clear Capacitor preferences", e);
+            }
             setTimeout(() => {
               window.location.replace('/');
             }, 100);

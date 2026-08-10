@@ -67,7 +67,7 @@ export default function DataSync() {
         });
       } catch (err) {
         console.error('Lỗi xuất file native:', err);
-        setAlertInfo({ title: t('sync.err_title', 'LỖI'), message: 'Không thể tạo file sao lưu. Vui lòng thử lại.' });
+        setAlertInfo({ title: t('sync.err_title', 'LỖI'), message: t('sync.err_export_fail', 'Không thể tạo file sao lưu. Vui lòng thử lại.') });
       }
       return;
     }

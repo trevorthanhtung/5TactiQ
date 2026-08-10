@@ -1,36 +1,38 @@
 import { useState } from 'react';
 import { ArrowLeft, Landmark, Shirt, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 export default function Operations() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'finance' | 'jersey' | 'field'>('finance');
 
   return (
     <div className="p-4 flex flex-col min-h-full max-w-5xl mx-auto w-full">
       <Link to="/menu" className="flex items-center gap-2 font-bold text-text-muted hover:text-primary mb-6 transition-colors">
-        <ArrowLeft size={20} /> Về Menu
+        <ArrowLeft size={20} /> {t('operations.back_menu', 'Về Menu')}
       </Link>
       
-      <h1 className="text-4xl @sm:text-5xl font-display uppercase text-primary leading-none mb-6">Vận hành</h1>
+      <h1 className="text-4xl @sm:text-5xl font-display uppercase text-primary leading-none mb-6">{t('operations.title', 'Vận hành')}</h1>
 
       <div className="flex border-b-2 border-border-main mb-6 flex-wrap shrink-0">
         <button 
           onClick={() => setActiveTab('finance')}
           className={`flex items-center gap-2 px-4 py-3 text-lg font-display uppercase tracking-widest transition-colors border-b-4 -mb-[2px] ${activeTab === 'finance' ? 'border-primary text-primary' : 'border-transparent text-slate-400 hover:text-text-muted'}`}
         >
-          <Landmark size={20} /> Quỹ Đội
+          <Landmark size={20} /> {t('operations.tab_finance', 'Quỹ Đội')}
         </button>
         <button 
           onClick={() => setActiveTab('jersey')}
           className={`flex items-center gap-2 px-4 py-3 text-lg font-display uppercase tracking-widest transition-colors border-b-4 -mb-[2px] ${activeTab === 'jersey' ? 'border-primary text-primary' : 'border-transparent text-slate-400 hover:text-text-muted'}`}
         >
-          <Shirt size={20} /> Áo đấu
+          <Shirt size={20} /> {t('operations.tab_jersey', 'Áo đấu')}
         </button>
         <button 
           onClick={() => setActiveTab('field')}
           className={`flex items-center gap-2 px-4 py-3 text-lg font-display uppercase tracking-widest transition-colors border-b-4 -mb-[2px] ${activeTab === 'field' ? 'border-primary text-primary' : 'border-transparent text-slate-400 hover:text-text-muted'}`}
         >
-          <MapPin size={20} /> Sân bãi
+          <MapPin size={20} /> {t('operations.tab_field', 'Sân bãi')}
         </button>
       </div>
 
@@ -38,14 +40,14 @@ export default function Operations() {
         {activeTab === 'finance' && (
           <div className="max-w-2xl mx-auto space-y-6">
             <div className="hallmark-card bg-primary text-white p-6 text-center border-primary">
-               <div className="text-sm font-bold uppercase tracking-widest text-accent mb-2">Số dư quỹ hiện tại</div>
+               <div className="text-sm font-bold uppercase tracking-widest text-accent mb-2">{t('operations.current_balance', 'Số dư quỹ hiện tại')}</div>
                <div className="text-5xl @sm:text-7xl font-display">2.500.000đ</div>
                <button className="mt-6 bg-accent text-primary px-6 py-2 font-display uppercase tracking-widest hover:bg-surface transition-colors">
-                 + Thêm thu/chi
+                 {t('operations.add_tx_btn', '+ Thêm thu/chi')}
                </button>
             </div>
             
-            <h3 className="font-display text-2xl uppercase text-primary pt-4">Lịch sử gần đây</h3>
+            <h3 className="font-display text-2xl uppercase text-primary pt-4">{t('operations.recent_history', 'Lịch sử gần đây')}</h3>
             <div className="space-y-0 border-t-2 border-border-main">
                <div className="flex justify-between items-center py-4 border-b-2 border-primary/10">
                  <div>
@@ -87,8 +89,8 @@ export default function Operations() {
                <div className="text-sm font-bold uppercase tracking-widest">Công Phượng</div>
              </div>
              <div className="hallmark-card bg-surface p-4 flex flex-col items-center justify-center border-dashed border-2 border-slate-300 text-slate-400 aspect-square hover:bg-slate-50 cursor-pointer transition-colors">
-               <div className="text-4xl font-display mb-2">Trống</div>
-               <div className="text-xs font-bold uppercase tracking-widest">+ Cấp áo mới</div>
+               <div className="text-4xl font-display mb-2">{t('operations.empty_kit', 'Trống')}</div>
+               <div className="text-xs font-bold uppercase tracking-widest">{t('operations.add_kit', '+ Cấp áo mới')}</div>
              </div>
           </div>
         )}
@@ -100,18 +102,18 @@ export default function Operations() {
               <div className="text-sm font-medium text-text-muted mb-4">Trần Đại Nghĩa, Hai Bà Trưng</div>
               <div className="flex gap-4 border-t-2 border-primary/10 pt-4">
                  <div>
-                   <div className="text-xs font-bold uppercase tracking-widest text-slate-400">Khung giờ</div>
+                   <div className="text-xs font-bold uppercase tracking-widest text-slate-400">{t('operations.time_slot', 'Khung giờ')}</div>
                    <div className="font-bold text-primary mt-1">19:00 - 20:30 (Thứ 3)</div>
                  </div>
                  <div>
-                   <div className="text-xs font-bold uppercase tracking-widest text-slate-400">Giá tiền</div>
+                   <div className="text-xs font-bold uppercase tracking-widest text-slate-400">{t('operations.price', 'Giá tiền')}</div>
                    <div className="font-bold text-primary mt-1">450K / trận</div>
                  </div>
               </div>
             </div>
             
             <button className="hallmark-btn-outline w-full border-dashed text-text-muted border-slate-400 hover:bg-slate-200 hover:text-slate-700 hover:border-slate-400">
-               + Thêm sân quen
+               {t('operations.add_venue_btn', '+ Thêm sân quen')}
             </button>
           </div>
         )}

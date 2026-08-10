@@ -2,8 +2,10 @@ import { useTrainingStore } from '../store/useTrainingStore';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { ArrowLeft, Check, X, Clock, UserMinus } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 export default function TrainingDetail() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const { sessions, updateAttendance, updateSession } = useTrainingStore();
@@ -12,7 +14,7 @@ export default function TrainingDetail() {
   const session = sessions.find(s => s.id === id);
 
   if (!session) {
-    return <div className="p-4 text-center">Không tìm thấy buổi tập.</div>;
+    return <div className="p-4 text-center">{t('training_detail.not_found', 'Không tìm thấy buổi tập.')}</div>;
   }
 
   const presentCount = Object.values(session.attendance).filter(status => status === 'present' || status === 'late').length;
@@ -32,25 +34,25 @@ export default function TrainingDetail() {
     switch (type) {
       case 'present':
         icon = <Check size={14} />;
-        label = 'Có mặt';
+        label = t('training_detail.present', 'Có mặt');
         colorClass = 'bg-emerald-600 text-white border-emerald-700';
         baseClass = 'text-emerald-700 hover:bg-emerald-50 border-emerald-200 bg-surface';
         break;
       case 'absent':
         icon = <X size={14} />;
-        label = 'Vắng';
+        label = t('training_detail.absent', 'Vắng');
         colorClass = 'bg-rose-600 text-white border-rose-700';
         baseClass = 'text-rose-700 hover:bg-rose-50 border-rose-200 bg-surface';
         break;
       case 'late':
         icon = <Clock size={14} />;
-        label = 'Trễ';
+        label = t('training_detail.late', 'Trễ');
         colorClass = 'bg-amber-500 text-white border-amber-600';
         baseClass = 'text-amber-700 hover:bg-amber-50 border-amber-200 bg-surface';
         break;
       case 'excused':
         icon = <UserMinus size={14} />;
-        label = 'Xin phép';
+        label = t('training_detail.excused', 'Xin phép');
         colorClass = 'bg-slate-600 text-white border-slate-700';
         baseClass = 'text-text-muted hover:bg-slate-50 border-border-main bg-surface';
         break;
@@ -79,15 +81,15 @@ export default function TrainingDetail() {
             <ArrowLeft size={20} />
           </button>
           <div>
-            <h1 className="text-2xl @md:text-4xl font-display uppercase text-primary leading-none">Chi tiết điểm danh</h1>
-            <p className="text-sm text-text-muted font-medium mt-1">Ngày: {session.date.split('-').reverse().join('/')}</p>
+            <h1 className="text-2xl @md:text-4xl font-display uppercase text-primary leading-none">{t('training_detail.title', 'Chi tiết điểm danh')}</h1>
+            <p className="text-sm text-text-muted font-medium mt-1">{t('training_detail.date_prefix', 'Ngày:')} {session.date.split('-').reverse().join('/')}</p>
           </div>
         </div>
         <button
           onClick={() => updateSession(session.id, { status: session.status === 'upcoming' ? 'finished' : 'upcoming' })}
           className={`px-4 py-2 font-display uppercase tracking-widest text-xs font-bold text-white transition-colors ${session.status === 'upcoming' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-slate-700 hover:bg-slate-800'}`}
         >
-          {session.status === 'upcoming' ? 'Kết thúc buổi tập' : 'Mở lại buổi tập'}
+          {session.status === 'upcoming' ? t('training_detail.end_session_btn', 'Kết thúc buổi tập') : t('training_detail.reopen_session_btn', 'Mở lại buổi tập')}
         </button>
       </div>
 
@@ -104,8 +106,8 @@ export default function TrainingDetail() {
             <span className="font-display font-bold text-primary text-xl relative">{attendanceRate}%</span>
           </div>
           <div>
-            <div className="text-sm text-text-muted uppercase tracking-widest font-bold">Tỷ lệ có mặt</div>
-            <div className="font-display text-xl text-primary">{presentCount} / {totalPlayers} quân số</div>
+            <div className="text-sm text-text-muted uppercase tracking-widest font-bold">{t('training_detail.attendance_rate', 'Tỷ lệ có mặt')}</div>
+            <div className="font-display text-xl text-primary">{presentCount} / {totalPlayers} {t('training_detail.attendance_count', 'quân số')}</div>
           </div>
         </div>
       </div>

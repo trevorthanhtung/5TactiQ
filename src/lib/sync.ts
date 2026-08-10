@@ -3,7 +3,7 @@ import { capacitorStorage } from '../utils/capacitorStorage';
 export const STORAGE_KEYS_META: Record<string, string> = {
   'katfc-player-storage': 'Đội hình, Chấn thương & Tier',
   'tactic-storage': 'Dữ liệu Sa bàn (Chiến thuật)',
-  'katfc-match-storage-v4': 'Dữ liệu Trận đấu & Lịch sử',
+  'katfc-match-storage-v5': 'Dữ liệu Trận đấu & Lịch sử',
   'katfc-venues-storage': 'Danh bạ Đội bóng',
   '5tactiq-settings-storage': 'Cài đặt Đội bóng'
 };
