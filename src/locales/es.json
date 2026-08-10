@@ -145,7 +145,9 @@
     "update_available": "Nueva actualización disponible. ¿Refrescar?",
     "update_action": "REFRESCAR",
     "offline": "Estás desconectado. Los datos se guardarán localmente.",
-    "online": "¡Conectado de nuevo!"
+    "online": "¡Conectado de nuevo!",
+    "unmarked_youth": "Jugador juvenil desmarcado para {{name}}.",
+    "marked_youth": "{{name}} marcado como jugador juvenil."
   },
   "roster": {
     "title": "Plantilla",
@@ -180,7 +182,12 @@
     "cancel_delete": "CANCELAR",
     "delete_now": "ELIMINAR AHORA",
     "edit_title": "Editar información del jugador",
-    "not_found": "Jugador no encontrado"
+    "not_found": "Jugador no encontrado",
+    "filter_youth": "Juvenil",
+    "youth_label": "JUGADOR CANTERANO",
+    "youth_tooltip": "Jugador canterano",
+    "mark_youth": "MARCAR COMO JUVENIL",
+    "unmark_youth": "DESMARCAR COMO JUVENIL"
   },
   "position": {
     "GK": "PT",

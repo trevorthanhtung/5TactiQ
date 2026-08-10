@@ -145,7 +145,9 @@
     "update_available": "Nova atualização disponível. Atualizar agora?",
     "update_action": "ATUALIZAR",
     "offline": "Você está offline. Os dados serão salvos localmente.",
-    "online": "Conectado novamente!"
+    "online": "Conectado novamente!",
+    "unmarked_youth": "Jogador da base desmarcado para {{name}}.",
+    "marked_youth": "{{name}} marcado como jogador da base."
   },
   "roster": {
     "title": "Elenco",
@@ -180,7 +182,12 @@
     "cancel_delete": "CANCELAR",
     "delete_now": "REMOVER AGORA",
     "edit_title": "Editar informações do jogador",
-    "not_found": "Jogador não encontrado"
+    "not_found": "Jogador não encontrado",
+    "filter_youth": "Base",
+    "youth_label": "JOGADOR DA BASE",
+    "youth_tooltip": "Jogador da base",
+    "mark_youth": "MARCAR COMO JOGADOR DA BASE",
+    "unmark_youth": "DESMARCAR JOGADOR DA BASE"
   },
   "position": {
     "GK": "GL",
