@@ -74,14 +74,18 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, title
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             className={`fixed inset-0 backdrop-blur-sm z-[100] ${isDesktop ? (variant === 'danger' ? 'bg-red-900/40' : 'bg-primary/40') : 'bg-black/40'}`}
-            onPointerDown={!isDesktop ? (e) => {
-              e.stopPropagation();
-              onClose();
-            } : undefined}
+            onClick={onClose}
           />
           
           {/* Sheet or Modal Container */}
-          <div className={`fixed inset-0 z-[101] ${isDesktop ? 'flex justify-center items-center p-4' : 'pointer-events-none'}`}>
+          <div 
+            className={`fixed inset-0 z-[101] ${isDesktop ? 'flex justify-center items-center p-4' : 'pointer-events-none'}`}
+            onClick={(e) => {
+              if (isDesktop && e.target === e.currentTarget) {
+                onClose();
+              }
+            }}
+          >
           <motion.div
             initial={isDesktop ? { opacity: 0, scale: 0.95, y: 0, x: 0 } : { y: '100%' }}
             animate={isDesktop ? { opacity: 1, scale: 1, y: 0, x: 0 } : { y: 0 }}
