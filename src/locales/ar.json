@@ -595,7 +595,10 @@
     "status_healthy": "سليم",
     "status_light": "إصابة خفيفة",
     "status_heavy": "إصابة بالغة",
-    "status_recovering": "يتعافى"
+    "status_recovering": "يتعافى",
+    "status": "الحالة الصحية",
+    "note": "ملاحظة صحية / إصابة",
+    "note_placeholder": "مثال: إصابة في الركبة، راحة لمدة أسبوعين..."
   },
   "venues": {
     "title": "دليل الملاعب",
@@ -735,5 +738,11 @@
     "absent": "غائب",
     "late": "متأخر",
     "excused": "بعذر"
+  },
+  "health": {
+    "healthy": "سليم",
+    "light_injury": "إصابة خفيفة",
+    "severe_injury": "إصابة خطيرة",
+    "recovering": "يتعافى"
   }
 }

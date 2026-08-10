@@ -595,7 +595,10 @@
     "status_healthy": "Sano",
     "status_light": "Lesión Leve",
     "status_heavy": "Lesión Grave",
-    "status_recovering": "Recuperando"
+    "status_recovering": "Recuperando",
+    "status": "Estado de salud",
+    "note": "Nota de salud / lesión",
+    "note_placeholder": "Ejemplo: Lesión de rodilla, baja por 2 semanas..."
   },
   "venues": {
     "title": "Directorio de Canchas",
@@ -735,5 +738,11 @@
     "absent": "Ausente",
     "late": "Tarde",
     "excused": "Con Permiso"
+  },
+  "health": {
+    "healthy": "Saludable",
+    "light_injury": "Lesión Leve",
+    "severe_injury": "Lesión Grave",
+    "recovering": "Recuperando"
   }
 }

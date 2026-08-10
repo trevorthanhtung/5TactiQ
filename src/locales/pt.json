@@ -595,7 +595,10 @@
     "status_healthy": "Saudável",
     "status_light": "Lesão Leve",
     "status_heavy": "Lesão Grave",
-    "status_recovering": "Em Recuperação"
+    "status_recovering": "Em Recuperação",
+    "status": "Estado de saúde",
+    "note": "Nota de lesão / saúde",
+    "note_placeholder": "Exemplo: Lesão no joelho, fora por 2 semanas..."
   },
   "venues": {
     "title": "Diretório de Quadras",
@@ -735,5 +738,11 @@
     "absent": "Ausente",
     "late": "Atrasado",
     "excused": "Licença"
+  },
+  "health": {
+    "healthy": "Saudável",
+    "light_injury": "Lesão Leve",
+    "severe_injury": "Lesão Grave",
+    "recovering": "Recuperando"
   }
 }

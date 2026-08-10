@@ -606,7 +606,10 @@
     "status_healthy": "Khỏe mạnh",
     "status_light": "Chấn thương nhẹ",
     "status_heavy": "Chấn thương nặng",
-    "status_recovering": "Đang hồi phục"
+    "status_recovering": "Đang hồi phục",
+    "status": "Tình trạng sức khỏe",
+    "note": "Ghi chú chấn thương / sức khỏe",
+    "note_placeholder": "Ví dụ: Trật khớp gối, nghỉ 2 tuần..."
   },
   "venues": {
     "title": "Danh bạ Sân bóng",
@@ -746,5 +749,11 @@
     "absent": "Vắng",
     "late": "Trễ",
     "excused": "Xin phép"
+  },
+  "health": {
+    "healthy": "Khỏe mạnh",
+    "light_injury": "Chấn thương nhẹ",
+    "severe_injury": "Chấn thương nặng",
+    "recovering": "Đang hồi phục"
   }
 }

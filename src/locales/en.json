@@ -605,7 +605,10 @@
     "status_healthy": "Healthy",
     "status_light": "Light Injury",
     "status_heavy": "Heavy Injury",
-    "status_recovering": "Recovering"
+    "status_recovering": "Recovering",
+    "status": "Health Status",
+    "note": "Injury / Health Note",
+    "note_placeholder": "Example: Knee injury, out for 2 weeks..."
   },
   "venues": {
     "title": "Venues Directory",
@@ -745,5 +748,11 @@
     "absent": "Absent",
     "late": "Late",
     "excused": "Excused"
+  },
+  "health": {
+    "healthy": "Healthy",
+    "light_injury": "Minor Injury",
+    "severe_injury": "Severe Injury",
+    "recovering": "Recovering"
   }
 }

@@ -158,7 +158,10 @@ export default function PlayerProfile() {
               )}
               {player.healthStatus && player.healthStatus !== 'Khỏe mạnh' && (
                 <span className={`font-display font-bold uppercase tracking-widest text-white px-3 py-1 text-sm shadow-sm ${player.healthStatus.includes('Chấn thương') ? 'bg-red-500' : 'bg-sky-500'}`}>
-                  {player.healthStatus}
+                  {player.healthStatus === 'Chấn thương nhẹ' ? t('health.light_injury', 'Chấn thương nhẹ') :
+                   player.healthStatus === 'Chấn thương nặng' ? t('health.severe_injury', 'Chấn thương nặng') :
+                   player.healthStatus === 'Đang hồi phục' ? t('health.recovering', 'Đang hồi phục') :
+                   player.healthStatus}
                 </span>
               )}
               {player.positions.map(pos => (
@@ -426,6 +429,12 @@ export default function PlayerProfile() {
                   else if (status === 'Đang hồi phục') colorClass = 'border-sky-500 bg-sky-500 text-white';
                 }
 
+                let statusLabel = status;
+                if (status === 'Khỏe mạnh') statusLabel = t('health.healthy', 'Khỏe mạnh');
+                if (status === 'Chấn thương nhẹ') statusLabel = t('health.light_injury', 'Chấn thương nhẹ');
+                if (status === 'Chấn thương nặng') statusLabel = t('health.severe_injury', 'Chấn thương nặng');
+                if (status === 'Đang hồi phục') statusLabel = t('health.recovering', 'Đang hồi phục');
+
                 return (
                   <button
                     key={status}
@@ -433,7 +442,7 @@ export default function PlayerProfile() {
                     onClick={() => setHealthStatus(status)}
                     className={`p-3 font-display text-sm font-bold uppercase tracking-wider border-2 transition-colors text-center ${colorClass}`}
                   >
-                    {status}
+                    {statusLabel}
                   </button>
                 );
               })}

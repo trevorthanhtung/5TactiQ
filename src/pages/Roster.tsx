@@ -354,7 +354,12 @@ export default function Roster() {
                           ? 'bg-rose-600 text-white' 
                           : 'bg-blue-600 text-white'
                       }`}
-                      title={player.healthStatus}
+                      title={
+                        player.healthStatus === 'Chấn thương nhẹ' ? t('health.light_injury', 'Chấn thương nhẹ') :
+                        player.healthStatus === 'Chấn thương nặng' ? t('health.severe_injury', 'Chấn thương nặng') :
+                        player.healthStatus === 'Đang hồi phục' ? t('health.recovering', 'Đang hồi phục') :
+                        player.healthStatus
+                      }
                     >
                       {player.healthStatus.includes('Chấn thương') ? (
                         <Cross size={16} className="fill-current" />
