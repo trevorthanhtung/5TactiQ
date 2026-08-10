@@ -517,7 +517,12 @@
       "katfc-fund-storage": "Team Fund",
       "katfc-venues-storage": "Venues Directory",
       "tactic-storage": "Tactical Diagrams"
-    }
+    },
+    "err_peer_unavailable": "Could not connect to this peer code. Please check the code or host status.",
+    "err_browser_incompatible": "Your browser does not support P2P connection.",
+    "err_network": "Network error or P2P server connection lost.",
+    "err_socket_closed": "P2P connection closed.",
+    "err_generic_p2p": "Failed to establish P2P connection."
   },
   "settings": {
     "title": "Team Settings",

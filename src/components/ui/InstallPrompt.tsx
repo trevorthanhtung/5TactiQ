@@ -61,7 +61,7 @@ export default function InstallPrompt() {
           ) : isAndroidWeb ? (
             <>
               <p className="text-xs text-text-muted mb-3 font-sans">
-                Tải bản App chính thức (APK) để có trải nghiệm mượt mà, kết nối P2P siêu tốc và chơi không cần mạng!
+                Tải bản App chính thức (APK) để có trải nghiệm cực mượt và đầy đủ tính năng nhất!
               </p>
               <div className="flex gap-2">
                 <button 

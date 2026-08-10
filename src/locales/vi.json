@@ -518,7 +518,12 @@
       "katfc-fund-storage": "Quỹ đội",
       "katfc-venues-storage": "Danh bạ Sân bóng",
       "tactic-storage": "Sơ đồ Chiến thuật"
-    }
+    },
+    "err_peer_unavailable": "Không tìm thấy thiết bị với mã này. Vui lòng kiểm tra lại mã hoặc máy Phát đã tắt.",
+    "err_browser_incompatible": "Trình duyệt không hỗ trợ kết nối P2P.",
+    "err_network": "Lỗi kết nối mạng hoặc máy chủ P2P.",
+    "err_socket_closed": "Kết nối P2P bị ngắt.",
+    "err_generic_p2p": "Không thể thiết lập kết nối P2P."
   },
   "settings": {
     "title": "Cài đặt đội bóng",

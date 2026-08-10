@@ -507,7 +507,12 @@
       "katfc-fund-storage": "صندوق الفريق",
       "katfc-venues-storage": "دليل الملاعب",
       "tactic-storage": "المخططات التكتيكية"
-    }
+    },
+    "err_peer_unavailable": "تعذر الاتصال برمز الجهاز. يرجى التحقق من الرمز أو حالة المضيف.",
+    "err_browser_incompatible": "متصفحك لا يدعم اتصال P2P.",
+    "err_network": "خطأ في الشبكة أو فقدان الاتصال بخادم P2P.",
+    "err_socket_closed": "تم إغلاق اتصال P2P.",
+    "err_generic_p2p": "فشل في إنشاء اتصال P2P."
   },
   "settings": {
     "title": "إعدادات الفريق",

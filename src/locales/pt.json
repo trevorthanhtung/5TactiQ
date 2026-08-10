@@ -507,7 +507,12 @@
       "katfc-fund-storage": "Caixa do Time",
       "katfc-venues-storage": "Diretório de Campos",
       "tactic-storage": "Esquemas Táticos"
-    }
+    },
+    "err_peer_unavailable": "Não foi possível conectar a este código. Verifique o código ou o status do anfitrião.",
+    "err_browser_incompatible": "Seu navegador não suporta conexão P2P.",
+    "err_network": "Erro de rede ou conexão com o servidor P2P perdida.",
+    "err_socket_closed": "Conexão P2P encerrada.",
+    "err_generic_p2p": "Falha ao estabelecer conexão P2P."
   },
   "settings": {
     "title": "Configurações da Equipe",

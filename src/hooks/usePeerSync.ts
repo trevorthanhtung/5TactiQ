@@ -2,6 +2,27 @@ import { useState, useEffect, useRef } from 'react';
 import Peer from 'peerjs';
 import type { DataConnection } from 'peerjs';
 import { exportData } from '../lib/sync';
+import i18n from '../lib/i18n';
+
+function parsePeerError(err: { type?: string; message?: string }): string {
+  const type = err?.type;
+  const msg = err?.message || '';
+
+  if (type === 'peer-unavailable' || msg.includes('Could not connect to peer')) {
+    return i18n.t('sync.err_peer_unavailable', 'Không tìm thấy thiết bị với mã này. Vui lòng kiểm tra lại mã hoặc máy Phát đã tắt.');
+  }
+  if (type === 'browser-incompatible') {
+    return i18n.t('sync.err_browser_incompatible', 'Trình duyệt không hỗ trợ kết nối P2P.');
+  }
+  if (type === 'network' || type === 'server-error') {
+    return i18n.t('sync.err_network', 'Lỗi kết nối mạng hoặc máy chủ P2P.');
+  }
+  if (type === 'socket-closed' || type === 'socket-error') {
+    return i18n.t('sync.err_socket_closed', 'Kết nối P2P bị ngắt.');
+  }
+
+  return msg || i18n.t('sync.err_generic_p2p', 'Không thể thiết lập kết nối P2P.');
+}
 
 export function usePeerSync(onDataReceived?: (dataStr: string) => void) {
   const [peerId, setPeerId] = useState<string | null>(null);
@@ -34,13 +55,13 @@ export function usePeerSync(onDataReceived?: (dataStr: string) => void) {
 
       conn.on('error', (err) => {
         setStatus('error');
-        setErrorMsg(err.message);
+        setErrorMsg(parsePeerError(err));
       });
     });
 
     peer.on('error', (err) => {
       setStatus('error');
-      setErrorMsg(err.message);
+      setErrorMsg(parsePeerError(err));
     });
 
     peerRef.current = peer;
@@ -70,13 +91,13 @@ export function usePeerSync(onDataReceived?: (dataStr: string) => void) {
 
       conn.on('error', (err) => {
         setStatus('error');
-        setErrorMsg(err.message);
+        setErrorMsg(parsePeerError(err));
       });
     });
 
     peer.on('error', (err) => {
       setStatus('error');
-      setErrorMsg(err.message);
+      setErrorMsg(parsePeerError(err));
     });
 
     peerRef.current = peer;
