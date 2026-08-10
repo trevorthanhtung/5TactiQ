@@ -1127,10 +1127,28 @@ export default function Matchday() {
               />
             </div>
             {currentMatch.status !== 'finished' && (
-              <div className="flex gap-1 w-full md:w-auto">
-                <button onClick={() => handleBulkAttendance('present')} className="flex-1 md:flex-none text-[10px] font-bold uppercase tracking-widest px-3 py-2 md:py-1.5 border border-primary text-primary hover:bg-primary/10 transition-colors text-center">{t('matchday.all_yes') || 'ALL YES'}</button>
-                <button onClick={() => handleBulkAttendance('absent')} className="flex-1 md:flex-none text-[10px] font-bold uppercase tracking-widest px-3 py-2 md:py-1.5 border border-secondary text-secondary hover:bg-secondary/10 transition-colors text-center">{t('matchday.all_no') || 'ALL NO'}</button>
-                <button onClick={() => handleBulkAttendance('pending')} className="flex-1 md:flex-none text-[10px] font-bold uppercase tracking-widest px-3 py-2 md:py-1.5 border border-slate-500 text-slate-500 hover:bg-slate-500/10 transition-colors text-center">{t('matchday.all_pending') || 'ALL ?'}</button>
+              <div className="flex gap-2 w-full md:w-auto">
+                <button
+                  type="button"
+                  onClick={() => handleBulkAttendance('present')}
+                  className="flex-1 md:flex-none text-[11px] sm:text-xs font-display font-bold uppercase tracking-wider px-3.5 py-2 bg-primary text-white border-2 border-primary hover:bg-[#323d29] transition-all text-center shadow-sm active:scale-95"
+                >
+                  {t('matchday.all_yes') || 'ALL YES'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleBulkAttendance('absent')}
+                  className="flex-1 md:flex-none text-[11px] sm:text-xs font-display font-bold uppercase tracking-wider px-3.5 py-2 bg-secondary text-white border-2 border-secondary hover:bg-[#d05c21] transition-all text-center shadow-sm active:scale-95"
+                >
+                  {t('matchday.all_no') || 'ALL NO'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleBulkAttendance('pending')}
+                  className="flex-1 md:flex-none text-[11px] sm:text-xs font-display font-bold uppercase tracking-wider px-3.5 py-2 bg-surface-2 text-text-main border-2 border-border-main hover:bg-surface hover:border-primary/50 transition-all text-center shadow-sm active:scale-95"
+                >
+                  {t('matchday.all_pending') || 'ALL ?'}
+                </button>
               </div>
             )}
           </div>

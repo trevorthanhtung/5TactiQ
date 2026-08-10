@@ -216,9 +216,9 @@
     "edit_health": "INJURY / HEALTH STATUS",
     "edit_health_title": "HEALTH & INJURY STATUS",
     "phone_label": "Phone number",
-    "phone_placeholder": "Ex: 123456...",
+    "phone_placeholder": "Ex: +1 234 567 890",
     "note_label": "Note",
-    "note_placeholder": "Additional info..."
+    "note_placeholder": "Enter additional info or injury status..."
   },
   "position": {
     "GK": "GK",

@@ -216,9 +216,9 @@
     "edit_health": "TÌNH TRẠNG CHẤN THƯƠNG",
     "edit_health_title": "TÌNH TRẠNG SỨC KHỎE / CHẤN THƯƠNG",
     "phone_label": "Số điện thoại",
-    "phone_placeholder": "VD: 090...",
+    "phone_placeholder": "VD: 0912 345 678",
     "note_label": "Ghi chú",
-    "note_placeholder": "Thông tin thêm..."
+    "note_placeholder": "Nhập thông tin hoặc tình trạng chấn thương..."
   },
   "position": {
     "GK": "GK",
