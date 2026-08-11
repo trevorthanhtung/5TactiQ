@@ -41,8 +41,8 @@
     "danger_zone": "Vùng nguy hiểm",
     "reset_alert_title": "CẢNH BÁO NGUY HIỂM",
     "reset_alert_msg": "Hành động này sẽ xóa TOÀN BỘ dữ liệu đội bóng, cầu thủ và trận đấu của bạn.\nKhông thể khôi phục lại.\n\nVui lòng nhập đúng tên đội bóng \"{{teamName}}\" để xác nhận:",
-    "privacy_msg_1": "5TactiQ hoàn toàn tôn trọng quyền riêng tư của bạn.",
-    "privacy_msg_2": "Toàn bộ dữ liệu về đội bóng, cầu thủ và chiến thuật đều được lưu trữ trực tiếp trên thiết bị của bạn (Local Storage). Chúng tôi không thu thập, không theo dõi và tuyệt đối không chia sẻ dữ liệu của bạn cho bất kỳ bên thứ ba nào.",
+    "privacy_msg_1": "5TactiQ hoàn toàn tôn trọng quyền riêng tư và an toàn dữ liệu của bạn.",
+    "privacy_msg_2": "Dữ liệu khi đăng nhập (Email/Google) được mã hóa và đồng bộ an toàn trên đám mây Supabase Cloud. Ở chế độ Khách, dữ liệu được lưu trực tiếp trên thiết bị của bạn (Local Storage). Chúng tôi tuyệt đối không chia sẻ dữ liệu của bạn cho bất kỳ bên thứ ba nào.",
     "app_info_desc": "Ứng dụng quản lý đội bóng, chiến thuật và thống kê chuyên nghiệp dành riêng cho sân 5.",
     "app_info_author": "thực hiện bởi thanhtungg.",
     "donate_msg": "Nếu thấy ứng dụng hữu ích và giúp bạn tiết kiệm thời gian, bạn có thể mời mình một ly cà phê nhé. Sự ủng hộ của bạn là động lực lớn để mình tiếp tục phát triển ứng dụng ngày càng tốt hơn!"
