@@ -30,24 +30,24 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
         masterGain.gain.setValueAtTime(0.4, now);
         masterGain.connect(ctx.destination);
 
-        // 1. HOLLYWOOD CINEMATIC TRAILER BOOM (Cú nổ trầm mượt mà dịu tai)
+        // 1. HOLLYWOOD CINEMATIC TRAILER BOOM (Phát ngắt ngay lập tức 0.0s không trễ)
         const subOsc = ctx.createOscillator();
         const subGain = ctx.createGain();
         subOsc.type = 'sine';
-        subOsc.frequency.setValueAtTime(90, now + 0.1);
-        subOsc.frequency.exponentialRampToValueAtTime(18, now + 1.3);
+        subOsc.frequency.setValueAtTime(100, now);
+        subOsc.frequency.exponentialRampToValueAtTime(18, now + 1.1);
 
-        subGain.gain.setValueAtTime(0, now + 0.1);
-        subGain.gain.linearRampToValueAtTime(0.35, now + 0.15);
-        subGain.gain.exponentialRampToValueAtTime(0.001, now + 1.4);
+        subGain.gain.setValueAtTime(0, now);
+        subGain.gain.linearRampToValueAtTime(0.4, now + 0.05);
+        subGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
 
         subOsc.connect(subGain);
         subGain.connect(masterGain);
-        subOsc.start(now + 0.1);
-        subOsc.stop(now + 1.4);
+        subOsc.start(now);
+        subOsc.stop(now + 1.2);
 
-        // Noise Impact Thud (Tiếng va đập không khí mờ nhẹ)
-        const bufferSize = Math.floor(ctx.sampleRate * 0.4);
+        // Noise Impact Thud (Phát ngay 0.0s)
+        const bufferSize = Math.floor(ctx.sampleRate * 0.3);
         const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
         const output = noiseBuffer.getChannelData(0);
         for (let i = 0; i < bufferSize; i++) {
@@ -58,20 +58,20 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
 
         const noiseFilter = ctx.createBiquadFilter();
         noiseFilter.type = 'lowpass';
-        noiseFilter.frequency.setValueAtTime(1200, now + 0.1);
-        noiseFilter.frequency.exponentialRampToValueAtTime(60, now + 0.45);
+        noiseFilter.frequency.setValueAtTime(1400, now);
+        noiseFilter.frequency.exponentialRampToValueAtTime(50, now + 0.35);
 
         const noiseGain = ctx.createGain();
-        noiseGain.gain.setValueAtTime(0, now + 0.1);
-        noiseGain.gain.linearRampToValueAtTime(0.12, now + 0.13);
-        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+        noiseGain.gain.setValueAtTime(0, now);
+        noiseGain.gain.linearRampToValueAtTime(0.15, now + 0.03);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
 
         whiteNoise.connect(noiseFilter);
         noiseFilter.connect(noiseGain);
         noiseGain.connect(masterGain);
-        whiteNoise.start(now + 0.1);
+        whiteNoise.start(now);
 
-        // 2. LUXURY AMBIENT GLASS PAD CHORD (Hợp âm không gian ngân vang dịu nhẹ)
+        // 2. LUXURY AMBIENT GLASS PAD CHORD (Hợp âm vang ngay 0.05s)
         const chordNotes = [146.83, 220.00, 349.23, 523.25, 659.25]; // Hợp âm Dm9
         chordNotes.forEach((freq, idx) => {
           if (!ctx) return;
@@ -80,39 +80,39 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
           const padFilter = ctx.createBiquadFilter();
 
           osc.type = 'sine';
-          osc.frequency.setValueAtTime(freq, now + 0.35);
+          osc.frequency.setValueAtTime(freq, now + 0.05);
 
           padFilter.type = 'lowpass';
-          padFilter.frequency.setValueAtTime(500, now + 0.35);
-          padFilter.frequency.exponentialRampToValueAtTime(2200, now + 1.1);
+          padFilter.frequency.setValueAtTime(500, now + 0.05);
+          padFilter.frequency.exponentialRampToValueAtTime(2200, now + 0.8);
 
-          const delay = idx * 0.03;
-          gain.gain.setValueAtTime(0, now + 0.35 + delay);
-          gain.gain.linearRampToValueAtTime(0.06, now + 0.75 + delay);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 1.85 + delay);
+          const delay = idx * 0.02;
+          gain.gain.setValueAtTime(0, now + 0.05 + delay);
+          gain.gain.linearRampToValueAtTime(0.08, now + 0.4 + delay);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 1.5 + delay);
 
           osc.connect(padFilter);
           padFilter.connect(gain);
           gain.connect(masterGain);
-          osc.start(now + 0.35 + delay);
-          osc.stop(now + 1.85 + delay);
+          osc.start(now + 0.05 + delay);
+          osc.stop(now + 1.5 + delay);
         });
 
-        // 3. SLEEK METALLIC HUD SNAP (Cú snap kim loại mỏng tinh tế)
+        // 3. SLEEK METALLIC HUD SNAP (Snap tinh tế ở 0.4s)
         const snapOsc = ctx.createOscillator();
         const snapGain = ctx.createGain();
         snapOsc.type = 'triangle';
-        snapOsc.frequency.setValueAtTime(1400, now + 0.95);
-        snapOsc.frequency.exponentialRampToValueAtTime(2200, now + 1.05);
+        snapOsc.frequency.setValueAtTime(1400, now + 0.4);
+        snapOsc.frequency.exponentialRampToValueAtTime(2200, now + 0.5);
 
-        snapGain.gain.setValueAtTime(0, now + 0.95);
-        snapGain.gain.linearRampToValueAtTime(0.07, now + 0.97);
-        snapGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+        snapGain.gain.setValueAtTime(0, now + 0.4);
+        snapGain.gain.linearRampToValueAtTime(0.08, now + 0.42);
+        snapGain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
 
         snapOsc.connect(snapGain);
         snapGain.connect(masterGain);
-        snapOsc.start(now + 0.95);
-        snapOsc.stop(now + 1.2);
+        snapOsc.start(now + 0.4);
+        snapOsc.stop(now + 0.65);
       } catch (e) {
         console.warn('Audio play failed', e);
       }
