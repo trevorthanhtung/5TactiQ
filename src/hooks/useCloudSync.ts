@@ -265,7 +265,7 @@ export function useCloudSync() {
   useEffect(() => {
     if (!session?.user?.id) return;
 
-    let timer: NodeJS.Timeout;
+    let timer: ReturnType<typeof setTimeout>;
     const triggerDebouncedSync = () => {
       if (isInternalSyncRef.current) return;
       clearTimeout(timer);

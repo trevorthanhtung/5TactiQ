@@ -39,6 +39,7 @@ export default function More() {
   const { theme, setTheme } = useThemeStore();
   const { hasUpdate, latestVersion, setShowUpdateModal } = useAppUpdateStore();
   const { session, isGuest, signOut, setGuest } = useAuthStore();
+  const addToast = useToastStore(state => state.addToast);
   const [badgeCount, setBadgeCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -690,7 +691,7 @@ export default function More() {
 
             <button
               type="button"
-              onClick={syncNow}
+              onClick={() => syncNow(true)}
               disabled={syncStatus === 'syncing' || !isOnline}
               className="hallmark-btn w-full flex items-center justify-center py-2.5 bg-primary text-white font-display text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.99] transition-all gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
