@@ -191,10 +191,6 @@ const Auth: React.FC = () => {
             <span>{t('auth.guest_btn', 'TRẢI NGHIỆM VỚI TƯ CÁCH KHÁCH')}</span>
             <ArrowRight size={16} className="text-secondary transform group-hover:translate-x-1 transition-transform" />
           </button>
-          <div className="mt-2.5 flex items-center justify-center text-[11px] text-text-muted font-medium tracking-wide">
-            <ShieldAlert size={13} className="mr-1.5 text-amber-500 shrink-0" />
-            <span>{t('auth.guest_note', 'Dữ liệu khách chỉ lưu trực tiếp trên trình duyệt thiết bị này')}</span>
-          </div>
         </div>
 
         {/* Platform Icons & Terms Footer */}
