@@ -13,13 +13,28 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
   useEffect(() => {
     let played = false;
 
-    const playSound = () => {
+    const playSound = async () => {
       if (played || prefersReducedMotion) return;
       try {
         const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
         if (!AudioCtx) return;
 
         const ctx = new AudioCtx();
+        
+        // Tránh spam console warning nếu trình duyệt chặn autoplay
+        if (ctx.state === 'suspended') {
+          try {
+            await ctx.resume();
+          } catch (e) {
+            // Ignore resume errors
+          }
+        }
+        
+        // Nếu vẫn không được phép chạy (bị trình duyệt chặn hoàn toàn), thoát sớm
+        if (ctx.state !== 'running') {
+          return;
+        }
+
         const now = ctx.currentTime;
 
         // Master Gain Output (Âm lượng vừa phải 0.5)
