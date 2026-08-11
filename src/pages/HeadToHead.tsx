@@ -211,7 +211,7 @@ export default function HeadToHead() {
           <div className="hallmark-divider mb-6"></div>
 
           {/* Search Bar & Season Filter Row */}
-          <div className="mb-6 flex flex-col @sm:flex-row gap-3 items-stretch @sm:items-center justify-between">
+          <div className="mb-6 flex flex-col @md:flex-row gap-3 items-stretch @md:items-center justify-between">
             <div className="relative flex-1 max-w-md">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search size={18} className="text-text-muted" />
@@ -229,8 +229,8 @@ export default function HeadToHead() {
               <CustomSelect 
                 value={filterMode} 
                 onChange={(val) => setFilterMode(val as 'all_time' | 'current_season')}
-                className="relative w-full @sm:w-auto shrink-0"
-                buttonClassName="bg-surface border-2 border-border-main text-xs font-bold uppercase tracking-widest text-text-main px-3 outline-none focus:border-primary cursor-pointer w-full @sm:w-auto h-[44px] flex items-center justify-between transition-colors hover:border-primary/50"
+                className="relative w-full @md:w-auto shrink-0"
+                buttonClassName="bg-surface border-2 border-border-main text-xs font-bold uppercase tracking-widest text-text-main px-3 outline-none focus:border-primary cursor-pointer w-full @md:w-auto h-[44px] flex items-center justify-between transition-colors hover:border-primary/50"
                 options={[
                   { value: 'current_season', label: t('stats.filter_season', 'MÙA GIẢI HIỆN TẠI') },
                   { value: 'all_time', label: t('stats.filter_all', 'TẤT CẢ THỜI GIAN') }
