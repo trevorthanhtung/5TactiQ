@@ -118,24 +118,39 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
       }
     };
 
-    playTacticalSound();
+    let played = false;
 
     const handleUserInteraction = () => {
-      playTacticalSound();
+      if (!played) {
+        played = true;
+        playTacticalSound();
+      }
       removeListeners();
     };
 
     const removeListeners = () => {
+      window.removeEventListener('pointermove', handleUserInteraction);
+      window.removeEventListener('mousemove', handleUserInteraction);
       window.removeEventListener('pointerdown', handleUserInteraction);
       window.removeEventListener('touchstart', handleUserInteraction);
       window.removeEventListener('click', handleUserInteraction);
       window.removeEventListener('keydown', handleUserInteraction);
+      window.removeEventListener('scroll', handleUserInteraction);
+      window.removeEventListener('focus', handleUserInteraction);
     };
 
-    window.addEventListener('pointerdown', handleUserInteraction);
-    window.addEventListener('touchstart', handleUserInteraction);
-    window.addEventListener('click', handleUserInteraction);
-    window.addEventListener('keydown', handleUserInteraction);
+    // Try playing immediately
+    playTacticalSound();
+
+    // Catch any mouse move, touch, or scroll gesture to play automatically
+    window.addEventListener('pointermove', handleUserInteraction, { once: true });
+    window.addEventListener('mousemove', handleUserInteraction, { once: true });
+    window.addEventListener('pointerdown', handleUserInteraction, { once: true });
+    window.addEventListener('touchstart', handleUserInteraction, { once: true });
+    window.addEventListener('click', handleUserInteraction, { once: true });
+    window.addEventListener('keydown', handleUserInteraction, { once: true });
+    window.addEventListener('scroll', handleUserInteraction, { once: true });
+    window.addEventListener('focus', handleUserInteraction, { once: true });
 
     // Bắt đầu fade out sau 2.1s (khi animation gần xong)
     const fadeTimer = setTimeout(() => {
@@ -559,32 +574,6 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
         <div className="sheen"></div>
         
       </div>
-
-      {/* Floating Sound Trigger Button */}
-      <button 
-        onClick={(e) => {
-          e.stopPropagation();
-          const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-          if (AudioCtx) {
-            const ctx = new AudioCtx();
-            const now = ctx.currentTime;
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(440, now);
-            osc.frequency.exponentialRampToValueAtTime(880, now + 0.3);
-            gain.gain.setValueAtTime(0.15, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start(now);
-            osc.stop(now + 0.35);
-          }
-        }}
-        className="fixed bottom-6 z-[10000] px-4 py-2 bg-primary text-white text-xs font-bold uppercase tracking-widest flex items-center gap-2 border-2 border-primary/40 shadow-2xl cursor-pointer hover:bg-primary/90 transition-all rounded-full active:scale-95"
-      >
-        <Volume2 size={16} /> Thử âm thanh 5TactiQ
-      </button>
     </div>
   );
 }
