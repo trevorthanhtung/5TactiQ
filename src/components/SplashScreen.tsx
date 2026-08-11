@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Volume2 } from 'lucide-react';
 
 interface SplashScreenProps {
   onComplete?: () => void;
@@ -24,19 +25,24 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
 
         const now = ctx.currentTime;
 
+        // Master Gain Output
+        const masterGain = ctx.createGain();
+        masterGain.gain.setValueAtTime(1.2, now);
+        masterGain.connect(ctx.destination);
+
         // 1. SUB-BASS IMPACT (Cú nổ trầm uy lực khi logo xuất hiện)
         const subOsc = ctx.createOscillator();
         const subGain = ctx.createGain();
         subOsc.type = 'sine';
-        subOsc.frequency.setValueAtTime(200, now + 0.05);
-        subOsc.frequency.exponentialRampToValueAtTime(30, now + 0.85);
+        subOsc.frequency.setValueAtTime(220, now + 0.05);
+        subOsc.frequency.exponentialRampToValueAtTime(32, now + 0.85);
 
         subGain.gain.setValueAtTime(0, now + 0.05);
-        subGain.gain.linearRampToValueAtTime(0.45, now + 0.1);
+        subGain.gain.linearRampToValueAtTime(0.85, now + 0.1);
         subGain.gain.exponentialRampToValueAtTime(0.001, now + 1.1);
 
         subOsc.connect(subGain);
-        subGain.connect(ctx.destination);
+        subGain.connect(masterGain);
         subOsc.start(now + 0.05);
         subOsc.stop(now + 1.1);
 
@@ -44,26 +50,26 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
         const swooshOsc = ctx.createOscillator();
         const swooshGain = ctx.createGain();
         swooshOsc.type = 'sawtooth';
-        swooshOsc.frequency.setValueAtTime(220, now + 0.2);
-        swooshOsc.frequency.exponentialRampToValueAtTime(1600, now + 0.65);
+        swooshOsc.frequency.setValueAtTime(250, now + 0.2);
+        swooshOsc.frequency.exponentialRampToValueAtTime(1800, now + 0.65);
 
         const filter = ctx.createBiquadFilter();
         filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(350, now + 0.2);
-        filter.frequency.exponentialRampToValueAtTime(2800, now + 0.65);
+        filter.frequency.setValueAtTime(400, now + 0.2);
+        filter.frequency.exponentialRampToValueAtTime(3200, now + 0.65);
 
         swooshGain.gain.setValueAtTime(0, now + 0.2);
-        swooshGain.gain.linearRampToValueAtTime(0.18, now + 0.4);
+        swooshGain.gain.linearRampToValueAtTime(0.35, now + 0.4);
         swooshGain.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
 
         swooshOsc.connect(filter);
         filter.connect(swooshGain);
-        swooshGain.connect(ctx.destination);
+        swooshGain.connect(masterGain);
         swooshOsc.start(now + 0.2);
         swooshOsc.stop(now + 0.7);
 
         // 3. SCI-FI TRIPLE RADAR LOCK (Tiếng khóa mục tiêu radar 3 nốt C6 -> E6 -> G6)
-        const playPing = (freq: number, startTime: number, vol = 0.15) => {
+        const playPing = (freq: number, startTime: number, vol = 0.4) => {
           if (!ctx) return;
           const pingOsc = ctx.createOscillator();
           const pingGain = ctx.createGain();
@@ -74,14 +80,14 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
           pingGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.45);
 
           pingOsc.connect(pingGain);
-          pingGain.connect(ctx.destination);
+          pingGain.connect(masterGain);
           pingOsc.start(startTime);
           pingOsc.stop(startTime + 0.45);
         };
 
-        playPing(1046.50, now + 0.85, 0.22); // Note C6
-        playPing(1318.51, now + 0.95, 0.20); // Note E6
-        playPing(1567.98, now + 1.05, 0.25); // Note G6
+        playPing(1046.50, now + 0.85, 0.45); // Note C6
+        playPing(1318.51, now + 0.95, 0.40); // Note E6
+        playPing(1567.98, now + 1.05, 0.50); // Note G6
 
         // 4. FUTSAL ELECTRONIC WHISTLE (Tiếng còi trọng tài điện tử chốt hạ)
         const whistleOsc = ctx.createOscillator();
@@ -91,11 +97,11 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
         whistleOsc.frequency.linearRampToValueAtTime(2950, now + 1.25);
 
         whistleGain.gain.setValueAtTime(0, now + 1.15);
-        whistleGain.gain.linearRampToValueAtTime(0.08, now + 1.18);
+        whistleGain.gain.linearRampToValueAtTime(0.22, now + 1.18);
         whistleGain.gain.exponentialRampToValueAtTime(0.001, now + 1.55);
 
         whistleOsc.connect(whistleGain);
-        whistleGain.connect(ctx.destination);
+        whistleGain.connect(masterGain);
         whistleOsc.start(now + 1.15);
         whistleOsc.stop(now + 1.55);
       } catch (e) {
@@ -544,6 +550,32 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
         <div className="sheen"></div>
         
       </div>
+
+      {/* Floating Sound Trigger Button */}
+      <button 
+        onClick={(e) => {
+          e.stopPropagation();
+          const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+          if (AudioCtx) {
+            const ctx = new AudioCtx();
+            const now = ctx.currentTime;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(300, now);
+            osc.frequency.exponentialRampToValueAtTime(1800, now + 0.4);
+            gain.gain.setValueAtTime(0.5, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.5);
+          }
+        }}
+        className="fixed bottom-6 z-[10000] px-4 py-2 bg-primary text-white text-xs font-bold uppercase tracking-widest flex items-center gap-2 border-2 border-primary/40 shadow-2xl cursor-pointer hover:bg-primary/90 transition-all rounded-full active:scale-95"
+      >
+        <Volume2 size={16} /> Thử âm thanh 5TactiQ
+      </button>
     </div>
   );
 }
