@@ -280,9 +280,9 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
       {/* Background layer */}
       <div className="grid-bg"></div>
 
-      {/* Tactical Pitch & Diagram Background Overlay */}
+      {/* Desktop / Landscape Tactical Pitch Background (Hidden on Mobile) */}
       <svg
-        className="pointer-events-none absolute inset-0 w-full h-full z-[1]"
+        className="hidden md:block pointer-events-none absolute inset-0 w-full h-full z-[1]"
         viewBox="0 0 1000 600"
         preserveAspectRatio="xMidYMid slice"
         style={{ opacity: 0, animation: 'grid-fade 1.2s ease forwards 0.1s' }}
@@ -365,6 +365,94 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
         <g className="animate-drift-1">
           <circle cx="660" cy="400" r="8" fill="#15803d" />
           <circle cx="660" cy="400" r="13" fill="none" stroke="#15803d" strokeWidth="1.5" opacity="0.4" />
+        </g>
+      </svg>
+
+      {/* Mobile / Portrait Vertical Tactical Pitch Background (Visible on Mobile) */}
+      <svg
+        className="block md:hidden pointer-events-none absolute inset-0 w-full h-full z-[1]"
+        viewBox="0 0 600 1000"
+        preserveAspectRatio="xMidYMid slice"
+        style={{ opacity: 0, animation: 'grid-fade 1.2s ease forwards 0.1s' }}
+      >
+        <defs>
+          <pattern id="tacticalGridMob" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(32,38,27,0.05)" strokeWidth="1" />
+          </pattern>
+          <marker id="arrowOrangeMob" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 10 5 L 0 9 z" fill="#e35d2a" opacity="0.75" />
+          </marker>
+          <marker id="arrowGreenMob" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 10 5 L 0 9 z" fill="#15803d" opacity="0.75" />
+          </marker>
+        </defs>
+
+        {/* Grid pattern fill */}
+        <rect width="600" height="1000" fill="url(#tacticalGridMob)" />
+
+        {/* Outer Court Boundary Lines */}
+        <rect x="40" y="50" width="520" height="900" fill="none" stroke="rgba(32,38,27,0.1)" strokeWidth="2" strokeDasharray="8 4" />
+
+        {/* Center Half-Court Line */}
+        <line x1="40" y1="500" x2="560" y2="500" stroke="rgba(32,38,27,0.12)" strokeWidth="2" />
+
+        {/* Center Circle (Surrounding Logo) */}
+        <circle cx="300" cy="500" r="140" fill="none" stroke="rgba(227,93,42,0.18)" strokeWidth="2" />
+        <circle cx="300" cy="500" r="220" fill="none" stroke="rgba(32,38,27,0.08)" strokeWidth="1.5" strokeDasharray="6 6" />
+
+        {/* Top Goal Area & Penalty Arc */}
+        <path d="M 160 50 A 140 140 0 0 1 440 50" fill="none" stroke="rgba(32,38,27,0.08)" strokeWidth="2" />
+        <rect x="220" y="50" width="160" height="50" fill="none" stroke="rgba(32,38,27,0.06)" strokeWidth="1.5" />
+
+        {/* Bottom Goal Area & Penalty Arc */}
+        <path d="M 160 950 A 140 140 0 0 0 440 950" fill="none" stroke="rgba(32,38,27,0.08)" strokeWidth="2" />
+        <rect x="220" y="900" width="160" height="50" fill="none" stroke="rgba(32,38,27,0.06)" strokeWidth="1.5" />
+
+        {/* Tactical Movement Arrows & Passes (Vertical) */}
+        <path
+          d="M 420 260 Q 440 370 370 440"
+          fill="none"
+          stroke="#e35d2a"
+          strokeWidth="2"
+          strokeDasharray="6 6"
+          opacity="0.6"
+          markerEnd="url(#arrowOrangeMob)"
+        />
+        <path
+          d="M 180 740 Q 160 630 230 560"
+          fill="none"
+          stroke="#15803d"
+          strokeWidth="2"
+          strokeDasharray="6 6"
+          opacity="0.6"
+          markerEnd="url(#arrowGreenMob)"
+        />
+        <path
+          d="M 160 300 Q 90 500 160 700"
+          fill="none"
+          stroke="#e35d2a"
+          strokeWidth="1.5"
+          strokeDasharray="4 4"
+          opacity="0.45"
+          markerEnd="url(#arrowOrangeMob)"
+        />
+
+        {/* Tactical Player Dots */}
+        <g className="animate-drift-1">
+          <circle cx="420" cy="260" r="8" fill="#e35d2a" />
+          <circle cx="420" cy="260" r="13" fill="none" stroke="#e35d2a" strokeWidth="1.5" opacity="0.4" />
+        </g>
+        <g className="animate-drift-2">
+          <circle cx="200" cy="340" r="8" fill="#e35d2a" />
+          <circle cx="200" cy="340" r="13" fill="none" stroke="#e35d2a" strokeWidth="1.5" opacity="0.4" />
+        </g>
+        <g className="animate-drift-3">
+          <circle cx="180" cy="740" r="8" fill="#15803d" />
+          <circle cx="180" cy="740" r="13" fill="none" stroke="#15803d" strokeWidth="1.5" opacity="0.4" />
+        </g>
+        <g className="animate-drift-1">
+          <circle cx="400" cy="660" r="8" fill="#15803d" />
+          <circle cx="400" cy="660" r="13" fill="none" stroke="#15803d" strokeWidth="1.5" opacity="0.4" />
         </g>
       </svg>
 
