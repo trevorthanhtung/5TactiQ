@@ -106,14 +106,21 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
     playTacticalSound();
 
     const handleUserInteraction = () => {
-      if (ctx && ctx.state === 'suspended') {
-        ctx.resume();
-      } else {
-        playTacticalSound();
-      }
-      window.removeEventListener('pointerdown', handleUserInteraction);
+      playTacticalSound();
+      removeListeners();
     };
+
+    const removeListeners = () => {
+      window.removeEventListener('pointerdown', handleUserInteraction);
+      window.removeEventListener('touchstart', handleUserInteraction);
+      window.removeEventListener('click', handleUserInteraction);
+      window.removeEventListener('keydown', handleUserInteraction);
+    };
+
     window.addEventListener('pointerdown', handleUserInteraction);
+    window.addEventListener('touchstart', handleUserInteraction);
+    window.addEventListener('click', handleUserInteraction);
+    window.addEventListener('keydown', handleUserInteraction);
 
     // Bắt đầu fade out sau 2.1s (khi animation gần xong)
     const fadeTimer = setTimeout(() => {
@@ -127,6 +134,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
     }, 2500);
 
     return () => {
+      removeListeners();
       clearTimeout(fadeTimer);
       clearTimeout(unmountTimer);
     };
