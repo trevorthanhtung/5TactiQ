@@ -360,11 +360,6 @@ export default function More() {
         <h2 className="text-sm font-display font-bold text-text-muted uppercase tracking-widest mb-4">{t('more.section_support')}</h2>
         {renderSection(supportItems)}
       </div>
-
-      <div className="mb-6">
-        <h2 className="text-sm font-display font-bold text-red-500 uppercase tracking-widest mb-4">{t('more.danger_zone', 'VÙNG NGUY HIỂM')}</h2>
-        {renderSection(dangerItems)}
-      </div>
       
       {/* Logout Card (Only shown when user is logged in with an account) */}
       {session && (
@@ -697,6 +692,49 @@ export default function More() {
             >
               <span>{syncStatus === 'syncing' ? t('sync.syncing_btn', 'ĐANG ĐỒNG BỘ...') : t('sync.sync_now_btn', 'ĐỒNG BỘ NGAY')}</span>
             </button>
+          </div>
+
+          {/* Danger Zone Section inside Profile Modal */}
+          <div className="mt-4 pt-3 border-t border-border-main">
+            <h4 className="font-display font-bold uppercase tracking-widest text-xs text-red-500 mb-3">
+              {t('more.danger_zone', 'VÙNG NGUY HIỂM')}
+            </h4>
+            <div 
+              onClick={() => {
+                setIsProfileOpen(false);
+                setConfirmInput('');
+                setConfirmInfo({
+                  title: t('more.reset_alert_title', 'CẢNH BÁO NGUY HIỂM'),
+                  message: t('more.reset_alert_msg', { teamName, defaultValue: `Hành động này sẽ xóa TOÀN BỘ dữ liệu đội bóng, cầu thủ và trận đấu của bạn.\nKhông thể khôi phục lại.\n\nVui lòng nhập đúng tên đội bóng "${teamName}" để xác nhận:` }),
+                  requireInput: teamName,
+                  onConfirm: async () => {
+                    localStorage.clear();
+                    try {
+                      const { Preferences } = await import('@capacitor/preferences');
+                      await Preferences.clear();
+                    } catch (e) {}
+                    addToast({ message: t('toast.all_data_cleared', 'Đã xóa toàn bộ dữ liệu ứng dụng'), type: 'info' });
+                    setTimeout(() => window.location.reload(), 500);
+                  }
+                });
+              }}
+              className="bg-red-500/5 border-2 border-red-500/40 hover:border-red-600 p-3.5 flex items-center justify-between gap-3 transition-all cursor-pointer group shadow-sm"
+            >
+              <div className="w-10 h-10 border-2 border-red-500/50 bg-red-500/10 flex items-center justify-center shrink-0">
+                <AlertTriangle size={20} className="text-red-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h5 className="font-display font-bold text-base text-red-600 uppercase tracking-wide">
+                  {t('more.reset_title', 'KHÔI PHỤC CÀI ĐẶT GỐC')}
+                </h5>
+                <p className="text-xs text-text-muted font-sans truncate mt-0.5">
+                  {t('more.reset_desc', 'Xóa vĩnh viễn toàn bộ dữ liệu')}
+                </p>
+              </div>
+              <div className="w-8 h-8 border-2 border-red-500/40 flex items-center justify-center shrink-0 text-red-500 group-hover:border-red-600 group-hover:translate-x-0.5 transition-all">
+                <ChevronRight size={18} />
+              </div>
+            </div>
           </div>
         </div>
       </BottomSheet>
