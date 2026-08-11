@@ -167,7 +167,9 @@
     "update_action": "LÀM MỚI",
     "offline": "Bạn đang ngoại tuyến. Dữ liệu sẽ được lưu cục bộ.",
     "online": "Đã kết nối mạng trở lại!",
-    "health_updated": "Đã cập nhật tình trạng sức khỏe cho {{name}}."
+    "health_updated": "Đã cập nhật tình trạng sức khỏe cho {{name}}.",
+    "badge_test": "Đã gửi thông báo kiểm tra!",
+    "cache_clear_error": "Không thể xóa bộ nhớ đệm."
   },
   "roster": {
     "filter_all": "Tất cả",
@@ -222,7 +224,8 @@
     "call_player": "GỌI ĐIỆN",
     "status_role_title": "VAI TRÒ & PHÂN LOẠI",
     "borrowed_badge": "MƯỢN",
-    "youth_badge": "TRẺ LÊN"
+    "youth_badge": "TRẺ LÊN",
+    "search_placeholder": "Tìm kiếm cầu thủ..."
   },
   "position": {
     "GK": "GK",
@@ -284,6 +287,7 @@
     "internal_caps": "NỘI BỘ",
     "weather_forecast": "Dự báo thời tiết",
     "weather_rain": "Dự báo mưa rào",
+    "weather_unavailable": "Chưa có thông tin dự báo (Hỗ trợ trong 14 ngày)",
     "attendance_list": "Danh sách thi đấu",
     "split_teams": "Chia đội",
     "present": "Có mặt",
@@ -293,11 +297,11 @@
     "no": "VẮNG",
     "team_lineup": "Đội hình chia sân",
     "randomize": "Chia Ngẫu Nhiên",
-    "reset_teams": "Làm Lại",
-    "all_yes": "Tất cả CÓ",
-    "all_no": "Tất cả KHÔNG",
-    "all_pending": "Tất cả CHƯA RÕ",
-    "search_player": "Tìm tên cầu thủ...",
+    "reset_teams": "Chia lại đội",
+    "all_yes": "Tất cả Có",
+    "all_no": "Tất cả Vắng",
+    "all_pending": "Tất cả Chưa rõ",
+    "search_player": "Tìm kiếm cầu thủ...",
     "team_a": "Đội A",
     "team_b": "Đội B",
     "team_c": "Đội C",
@@ -456,7 +460,7 @@
     "suggested_times": "Gợi ý giờ đá sân phủi:",
     "select_time": "Chọn giờ",
     "select_match_time": "CHỌN GIỜ ĐÁ",
-    "cancel": "HỦY",
+    "cancel": "Hủy",
     "apply": "ÁP DỤNG",
     "january": "THÁNG 1",
     "february": "THÁNG 2",
@@ -476,7 +480,14 @@
     "thu": "T5",
     "fri": "T6",
     "sat": "T7",
-    "sun": "CN"
+    "sun": "CN",
+    "ok": "OK",
+    "confirm": "Xác nhận",
+    "today": "Hôm nay",
+    "next_tue": "Thứ 3 tới",
+    "next_thu": "Thứ 5 tới",
+    "next_sat": "Thứ 7 tới",
+    "next_sun": "Chủ Nhật tới"
   },
   "datepicker": {
     "currently_selected": "ĐANG CHỌN:",
@@ -574,7 +585,9 @@
     "mode_overwrite": "Ghi đè",
     "mode_merge": "Gộp",
     "mode_overwrite_desc": "* Dữ liệu cũ của các mục được chọn sẽ bị XÓA SẠCH và thay thế.",
-    "mode_merge_desc": "* Dữ liệu cũ sẽ được GIỮ LẠI và gộp thêm dữ liệu mới."
+    "mode_merge_desc": "* Dữ liệu cũ sẽ được GIỮ LẠI và gộp thêm dữ liệu mới.",
+    "host_click_to_copy": "Nhấp để sao chép mã kết nối",
+    "export_direct_success": "Đã lưu file sao lưu thành công!"
   },
   "settings": {
     "title": "Cài đặt đội bóng",
@@ -605,7 +618,12 @@
     "badge_win": "T",
     "badge_loss": "B",
     "badge_draw": "H",
-    "search_placeholder": "Tìm tên đối thủ..."
+    "search_placeholder": "Tìm tên đối thủ...",
+    "internal_opp": "Đối thủ nội bộ",
+    "team_a": "Đội A",
+    "team_b": "Đội B",
+    "team_c": "Đội C",
+    "team_d": "Đội D"
   },
   "fitness": {
     "title": "Chấn thương & Thể lực",
@@ -769,5 +787,10 @@
     "light_injury": "Chấn thương nhẹ",
     "severe_injury": "Chấn thương nặng",
     "recovering": "Đang hồi phục"
+  },
+  "app": {
+    "update_available": "Đã có bản cập nhật mới!",
+    "update_now": "CẬP NHẬT NGAY",
+    "exit_prompt": "Nhấn lần nữa để thoát ứng dụng"
   }
 }

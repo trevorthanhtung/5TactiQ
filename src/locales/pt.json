@@ -167,7 +167,9 @@
     "online": "Conectado novamente!",
     "unmarked_youth": "Jogador da base desmarcado para {{name}}.",
     "marked_youth": "{{name}} marcado como jogador da base.",
-    "health_updated": "Status de saúde atualizado para {{name}}."
+    "health_updated": "Status de saúde atualizado para {{name}}.",
+    "badge_test": "Notificação de teste enviada!",
+    "cache_clear_error": "Não foi possível limpar o cache."
   },
   "roster": {
     "title": "Elenco",
@@ -217,7 +219,13 @@
     "call_player": "LIGAR JOGADOR",
     "status_role_title": "FUNÇÕES E CLASSIFICAÇÕES",
     "borrowed_badge": "EMPRÉSTIMO",
-    "youth_badge": "BASE"
+    "youth_badge": "BASE",
+    "search_placeholder": "Procurar jogador...",
+    "filter_all": "Todos",
+    "filter_injured": "Lesionado",
+    "filter_recovering": "Recuperação",
+    "filter_borrowed": "Emprestado",
+    "no_filtered_players": "Nenhum jogador encontrado"
   },
   "position": {
     "GK": "GL",
@@ -279,6 +287,7 @@
     "internal_caps": "INTERNO",
     "weather_forecast": "Previsão do Tempo",
     "weather_rain": "Previsão de Chuva",
+    "weather_unavailable": "Previsão indisponível (suportado em até 14 dias)",
     "attendance_list": "Lista de Presença",
     "split_teams": "Dividir Equipes",
     "present": "Presente",
@@ -316,7 +325,13 @@
     "delete_match": "EXCLUIR PARTIDA",
     "confirm_delete_match": "Tem certeza que deseja excluir esta partida?",
     "delete_match_warning": "Aviso: Todos os dados e resultados serão excluídos permanentemente.",
-    "search_placeholder": "Procurar oponente..."
+    "search_placeholder": "Procurar oponente...",
+    "search_player": "Procurar jogador...",
+    "all_yes": "Todos Presentes",
+    "all_no": "Todos Ausentes",
+    "all_pending": "Todos Pendentes",
+    "reset_teams": "Reiniciar Times",
+    "move_to": "Mover para"
   },
   "tactics": {
     "rotate_screen": "Girar tela",
@@ -445,7 +460,7 @@
     "suggested_times": "Horários sugeridos:",
     "select_time": "Selecionar hora",
     "select_match_time": "SELECIONAR HORA DO JOGO",
-    "cancel": "CANCELAR",
+    "cancel": "Cancelar",
     "apply": "APLICAR",
     "january": "JAN",
     "february": "FEV",
@@ -465,7 +480,14 @@
     "thu": "QUI",
     "fri": "SEX",
     "sat": "SÁB",
-    "sun": "DOM"
+    "sun": "DOM",
+    "ok": "OK",
+    "confirm": "Confirmar",
+    "today": "Hoje",
+    "next_tue": "Próx. Ter",
+    "next_thu": "Próx. Qui",
+    "next_sat": "Próx. Sáb",
+    "next_sun": "Próx. Dom"
   },
   "datepicker": {
     "currently_selected": "SELECIONADO:",
@@ -563,7 +585,9 @@
     "mode_overwrite": "Overwrite",
     "mode_merge": "Merge",
     "mode_overwrite_desc": "* Old data of the selected items will be COMPLETELY DELETED and replaced.",
-    "mode_merge_desc": "* Old data will be KEPT and new data will be merged."
+    "mode_merge_desc": "* Old data will be KEPT and new data will be merged.",
+    "host_click_to_copy": "Clique para copiar o código de conexão",
+    "export_direct_success": "Arquivo de backup salvo com sucesso!"
   },
   "settings": {
     "title": "Configurações da Equipe",
@@ -594,7 +618,12 @@
     "badge_win": "V",
     "badge_loss": "D",
     "badge_draw": "E",
-    "search_placeholder": "Procurar nome do oponente..."
+    "search_placeholder": "Procurar nome do oponente...",
+    "internal_opp": "Oponente Interno",
+    "team_a": "Time A",
+    "team_b": "Time B",
+    "team_c": "Time C",
+    "team_d": "Time D"
   },
   "fitness": {
     "title": "Lesões e Condição Física",
@@ -758,5 +787,10 @@
     "light_injury": "Lesão Leve",
     "severe_injury": "Lesão Grave",
     "recovering": "Recuperando"
+  },
+  "app": {
+    "update_available": "Nova atualização disponível!",
+    "update_now": "ATUALIZAR AGORA",
+    "exit_prompt": "Pressione novamente para sair"
   }
 }

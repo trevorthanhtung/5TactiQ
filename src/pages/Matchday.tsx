@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Plus, CloudRain, Sun, Cloud, Save, Navigation2, Activity, Edit2, Shuffle, MapPin, CalendarClock, Bell, Play, CheckCircle2, Trophy, Flame, Trash2, ChevronDown, Check, X, RotateCcw, Users, CloudLightning, CloudFog, CloudDrizzle, ArrowLeft, Eye, Search } from 'lucide-react';
+import { Plus, CloudRain, Sun, Cloud, CloudOff, Save, Navigation2, Activity, Edit2, Shuffle, MapPin, CalendarClock, Bell, Play, CheckCircle2, Trophy, Flame, Trash2, ChevronDown, Check, X, RotateCcw, Users, CloudLightning, CloudFog, CloudDrizzle, ArrowLeft, Eye, Search } from 'lucide-react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useMatchStore } from '../store/useMatchStore';
 import { useSettingsStore } from '../store/useSettingsStore';
@@ -110,6 +110,7 @@ export default function Matchday() {
     }
   };
   const [liveWeather, setLiveWeather] = useState<WeatherData | null>(null);
+  const [isWeatherUnavailable, setIsWeatherUnavailable] = useState(false);
 
   // Derive unique past opponent names for autocomplete
   const pastOpponents = useMemo(() => {
@@ -127,14 +128,28 @@ export default function Matchday() {
 
   useEffect(() => {
     if (currentMatch && currentMatch.date && currentMatch.time) {
+      const matchDate = new Date(`${currentMatch.date}T${currentMatch.time}`);
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      const mDate = new Date(matchDate);
+      mDate.setHours(0, 0, 0, 0);
+
+      const diffDays = Math.round((mDate.getTime() - now.getTime()) / (1000 * 3600 * 24));
+
+      if (diffDays < 0 || diffDays > 14) {
+        setLiveWeather(null);
+        setIsWeatherUnavailable(true);
+        return;
+      }
+
       const fetchWeather = (lat: number, lon: number) => {
         fetchWeatherForecast(currentMatch.date, currentMatch.time, lat, lon).then(data => {
           if (data) {
             setLiveWeather(data);
-          } else if (currentMatch.weather) {
-            setLiveWeather(currentMatch.weather as any);
+            setIsWeatherUnavailable(false);
           } else {
             setLiveWeather(null);
+            setIsWeatherUnavailable(true);
           }
         });
       };
@@ -155,6 +170,7 @@ export default function Matchday() {
       }
     } else {
       setLiveWeather(null);
+      setIsWeatherUnavailable(false);
     }
   }, [currentMatch?.id, currentMatch?.date, currentMatch?.time]);
 
@@ -244,9 +260,6 @@ export default function Matchday() {
     location: '',
     time: '19:00',
     date: new Date().toISOString().split('T')[0],
-    weatherCondition: 'rain' as 'rain' | 'clear' | 'cloudy',
-    weatherProb: 70,
-    weatherNote: 'weather.rain',
     teamAColor: 'Đỏ',
     teamBColor: 'Xanh'
   });
@@ -315,11 +328,6 @@ export default function Matchday() {
       location: newMatchData.location,
       time: newMatchData.time,
       date: newMatchData.date,
-      weather: {
-        condition: newMatchData.weatherCondition,
-        probability: newMatchData.weatherProb,
-        note: newMatchData.weatherNote,
-      },
       teamAColor: newMatchData.teamAColor,
       teamBColor: newMatchData.teamBColor,
     });
@@ -1064,7 +1072,7 @@ export default function Matchday() {
       <div className="bg-surface p-5 sm:p-6 border-2 border-primary shadow-lg flex flex-col items-center text-center relative shrink-0">
         <div className="text-xs font-display uppercase tracking-widest text-secondary mb-1 font-bold">
           {currentMatch.matchType === 'internal' 
-            ? `${t('matchday.internal_match_caps')} • ${currentMatch.teamCount || 2} ĐỘI`
+            ? `${t('matchday.internal_match_caps')} • ${currentMatch.teamCount || 2} ${t('matchday.team_count_unit').toUpperCase()}`
             : currentMatch.matchType === 'friendly' 
             ? t('matchday.friendly_match_caps') 
             : t('matchday.tournament_match_caps')}
@@ -1087,11 +1095,10 @@ export default function Matchday() {
               }`}>
                 {(['A', 'B', 'C', 'D'] as const).slice(0, currentMatch.teamCount || 2).map((team) => {
                   const scoreField = `scoreTeam${team}` as keyof typeof currentMatch;
-                  const colorField = `team${team}Color` as keyof typeof currentMatch;
                   return (
                     <div key={team} className="bg-surface-2 border-2 border-border-main p-3 sm:p-4 flex flex-col items-center justify-center shadow-sm relative group hover:border-primary/50 transition-colors">
                       <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-text-muted mb-1 truncate max-w-full">
-                        {t(`matchday.team_${team.toLowerCase()}`)} ({getBibColorLabel(currentMatch[colorField] as string)})
+                        {t(`matchday.team_${team.toLowerCase()}`)}
                       </span>
                       <span className={`text-3xl sm:text-5xl font-display font-bold ${team === 'A' ? 'text-primary' : 'text-text-main'}`}>
                         {Number(currentMatch[scoreField] ?? 0)}
@@ -1123,8 +1130,8 @@ export default function Matchday() {
 
       </div>
 
-      {/* 3. Weather Alert (If any) */}
-      {liveWeather && (
+      {/* 3. Weather Alert / Status */}
+      {liveWeather ? (
         <div className={`border-2 p-3.5 flex items-center gap-3 shrink-0 ${liveWeather.condition === 'rain' || liveWeather.condition === 'thunderstorm'
             ? 'border-secondary/40 bg-amber-500/10'
             : 'border-slate-300/50 bg-surface/50'
@@ -1142,7 +1149,16 @@ export default function Matchday() {
             </span>
           </div>
         </div>
-      )}
+      ) : isWeatherUnavailable ? (
+        <div className="border-2 border-border-main/60 bg-surface/50 p-3.5 flex items-center gap-3 shrink-0 text-text-muted">
+          <CloudOff className="text-text-muted shrink-0" size={24} />
+          <div>
+            <span className="font-display uppercase font-bold text-xs md:text-sm text-text-muted">
+              {t('matchday.weather_unavailable')}
+            </span>
+          </div>
+        </div>
+      ) : null}
 
       {/* 4. Navigation Segmented Tabs */}
       <div className="flex bg-surface-2 p-1 border-2 border-border-main gap-1 shrink-0">

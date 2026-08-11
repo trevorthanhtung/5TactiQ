@@ -167,7 +167,9 @@
     "online": "Подключение восстановлено!",
     "unmarked_youth": "Снята отметка молодого игрока для {{name}}.",
     "marked_youth": "{{name}} отмечен как молодой игрок.",
-    "health_updated": "Статус здоровья обновлен для {{name}}."
+    "health_updated": "Статус здоровья обновлен для {{name}}.",
+    "badge_test": "Тестовое уведомление отправлено!",
+    "cache_clear_error": "Не удалось очистить кэш."
   },
   "roster": {
     "title": "Состав",
@@ -217,7 +219,13 @@
     "call_player": "ПОЗВОНИТЬ ИГРОКУ",
     "status_role_title": "РОЛИ И КЛАССИФИКАЦИИ",
     "borrowed_badge": "АРЕНДА",
-    "youth_badge": "ВОСПИТАННИК"
+    "youth_badge": "ВОСПИТАННИК",
+    "search_placeholder": "Поиск игрока...",
+    "filter_all": "Все",
+    "filter_injured": "Травма",
+    "filter_recovering": "Восстановление",
+    "filter_borrowed": "Аренда",
+    "no_filtered_players": "Игроки не найдены"
   },
   "position": {
     "GK": "ВР",
@@ -279,6 +287,7 @@
     "internal_caps": "ВНУТРЕННИЙ",
     "weather_forecast": "Прогноз погоды",
     "weather_rain": "Прогноз дождя",
+    "weather_unavailable": "Прогноз недоступен (доступен в пределах 14 дней)",
     "attendance_list": "Список участников",
     "split_teams": "Разделить команды",
     "present": "Присутствует",
@@ -316,7 +325,13 @@
     "delete_match": "УДАЛИТЬ МАТЧ",
     "confirm_delete_match": "Вы уверены, что хотите удалить этот матч?",
     "delete_match_warning": "Внимание: Все данные и результаты будут удалены навсегда.",
-    "search_placeholder": "Поиск соперника..."
+    "search_placeholder": "Поиск соперника...",
+    "search_player": "Поиск игрока...",
+    "all_yes": "Все Идут",
+    "all_no": "Все Пропускают",
+    "all_pending": "Все Не определились",
+    "reset_teams": "Сбросить Команды",
+    "move_to": "Переместить в"
   },
   "tactics": {
     "rotate_screen": "Поверните экран",
@@ -445,7 +460,7 @@
     "suggested_times": "Рекомендуемое время:",
     "select_time": "Выбрать время",
     "select_match_time": "ВЫБРАТЬ ВРЕМЯ МАТЧА",
-    "cancel": "ОТМЕНА",
+    "cancel": "Отмена",
     "apply": "ПРИМЕНИТЬ",
     "january": "ЯНВ",
     "february": "ФЕВ",
@@ -465,7 +480,14 @@
     "thu": "ЧТ",
     "fri": "ПТ",
     "sat": "СБ",
-    "sun": "ВС"
+    "sun": "ВС",
+    "ok": "ОК",
+    "confirm": "Подтвердить",
+    "today": "Сегодня",
+    "next_tue": "След. Вт",
+    "next_thu": "След. Чт",
+    "next_sat": "След. Сб",
+    "next_sun": "След. Vsk"
   },
   "datepicker": {
     "currently_selected": "ВЫБРАНО:",
@@ -563,7 +585,9 @@
     "mode_overwrite": "Overwrite",
     "mode_merge": "Merge",
     "mode_overwrite_desc": "* Old data of the selected items will be COMPLETELY DELETED and replaced.",
-    "mode_merge_desc": "* Old data will be KEPT and new data will be merged."
+    "mode_merge_desc": "* Old data will be KEPT and new data will be merged.",
+    "host_click_to_copy": "Нажмите, чтобы скопировать код подключения",
+    "export_direct_success": "Файл резервной копии успешно сохранен!"
   },
   "settings": {
     "title": "Настройки команды",
@@ -594,7 +618,12 @@
     "badge_win": "В",
     "badge_loss": "П",
     "badge_draw": "Н",
-    "search_placeholder": "Поиск имени соперника..."
+    "search_placeholder": "Поиск имени соперника...",
+    "internal_opp": "Внутренний Соперник",
+    "team_a": "Команда А",
+    "team_b": "Команда Б",
+    "team_c": "Команда В",
+    "team_d": "Команда Г"
   },
   "fitness": {
     "title": "Травмы и физ. форма",
@@ -758,5 +787,10 @@
     "light_injury": "Легкая травма",
     "severe_injury": "Тяжелая травма",
     "recovering": "Восстанавливается"
+  },
+  "app": {
+    "update_available": "Доступно новое обновление!",
+    "update_now": "ОБНОВИТЬ СЕЙЧАС",
+    "exit_prompt": "Нажмите еще раз để выйти"
   }
 }

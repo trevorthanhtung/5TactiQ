@@ -55,11 +55,7 @@ export const useMatchStore = create<MatchState>()(
           time: info.time || '19:00',
           matchType: info.matchType || 'internal',
           status: 'upcoming',
-          weather: info.weather || {
-            condition: 'clear',
-            probability: 20,
-            note: 'Thời tiết ổn định.'
-          },
+          weather: info.weather,
           teamCount: info.teamCount || 2,
           teamAColor: info.teamAColor || 'Đỏ',
           teamBColor: info.teamBColor || 'Xanh',

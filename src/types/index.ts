@@ -38,7 +38,7 @@ export interface MatchInfo {
   time: string;
   matchType: 'friendly' | 'internal' | 'tournament';
   status: MatchStatus;
-  weather: {
+  weather?: {
     condition: 'rain' | 'clear' | 'cloudy';
     probability: number;
     note: string;

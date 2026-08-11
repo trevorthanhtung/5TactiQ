@@ -167,7 +167,9 @@
     "online": "¡Conectado de nuevo!",
     "unmarked_youth": "Jugador juvenil desmarcado para {{name}}.",
     "marked_youth": "{{name}} marcado como jugador juvenil.",
-    "health_updated": "Estado de salud actualizado para {{name}}."
+    "health_updated": "Estado de salud actualizado para {{name}}.",
+    "badge_test": "¡Notificación de prueba enviada!",
+    "cache_clear_error": "No se pudo limpiar la caché."
   },
   "roster": {
     "title": "Plantilla",
@@ -203,7 +205,7 @@
     "delete_now": "ELIMINAR AHORA",
     "edit_title": "Editar información del jugador",
     "not_found": "Jugador no encontrado",
-    "filter_youth": "Juvenil",
+    "filter_youth": "Cantera",
     "youth_label": "JUGADOR CANTERANO",
     "youth_tooltip": "Jugador canterano",
     "mark_youth": "JUGADOR JUVENIL",
@@ -217,7 +219,13 @@
     "call_player": "LLAMAR JUGADOR",
     "status_role_title": "ROLES Y CLASIFICACIONES",
     "borrowed_badge": "CEDIDO",
-    "youth_badge": "CANTERANO"
+    "youth_badge": "CANTERANO",
+    "search_placeholder": "Buscar jugador...",
+    "filter_all": "Todos",
+    "filter_injured": "Lesionado",
+    "filter_recovering": "Recuperación",
+    "filter_borrowed": "Cedido",
+    "no_filtered_players": "No se encontraron jugadores"
   },
   "position": {
     "GK": "PT",
@@ -279,6 +287,7 @@
     "internal_caps": "INTERNO",
     "weather_forecast": "Pronóstico del Tiempo",
     "weather_rain": "Pronóstico de Lluvia",
+    "weather_unavailable": "Pronóstico no disponible (disponible dentro de 14 días)",
     "attendance_list": "Lista de Asistencia",
     "split_teams": "Dividir Equipos",
     "present": "Presente",
@@ -316,7 +325,13 @@
     "delete_match": "ELIMINAR PARTIDO",
     "confirm_delete_match": "¿Estás seguro de que deseas eliminar este partido?",
     "delete_match_warning": "Advertencia: Todos los datos y resultados se eliminarán permanentemente.",
-    "search_placeholder": "Buscar oponente..."
+    "search_placeholder": "Buscar oponente...",
+    "search_player": "Buscar jugador...",
+    "all_yes": "Todos Presentes",
+    "all_no": "Todos Ausentes",
+    "all_pending": "Todos Pendientes",
+    "reset_teams": "Reiniciar Equipos",
+    "move_to": "Mover a"
   },
   "tactics": {
     "rotate_screen": "Rotar pantalla",
@@ -445,7 +460,7 @@
     "suggested_times": "Horas sugeridas:",
     "select_time": "Seleccionar hora",
     "select_match_time": "SELECCIONAR HORA",
-    "cancel": "CANCELAR",
+    "cancel": "Cancelar",
     "apply": "APLICAR",
     "january": "ENE",
     "february": "FEB",
@@ -465,7 +480,14 @@
     "thu": "JUE",
     "fri": "VIE",
     "sat": "SÁB",
-    "sun": "DOM"
+    "sun": "DOM",
+    "ok": "OK",
+    "confirm": "Confirmar",
+    "today": "Hoy",
+    "next_tue": "Próx. Mar",
+    "next_thu": "Próx. Jue",
+    "next_sat": "Próx. Sáb",
+    "next_sun": "Próx. Dom"
   },
   "datepicker": {
     "currently_selected": "SELECCIONADO:",
@@ -563,7 +585,9 @@
     "mode_overwrite": "Overwrite",
     "mode_merge": "Merge",
     "mode_overwrite_desc": "* Old data of the selected items will be COMPLETELY DELETED and replaced.",
-    "mode_merge_desc": "* Old data will be KEPT and new data will be merged."
+    "mode_merge_desc": "* Old data will be KEPT and new data will be merged.",
+    "host_click_to_copy": "Haz clic para copiar el código de conexión",
+    "export_direct_success": "¡Archivo de copia de seguridad guardado con éxito!"
   },
   "settings": {
     "title": "Configuración del Equipo",
@@ -594,7 +618,12 @@
     "badge_win": "V",
     "badge_loss": "D",
     "badge_draw": "E",
-    "search_placeholder": "Buscar nombre del oponente..."
+    "search_placeholder": "Buscar nombre del oponente...",
+    "internal_opp": "Rival Interno",
+    "team_a": "Equipo A",
+    "team_b": "Equipo B",
+    "team_c": "Equipo C",
+    "team_d": "Equipo D"
   },
   "fitness": {
     "title": "Lesiones y Estado Físico",
@@ -758,5 +787,10 @@
     "light_injury": "Lesión Leve",
     "severe_injury": "Lesión Grave",
     "recovering": "Recuperando"
+  },
+  "app": {
+    "update_available": "¡Nueva actualización disponible!",
+    "update_now": "ACTUALIZAR AHORA",
+    "exit_prompt": "Presiona de nuevo para salir"
   }
 }

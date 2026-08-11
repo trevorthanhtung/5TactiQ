@@ -167,7 +167,9 @@
     "online": "Back online!",
     "unmarked_youth": "Unmarked youth player for {{name}}.",
     "marked_youth": "Marked {{name}} as youth player.",
-    "health_updated": "Updated health status for {{name}}."
+    "health_updated": "Updated health status for {{name}}.",
+    "badge_test": "Test badge notification sent!",
+    "cache_clear_error": "Could not clear cache."
   },
   "roster": {
     "filter_all": "All",
@@ -222,7 +224,8 @@
     "call_player": "CALL PLAYER",
     "status_role_title": "ROLES & CLASSIFICATIONS",
     "borrowed_badge": "LOAN",
-    "youth_badge": "YOUTH"
+    "youth_badge": "YOUTH",
+    "search_placeholder": "Search player..."
   },
   "position": {
     "GK": "GK",
@@ -284,6 +287,7 @@
     "internal_caps": "INTERNAL",
     "weather_forecast": "Weather Forecast",
     "weather_rain": "Rain Forecast",
+    "weather_unavailable": "Forecast unavailable (Supported within 14 days)",
     "attendance_list": "Attendance List",
     "split_teams": "Split Teams",
     "present": "Present",
@@ -294,9 +298,9 @@
     "team_lineup": "Team Lineup",
     "randomize": "Randomize",
     "reset_teams": "Reset Teams",
-    "all_yes": "All Yes",
-    "all_no": "All No",
-    "all_pending": "All ?",
+    "all_yes": "All Attending",
+    "all_no": "All Absent",
+    "all_pending": "All Pending",
     "search_player": "Search player...",
     "team_a": "Team A",
     "team_b": "Team B",
@@ -326,7 +330,8 @@
     "delete_match": "DELETE MATCH",
     "confirm_delete_match": "Are you sure you want to delete this match?",
     "delete_match_warning": "Warning: All attendance data and match results will be permanently deleted and cannot be undone.",
-    "search_placeholder": "Search opponent..."
+    "search_placeholder": "Search opponent...",
+    "move_to": "Move to"
   },
   "tactics": {
     "rotate_screen": "Rotate screen",
@@ -455,7 +460,7 @@
     "suggested_times": "Suggested times:",
     "select_time": "Select time",
     "select_match_time": "SELECT MATCH TIME",
-    "cancel": "CANCEL",
+    "cancel": "Cancel",
     "apply": "APPLY",
     "january": "JAN",
     "february": "FEB",
@@ -475,7 +480,14 @@
     "thu": "THU",
     "fri": "FRI",
     "sat": "SAT",
-    "sun": "SUN"
+    "sun": "SUN",
+    "ok": "OK",
+    "confirm": "Confirm",
+    "today": "Today",
+    "next_tue": "Next Tue",
+    "next_thu": "Next Thu",
+    "next_sat": "Next Sat",
+    "next_sun": "Next Sun"
   },
   "datepicker": {
     "currently_selected": "SELECTED:",
@@ -573,7 +585,9 @@
     "mode_overwrite": "Overwrite",
     "mode_merge": "Merge",
     "mode_overwrite_desc": "* Old data of the selected items will be COMPLETELY DELETED and replaced.",
-    "mode_merge_desc": "* Old data will be KEPT and new data will be merged."
+    "mode_merge_desc": "* Old data will be KEPT and new data will be merged.",
+    "host_click_to_copy": "Click to copy connection code",
+    "export_direct_success": "Backup file saved successfully!"
   },
   "settings": {
     "title": "Team Settings",
@@ -604,7 +618,12 @@
     "badge_win": "W",
     "badge_loss": "L",
     "badge_draw": "D",
-    "search_placeholder": "Search opponent name..."
+    "search_placeholder": "Search opponent name...",
+    "internal_opp": "Internal Opponent",
+    "team_a": "Team A",
+    "team_b": "Team B",
+    "team_c": "Team C",
+    "team_d": "Team D"
   },
   "fitness": {
     "title": "Injuries & Fitness",
@@ -768,5 +787,10 @@
     "light_injury": "Minor Injury",
     "severe_injury": "Severe Injury",
     "recovering": "Recovering"
+  },
+  "app": {
+    "update_available": "New update available!",
+    "update_now": "UPDATE NOW",
+    "exit_prompt": "Press again to exit app"
   }
 }

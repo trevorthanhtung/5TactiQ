@@ -167,7 +167,9 @@
     "online": "عاد الاتصال بالإنترنت!",
     "unmarked_youth": "تم إلغاء تحديد لاعب شاب لـ {{name}}.",
     "marked_youth": "تم تحديد {{name}} كلاعب شاب.",
-    "health_updated": "تم تحديث الحالة الصحية لـ {{name}}."
+    "health_updated": "تم تحديث الحالة الصحية لـ {{name}}.",
+    "badge_test": "تم إرسال إشعار الاختبار!",
+    "cache_clear_error": "تعذر مسح ذاكرة التخزين المؤقت."
   },
   "roster": {
     "title": "القائمة",
@@ -217,7 +219,13 @@
     "call_player": "الاتصال باللاعب",
     "status_role_title": "الأدوار والتصنيفات",
     "borrowed_badge": "إعارة",
-    "youth_badge": "ناشئ"
+    "youth_badge": "ناشئ",
+    "search_placeholder": "البحث عن لاعب...",
+    "filter_all": "الكل",
+    "filter_injured": "مصاب",
+    "filter_recovering": "تعافي",
+    "filter_borrowed": "معار",
+    "no_filtered_players": "لم يتم العثور على لاعبين"
   },
   "position": {
     "GK": "حارس",
@@ -279,6 +287,7 @@
     "internal_caps": "داخلي",
     "weather_forecast": "توقعات الطقس",
     "weather_rain": "توقعات المطر",
+    "weather_unavailable": "توقعات الطقس غير متوفرة (مدعومة خلال 14 يومًا)",
     "attendance_list": "قائمة الحضور",
     "split_teams": "تقسيم الفرق",
     "present": "حاضر",
@@ -316,7 +325,13 @@
     "delete_match": "حذف المباراة",
     "confirm_delete_match": "هل أنت متأكد أنك تريد حذف هذه المباراة؟",
     "delete_match_warning": "تحذير: سيتم حذف جميع البيانات والنتائج نهائياً ولا يمكن التراجع.",
-    "search_placeholder": "البحث عن خصم..."
+    "search_placeholder": "البحث عن خصم...",
+    "search_player": "البحث عن لاعب...",
+    "all_yes": "الجميع حاضر",
+    "all_no": "الجميع غائب",
+    "all_pending": "الجميع معلق",
+    "reset_teams": "إعادة توزيع الفرق",
+    "move_to": "الانتقال إلى"
   },
   "tactics": {
     "rotate_screen": "قم بتدوير الشاشة",
@@ -465,7 +480,14 @@
     "thu": "الخميس",
     "fri": "الجمعة",
     "sat": "السبت",
-    "sun": "الأحد"
+    "sun": "الأحد",
+    "ok": "حسنا",
+    "confirm": "تأكيد",
+    "today": "اليوم",
+    "next_tue": "الثلاثاء القادم",
+    "next_thu": "الخميس القادم",
+    "next_sat": "السبت القادم",
+    "next_sun": "الأحد القادم"
   },
   "datepicker": {
     "currently_selected": "محدد:",
@@ -563,7 +585,9 @@
     "mode_overwrite": "Overwrite",
     "mode_merge": "Merge",
     "mode_overwrite_desc": "* Old data of the selected items will be COMPLETELY DELETED and replaced.",
-    "mode_merge_desc": "* Old data will be KEPT and new data will be merged."
+    "mode_merge_desc": "* Old data will be KEPT and new data will be merged.",
+    "host_click_to_copy": "انقر لنسخ رمز الاتصال",
+    "export_direct_success": "تم حفظ ملف النسخ الاحتياطي بنجاح!"
   },
   "settings": {
     "title": "إعدادات الفريق",
@@ -594,7 +618,12 @@
     "badge_win": "ف",
     "badge_loss": "خ",
     "badge_draw": "ت",
-    "search_placeholder": "البحث عن اسم الخصم..."
+    "search_placeholder": "البحث عن اسم الخصم...",
+    "internal_opp": "خصم داخلي",
+    "team_a": "الفريق أ",
+    "team_b": "الفريق ب",
+    "team_c": "الفريق ج",
+    "team_d": "الفريق د"
   },
   "fitness": {
     "title": "الإصابات واللياقة البدنية",
@@ -758,5 +787,10 @@
     "light_injury": "إصابة خفيفة",
     "severe_injury": "إصابة خطيرة",
     "recovering": "يتعافى"
+  },
+  "app": {
+    "update_available": "تحديث جديد متاح!",
+    "update_now": "التحديث الآن",
+    "exit_prompt": "اضغط مرة أخرى للخروج"
   }
 }
