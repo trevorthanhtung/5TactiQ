@@ -172,10 +172,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
 
   return (
     <div 
-      onClick={triggerAudio}
-      onPointerDown={triggerAudio}
-      onTouchStart={triggerAudio}
-      className={`fixed inset-0 z-[9999] splash-root transition-opacity duration-500 ease-in-out cursor-pointer ${isFading ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+      className={`fixed inset-0 z-[9999] splash-root transition-opacity duration-500 ease-in-out ${isFading ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
     >
       <style>{`
         .splash-root {
