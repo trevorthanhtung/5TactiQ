@@ -757,9 +757,10 @@ export default function Matchday() {
             )}
             <button
               onClick={() => setShowCreateModal(true)}
-              className="hallmark-btn flex items-center justify-center gap-2 bg-secondary text-white shrink-0 h-[44px]"
+              className="hallmark-btn flex items-center justify-center gap-2 bg-secondary text-white shrink-0 h-[44px] px-6"
             >
-              <Plus size={20} /> <span className="hidden @xl:inline">{t('matchday.create_new')}</span>
+              <Plus size={20} /> 
+              <span className="uppercase tracking-widest text-sm">{t('matchday.create_new')}</span>
             </button>
           </div>
         </div>
