@@ -302,23 +302,23 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
         {/* Grid pattern fill */}
         <rect width="1000" height="600" fill="url(#tacticalGrid)" />
 
-        {/* Outer Court Boundary Lines */}
-        <rect x="50" y="40" width="900" height="520" fill="none" stroke="rgba(32,38,27,0.1)" strokeWidth="2" strokeDasharray="8 4" />
+        {/* Outer Court Boundary Lines & Subtle Pitch Tint */}
+        <rect x="50" y="40" width="900" height="520" fill="rgba(32,38,27,0.02)" stroke="rgba(32,38,27,0.25)" strokeWidth="3" strokeDasharray="10 5" rx="10" />
 
         {/* Center Half-Court Line */}
-        <line x1="500" y1="40" x2="500" y2="560" stroke="rgba(32,38,27,0.12)" strokeWidth="2" />
+        <line x1="500" y1="40" x2="500" y2="560" stroke="rgba(32,38,27,0.3)" strokeWidth="3" />
 
         {/* Center Circle (Surrounding Logo) */}
-        <circle cx="500" cy="300" r="140" fill="none" stroke="rgba(227,93,42,0.18)" strokeWidth="2" />
-        <circle cx="500" cy="300" r="220" fill="none" stroke="rgba(32,38,27,0.08)" strokeWidth="1.5" strokeDasharray="6 6" />
+        <circle cx="500" cy="300" r="140" fill="none" stroke="rgba(227,93,42,0.35)" strokeWidth="3" />
+        <circle cx="500" cy="300" r="220" fill="none" stroke="rgba(32,38,27,0.15)" strokeWidth="2" strokeDasharray="6 6" />
 
         {/* Left Goal Area & Penalty Arc */}
-        <path d="M 50 160 A 140 140 0 0 1 190 300 A 140 140 0 0 1 50 440" fill="none" stroke="rgba(32,38,27,0.08)" strokeWidth="2" />
-        <rect x="50" y="220" width="50" height="160" fill="none" stroke="rgba(32,38,27,0.06)" strokeWidth="1.5" />
+        <path d="M 50 160 A 140 140 0 0 1 190 300 A 140 140 0 0 1 50 440" fill="none" stroke="rgba(32,38,27,0.22)" strokeWidth="2.5" />
+        <rect x="50" y="220" width="50" height="160" fill="none" stroke="rgba(32,38,27,0.18)" strokeWidth="2" />
 
         {/* Right Goal Area & Penalty Arc */}
-        <path d="M 950 160 A 140 140 0 0 0 810 300 A 140 140 0 0 0 950 440" fill="none" stroke="rgba(32,38,27,0.08)" strokeWidth="2" />
-        <rect x="900" y="220" width="50" height="160" fill="none" stroke="rgba(32,38,27,0.06)" strokeWidth="1.5" />
+        <path d="M 950 160 A 140 140 0 0 0 810 300 A 140 140 0 0 0 950 440" fill="none" stroke="rgba(32,38,27,0.22)" strokeWidth="2.5" />
+        <rect x="900" y="220" width="50" height="160" fill="none" stroke="rgba(32,38,27,0.18)" strokeWidth="2" />
 
         {/* Tactical Movement Arrows & Passes */}
         <path
@@ -390,23 +390,23 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
         {/* Grid pattern fill */}
         <rect width="600" height="1000" fill="url(#tacticalGridMob)" />
 
-        {/* Outer Court Boundary Lines */}
-        <rect x="40" y="50" width="520" height="900" fill="none" stroke="rgba(32,38,27,0.1)" strokeWidth="2" strokeDasharray="8 4" />
+        {/* Outer Court Boundary Lines & Subtle Pitch Tint */}
+        <rect x="40" y="50" width="520" height="900" fill="rgba(32,38,27,0.02)" stroke="rgba(32,38,27,0.25)" strokeWidth="3" strokeDasharray="10 5" rx="10" />
 
         {/* Center Half-Court Line */}
-        <line x1="40" y1="500" x2="560" y2="500" stroke="rgba(32,38,27,0.12)" strokeWidth="2" />
+        <line x1="40" y1="500" x2="560" y2="500" stroke="rgba(32,38,27,0.3)" strokeWidth="3" />
 
         {/* Center Circle (Surrounding Logo) */}
-        <circle cx="300" cy="500" r="140" fill="none" stroke="rgba(227,93,42,0.18)" strokeWidth="2" />
-        <circle cx="300" cy="500" r="220" fill="none" stroke="rgba(32,38,27,0.08)" strokeWidth="1.5" strokeDasharray="6 6" />
+        <circle cx="300" cy="500" r="140" fill="none" stroke="rgba(227,93,42,0.35)" strokeWidth="3" />
+        <circle cx="300" cy="500" r="220" fill="none" stroke="rgba(32,38,27,0.15)" strokeWidth="2" strokeDasharray="6 6" />
 
         {/* Top Goal Area & Penalty Arc */}
-        <path d="M 160 50 A 140 140 0 0 1 440 50" fill="none" stroke="rgba(32,38,27,0.08)" strokeWidth="2" />
-        <rect x="220" y="50" width="160" height="50" fill="none" stroke="rgba(32,38,27,0.06)" strokeWidth="1.5" />
+        <path d="M 160 50 A 140 140 0 0 1 440 50" fill="none" stroke="rgba(32,38,27,0.22)" strokeWidth="2.5" />
+        <rect x="220" y="50" width="160" height="50" fill="none" stroke="rgba(32,38,27,0.18)" strokeWidth="2" />
 
         {/* Bottom Goal Area & Penalty Arc */}
-        <path d="M 160 950 A 140 140 0 0 0 440 950" fill="none" stroke="rgba(32,38,27,0.08)" strokeWidth="2" />
-        <rect x="220" y="900" width="160" height="50" fill="none" stroke="rgba(32,38,27,0.06)" strokeWidth="1.5" />
+        <path d="M 160 950 A 140 140 0 0 0 440 950" fill="none" stroke="rgba(32,38,27,0.22)" strokeWidth="2.5" />
+        <rect x="220" y="900" width="160" height="50" fill="none" stroke="rgba(32,38,27,0.18)" strokeWidth="2" />
 
         {/* Tactical Movement Arrows & Passes (Vertical) */}
         <path
