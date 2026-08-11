@@ -27,83 +27,92 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
 
         // Master Gain Output
         const masterGain = ctx.createGain();
-        masterGain.gain.setValueAtTime(1.2, now);
+        masterGain.gain.setValueAtTime(1.0, now);
         masterGain.connect(ctx.destination);
 
-        // 1. SUB-BASS IMPACT (Cú nổ trầm uy lực khi logo xuất hiện)
+        // 1. HOLLYWOOD CINEMATIC TRAILER BOOM (Cú nổ điện ảnh trầm u mịt chuẩn trailer phim)
         const subOsc = ctx.createOscillator();
         const subGain = ctx.createGain();
         subOsc.type = 'sine';
-        subOsc.frequency.setValueAtTime(220, now + 0.05);
-        subOsc.frequency.exponentialRampToValueAtTime(32, now + 0.85);
+        subOsc.frequency.setValueAtTime(90, now + 0.1);
+        subOsc.frequency.exponentialRampToValueAtTime(18, now + 1.3);
 
-        subGain.gain.setValueAtTime(0, now + 0.05);
-        subGain.gain.linearRampToValueAtTime(0.85, now + 0.1);
-        subGain.gain.exponentialRampToValueAtTime(0.001, now + 1.1);
+        subGain.gain.setValueAtTime(0, now + 0.1);
+        subGain.gain.linearRampToValueAtTime(0.7, now + 0.15);
+        subGain.gain.exponentialRampToValueAtTime(0.001, now + 1.4);
 
         subOsc.connect(subGain);
         subGain.connect(masterGain);
-        subOsc.start(now + 0.05);
-        subOsc.stop(now + 1.1);
+        subOsc.start(now + 0.1);
+        subOsc.stop(now + 1.4);
 
-        // 2. TACTICAL HUD RADAR SWOOSH (Tiếng quét radar chiến thuật lướt qua)
-        const swooshOsc = ctx.createOscillator();
-        const swooshGain = ctx.createGain();
-        swooshOsc.type = 'sawtooth';
-        swooshOsc.frequency.setValueAtTime(250, now + 0.2);
-        swooshOsc.frequency.exponentialRampToValueAtTime(1800, now + 0.65);
+        // Noise Impact Thud (Tiếng va đập không khí trầm đục của trailer Hollywood)
+        const bufferSize = Math.floor(ctx.sampleRate * 0.4);
+        const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          output[i] = Math.random() * 2 - 1;
+        }
+        const whiteNoise = ctx.createBufferSource();
+        whiteNoise.buffer = noiseBuffer;
 
-        const filter = ctx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(400, now + 0.2);
-        filter.frequency.exponentialRampToValueAtTime(3200, now + 0.65);
+        const noiseFilter = ctx.createBiquadFilter();
+        noiseFilter.type = 'lowpass';
+        noiseFilter.frequency.setValueAtTime(1200, now + 0.1);
+        noiseFilter.frequency.exponentialRampToValueAtTime(60, now + 0.45);
 
-        swooshGain.gain.setValueAtTime(0, now + 0.2);
-        swooshGain.gain.linearRampToValueAtTime(0.35, now + 0.4);
-        swooshGain.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+        const noiseGain = ctx.createGain();
+        noiseGain.gain.setValueAtTime(0, now + 0.1);
+        noiseGain.gain.linearRampToValueAtTime(0.35, now + 0.13);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
 
-        swooshOsc.connect(filter);
-        filter.connect(swooshGain);
-        swooshGain.connect(masterGain);
-        swooshOsc.start(now + 0.2);
-        swooshOsc.stop(now + 0.7);
+        whiteNoise.connect(noiseFilter);
+        noiseFilter.connect(noiseGain);
+        noiseGain.connect(masterGain);
+        whiteNoise.start(now + 0.1);
 
-        // 3. SCI-FI TRIPLE RADAR LOCK (Tiếng khóa mục tiêu radar 3 nốt C6 -> E6 -> G6)
-        const playPing = (freq: number, startTime: number, vol = 0.4) => {
+        // 2. LUXURY AMBIENT GLASS PAD CHORD (Hợp âm không gian sang trọng kiểu PlayStation / Apple)
+        const chordNotes = [146.83, 220.00, 349.23, 523.25, 659.25]; // Hợp âm Dm9
+        chordNotes.forEach((freq, idx) => {
           if (!ctx) return;
-          const pingOsc = ctx.createOscillator();
-          const pingGain = ctx.createGain();
-          pingOsc.type = 'sine';
-          pingOsc.frequency.setValueAtTime(freq, startTime);
-          pingGain.gain.setValueAtTime(0, startTime);
-          pingGain.gain.linearRampToValueAtTime(vol, startTime + 0.02);
-          pingGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.45);
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          const padFilter = ctx.createBiquadFilter();
 
-          pingOsc.connect(pingGain);
-          pingGain.connect(masterGain);
-          pingOsc.start(startTime);
-          pingOsc.stop(startTime + 0.45);
-        };
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + 0.35);
 
-        playPing(1046.50, now + 0.85, 0.45); // Note C6
-        playPing(1318.51, now + 0.95, 0.40); // Note E6
-        playPing(1567.98, now + 1.05, 0.50); // Note G6
+          padFilter.type = 'lowpass';
+          padFilter.frequency.setValueAtTime(500, now + 0.35);
+          padFilter.frequency.exponentialRampToValueAtTime(2200, now + 1.1);
 
-        // 4. FUTSAL ELECTRONIC WHISTLE (Tiếng còi trọng tài điện tử chốt hạ)
-        const whistleOsc = ctx.createOscillator();
-        const whistleGain = ctx.createGain();
-        whistleOsc.type = 'triangle';
-        whistleOsc.frequency.setValueAtTime(2800, now + 1.15);
-        whistleOsc.frequency.linearRampToValueAtTime(2950, now + 1.25);
+          const delay = idx * 0.03;
+          gain.gain.setValueAtTime(0, now + 0.35 + delay);
+          gain.gain.linearRampToValueAtTime(0.12, now + 0.75 + delay);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 1.85 + delay);
 
-        whistleGain.gain.setValueAtTime(0, now + 1.15);
-        whistleGain.gain.linearRampToValueAtTime(0.22, now + 1.18);
-        whistleGain.gain.exponentialRampToValueAtTime(0.001, now + 1.55);
+          osc.connect(padFilter);
+          padFilter.connect(gain);
+          gain.connect(masterGain);
+          osc.start(now + 0.35 + delay);
+          osc.stop(now + 1.85 + delay);
+        });
 
-        whistleOsc.connect(whistleGain);
-        whistleGain.connect(masterGain);
-        whistleOsc.start(now + 1.15);
-        whistleOsc.stop(now + 1.55);
+        // 3. SLEEK METALLIC HUD SNAP (Cú snap kim loại mỏng tinh tế khi logo ổn định)
+        const snapOsc = ctx.createOscillator();
+        const snapGain = ctx.createGain();
+        snapOsc.type = 'triangle';
+        snapOsc.frequency.setValueAtTime(1400, now + 0.95);
+        snapOsc.frequency.exponentialRampToValueAtTime(2200, now + 1.05);
+
+        snapGain.gain.setValueAtTime(0, now + 0.95);
+        snapGain.gain.linearRampToValueAtTime(0.15, now + 0.97);
+        snapGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+
+        snapOsc.connect(snapGain);
+        snapGain.connect(masterGain);
+        snapOsc.start(now + 0.95);
+        snapOsc.stop(now + 1.2);
       } catch (e) {
         console.warn('Audio play failed', e);
       }
