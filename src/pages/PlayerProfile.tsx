@@ -210,8 +210,7 @@ export default function PlayerProfile() {
             <div className="flex flex-col gap-2.5 pt-2 border-t border-border-main/60">
               {player.phone && (
                 <div className="flex items-center gap-2.5 text-sm">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-surface-2 text-text-muted border border-border-main text-xs font-bold uppercase tracking-wider">
-                    <Phone size={13} className="text-secondary" />
+                  <span className="inline-flex items-center px-2.5 py-1 bg-surface-2 text-text-muted border border-border-main text-xs font-bold uppercase tracking-wider">
                     <span>{t('roster.phone_label', 'Số điện thoại')}</span>
                   </span>
                   <a href={`tel:${player.phone}`} className="font-mono font-bold text-text-main hover:text-secondary hover:underline text-base tracking-wide">
@@ -257,7 +256,7 @@ export default function PlayerProfile() {
               href={`tel:${player.phone}`}
               className="hallmark-btn flex justify-center items-center gap-2 bg-sky-600 text-white border-2 border-sky-600 hover:bg-sky-700 py-3.5 transition-all shadow-sm active:scale-95"
             >
-              <Phone size={18} /> {t('roster.call_player', 'GỌI ĐIỆN')}
+              {t('roster.call_player', 'GỌI ĐIỆN')}
             </a>
           )}
           
@@ -265,7 +264,7 @@ export default function PlayerProfile() {
             onClick={openEditModal}
             className={`hallmark-btn flex justify-center items-center gap-2 bg-primary text-white border-2 border-primary hover:bg-[#323d29] py-3.5 transition-all shadow-sm active:scale-95 ${!player.phone ? 'sm:col-span-2' : ''}`}
           >
-            <Edit2 size={18} /> {t('roster.edit_info')}
+            {t('roster.edit_info')}
           </button>
         </div>
 
@@ -346,7 +345,7 @@ export default function PlayerProfile() {
           onClick={() => setShowDeleteConfirm(true)}
           className="w-full flex justify-center items-center gap-2 text-rose-500 hover:text-rose-400 py-2.5 transition-colors font-display text-xs font-bold uppercase tracking-wider active:scale-95 mt-1"
         >
-          <Trash2 size={16} /> {t('roster.delete_player')}
+          {t('roster.delete_player')}
         </button>
       </div>
 

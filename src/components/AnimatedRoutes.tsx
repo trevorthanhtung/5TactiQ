@@ -4,7 +4,9 @@ import { AnimatePresence } from 'framer-motion';
 import { PageWrapper } from './ui/PageWrapper';
 import { SuspenseLoader } from './ui/SuspenseLoader';
 import Layout from './Layout';
+import { useAuthStore } from '../store/useAuthStore';
 
+import Auth from '../pages/Auth';
 import Home from '../pages/Home';
 import Roster from '../pages/Roster';
 import Tactics from '../pages/Tactics';
@@ -19,10 +21,25 @@ import Fitness from '../pages/Fitness';
 import Venues from '../pages/Venues';
 import DataSync from '../pages/DataSync';
 import TierRanking from '../pages/TierRanking';
+import ResetPassword from '../pages/ResetPassword';
 
 export const AnimatedRoutes: React.FC = () => {
   const location = useLocation();
   const isTactics = location.pathname.startsWith('/tactics');
+  const isResetPassword = location.pathname === '/reset-password' || window.location.hash.includes('reset-password') || window.location.hash.includes('type=recovery') || window.location.hash.includes('error_code');
+  const { session, isGuest, isLoading } = useAuthStore();
+
+  if (isLoading) {
+    return <SuspenseLoader />;
+  }
+
+  if (isResetPassword) {
+    return <ResetPassword />;
+  }
+
+  if (!session && !isGuest) {
+    return <Auth />;
+  }
 
   return (
     <AnimatePresence mode="wait">
@@ -44,6 +61,7 @@ export const AnimatedRoutes: React.FC = () => {
             <Route path="tier-ranking" element={<TierRanking />} />
           </Route>
           <Route path="/tactics" element={<PageWrapper><Tactics /></PageWrapper>} />
+          <Route path="/reset-password" element={<ResetPassword />} />
         </Routes>
       </Suspense>
     </AnimatePresence>

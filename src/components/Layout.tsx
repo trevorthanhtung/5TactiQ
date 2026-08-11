@@ -2,10 +2,11 @@ import { useOutlet, useLocation, NavLink, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { PageWrapper } from './ui/PageWrapper';
-import { Home, Users, LayoutDashboard, Calendar, Menu } from 'lucide-react';
+import { Home, Users, LayoutDashboard, Calendar, Menu, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useMatchStore } from '../store/useMatchStore';
+import { useCloudSync } from '../hooks/useCloudSync';
 
 export default function Layout() {
   const { t } = useTranslation();
@@ -13,6 +14,7 @@ export default function Layout() {
   const outlet = useOutlet();
   const location = useLocation();
   const navigate = useNavigate();
+  const { syncNow, syncStatus } = useCloudSync();
 
   
   const navItems = [

@@ -395,23 +395,47 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
         {/* Grid pattern fill */}
         <rect width="1000" height="600" fill="url(#tacticalGrid)" />
 
-        {/* Outer Court Boundary Lines & Subtle Pitch Tint */}
-        <rect x="50" y="40" width="900" height="520" fill="rgba(32,38,27,0.02)" stroke="rgba(32,38,27,0.25)" strokeWidth="3" strokeDasharray="10 5" rx="10" />
+        {/* Outer Pitch Boundary */}
+        <rect x="70" y="40" width="860" height="520" fill="rgba(32,38,27,0.02)" stroke="rgba(32,38,27,0.25)" strokeWidth="3" strokeDasharray="10 5" rx="10" />
 
         {/* Center Half-Court Line */}
         <line x1="500" y1="40" x2="500" y2="560" stroke="rgba(32,38,27,0.3)" strokeWidth="3" />
 
-        {/* Center Circle (Surrounding Logo) */}
-        <circle cx="500" cy="300" r="140" fill="none" stroke="rgba(227,93,42,0.35)" strokeWidth="3" />
-        <circle cx="500" cy="300" r="220" fill="none" stroke="rgba(32,38,27,0.15)" strokeWidth="2" strokeDasharray="6 6" />
+        {/* Center Circle & Center Spot */}
+        <circle cx="500" cy="300" r="120" fill="none" stroke="rgba(227,93,42,0.35)" strokeWidth="3" />
+        <circle cx="500" cy="300" r="200" fill="none" stroke="rgba(32,38,27,0.15)" strokeWidth="2" strokeDasharray="6 6" />
 
-        {/* Left Goal Area & Penalty Arc */}
-        <path d="M 50 160 A 140 140 0 0 1 190 300 A 140 140 0 0 1 50 440" fill="none" stroke="rgba(32,38,27,0.22)" strokeWidth="2.5" />
-        <rect x="50" y="220" width="50" height="160" fill="none" stroke="rgba(32,38,27,0.18)" strokeWidth="2" />
+        {/* === LEFT SIDE === */}
+        {/* Goal Net (behind goal line) */}
+        <rect x="48" y="258" width="22" height="84" fill="none" stroke="rgba(32,38,27,0.22)" strokeWidth="1.5" rx="2" />
+        {/* Futsal D-shaped Penalty Area: two quarter-circle arcs (r=150) from goalposts + connecting line */}
+        <path
+          d="M 70,150 A 150,150 0 0,1 220,258 L 220,342 A 150,150 0 0,1 70,450"
+          fill="none" stroke="rgba(32,38,27,0.22)" strokeWidth="2.5"
+        />
+        {/* 1st Penalty Spot (6m) */}
+        <circle cx="220" cy="300" r="3.5" fill="rgba(32,38,27,0.35)" />
+        {/* 2nd Penalty Spot (10m) */}
+        <circle cx="330" cy="300" r="3" fill="rgba(32,38,27,0.25)" />
 
-        {/* Right Goal Area & Penalty Arc */}
-        <path d="M 950 160 A 140 140 0 0 0 810 300 A 140 140 0 0 0 950 440" fill="none" stroke="rgba(32,38,27,0.22)" strokeWidth="2.5" />
-        <rect x="900" y="220" width="50" height="160" fill="none" stroke="rgba(32,38,27,0.18)" strokeWidth="2" />
+        {/* === RIGHT SIDE === */}
+        {/* Goal Net (behind goal line) */}
+        <rect x="930" y="258" width="22" height="84" fill="none" stroke="rgba(32,38,27,0.22)" strokeWidth="1.5" rx="2" />
+        {/* Futsal D-shaped Penalty Area */}
+        <path
+          d="M 930,150 A 150,150 0 0,0 780,258 L 780,342 A 150,150 0 0,0 930,450"
+          fill="none" stroke="rgba(32,38,27,0.22)" strokeWidth="2.5"
+        />
+        {/* 1st Penalty Spot (6m) */}
+        <circle cx="780" cy="300" r="3.5" fill="rgba(32,38,27,0.35)" />
+        {/* 2nd Penalty Spot (10m) */}
+        <circle cx="670" cy="300" r="3" fill="rgba(32,38,27,0.25)" />
+
+        {/* Corner Arcs (tiny quarter circles) */}
+        <path d="M 70,52 A 12,12 0 0,1 82,40" fill="none" stroke="rgba(32,38,27,0.18)" strokeWidth="1.5" />
+        <path d="M 70,548 A 12,12 0 0,0 82,560" fill="none" stroke="rgba(32,38,27,0.18)" strokeWidth="1.5" />
+        <path d="M 930,52 A 12,12 0 0,0 918,40" fill="none" stroke="rgba(32,38,27,0.18)" strokeWidth="1.5" />
+        <path d="M 930,548 A 12,12 0 0,1 918,560" fill="none" stroke="rgba(32,38,27,0.18)" strokeWidth="1.5" />
 
         {/* Tactical Movement Arrows & Passes */}
         <path
@@ -483,23 +507,47 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
         {/* Grid pattern fill */}
         <rect width="600" height="1000" fill="url(#tacticalGridMob)" />
 
-        {/* Outer Court Boundary Lines & Subtle Pitch Tint */}
-        <rect x="40" y="50" width="520" height="900" fill="rgba(32,38,27,0.02)" stroke="rgba(32,38,27,0.25)" strokeWidth="3" strokeDasharray="10 5" rx="10" />
+        {/* Outer Pitch Boundary */}
+        <rect x="40" y="70" width="520" height="860" fill="rgba(32,38,27,0.02)" stroke="rgba(32,38,27,0.25)" strokeWidth="3" strokeDasharray="10 5" rx="10" />
 
         {/* Center Half-Court Line */}
         <line x1="40" y1="500" x2="560" y2="500" stroke="rgba(32,38,27,0.3)" strokeWidth="3" />
 
-        {/* Center Circle (Surrounding Logo) */}
-        <circle cx="300" cy="500" r="140" fill="none" stroke="rgba(227,93,42,0.35)" strokeWidth="3" />
-        <circle cx="300" cy="500" r="220" fill="none" stroke="rgba(32,38,27,0.15)" strokeWidth="2" strokeDasharray="6 6" />
+        {/* Center Circle & Center Spot */}
+        <circle cx="300" cy="500" r="120" fill="none" stroke="rgba(227,93,42,0.35)" strokeWidth="3" />
+        <circle cx="300" cy="500" r="200" fill="none" stroke="rgba(32,38,27,0.15)" strokeWidth="2" strokeDasharray="6 6" />
 
-        {/* Top Goal Area & Penalty Arc */}
-        <path d="M 160 50 A 140 140 0 0 1 440 50" fill="none" stroke="rgba(32,38,27,0.22)" strokeWidth="2.5" />
-        <rect x="220" y="50" width="160" height="50" fill="none" stroke="rgba(32,38,27,0.18)" strokeWidth="2" />
+        {/* === TOP SIDE === */}
+        {/* Goal Net (behind goal line) */}
+        <rect x="258" y="48" width="84" height="22" fill="none" stroke="rgba(32,38,27,0.22)" strokeWidth="1.5" rx="2" />
+        {/* Futsal D-shaped Penalty Area: two quarter-circle arcs (r=150) from goalposts + connecting line */}
+        <path
+          d="M 150,70 A 150,150 0 0,0 258,220 L 342,220 A 150,150 0 0,0 450,70"
+          fill="none" stroke="rgba(32,38,27,0.22)" strokeWidth="2.5"
+        />
+        {/* 1st Penalty Spot (6m) */}
+        <circle cx="300" cy="220" r="3.5" fill="rgba(32,38,27,0.35)" />
+        {/* 2nd Penalty Spot (10m) */}
+        <circle cx="300" cy="330" r="3" fill="rgba(32,38,27,0.25)" />
 
-        {/* Bottom Goal Area & Penalty Arc */}
-        <path d="M 160 950 A 140 140 0 0 0 440 950" fill="none" stroke="rgba(32,38,27,0.22)" strokeWidth="2.5" />
-        <rect x="220" y="900" width="160" height="50" fill="none" stroke="rgba(32,38,27,0.18)" strokeWidth="2" />
+        {/* === BOTTOM SIDE === */}
+        {/* Goal Net (behind goal line) */}
+        <rect x="258" y="930" width="84" height="22" fill="none" stroke="rgba(32,38,27,0.22)" strokeWidth="1.5" rx="2" />
+        {/* Futsal D-shaped Penalty Area */}
+        <path
+          d="M 150,930 A 150,150 0 0,1 258,780 L 342,780 A 150,150 0 0,1 450,930"
+          fill="none" stroke="rgba(32,38,27,0.22)" strokeWidth="2.5"
+        />
+        {/* 1st Penalty Spot (6m) */}
+        <circle cx="300" cy="780" r="3.5" fill="rgba(32,38,27,0.35)" />
+        {/* 2nd Penalty Spot (10m) */}
+        <circle cx="300" cy="670" r="3" fill="rgba(32,38,27,0.25)" />
+
+        {/* Corner Arcs (tiny quarter circles) */}
+        <path d="M 40,82 A 12,12 0 0,0 52,70" fill="none" stroke="rgba(32,38,27,0.18)" strokeWidth="1.5" />
+        <path d="M 548,70 A 12,12 0 0,0 560,82" fill="none" stroke="rgba(32,38,27,0.18)" strokeWidth="1.5" />
+        <path d="M 40,918 A 12,12 0 0,1 52,930" fill="none" stroke="rgba(32,38,27,0.18)" strokeWidth="1.5" />
+        <path d="M 548,930 A 12,12 0 0,1 560,918" fill="none" stroke="rgba(32,38,27,0.18)" strokeWidth="1.5" />
 
         {/* Tactical Movement Arrows & Passes (Vertical) */}
         <path

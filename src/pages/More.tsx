@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { HeartPulse, History, Settings, ChevronRight, MapPin, RefreshCw, ShieldCheck, Info, Coffee, MessageSquare, Package, Eraser, AlertTriangle, Smartphone, BellRing, Globe, Check, Moon, Sun, Monitor, Crown, LogOut, User as UserIcon, LogIn } from 'lucide-react';
+import { HeartPulse, History, Settings, ChevronRight, MapPin, RefreshCw, ShieldCheck, Info, Coffee, MessageSquare, Package, Eraser, AlertTriangle, Smartphone, BellRing, Globe, Check, Moon, Sun, Monitor, Crown, LogOut, User as UserIcon, LogIn, Save, Cloud, CloudOff, Wifi, WifiOff, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { supabase } from '../lib/supabase';
 import { useAppBadge } from '../hooks/useAppBadge';
 import { useWebPush } from '../hooks/useWebPush';
 import { useToastStore } from '../store/useToastStore';
@@ -13,6 +14,7 @@ import { useSettingsStore } from '../store/useSettingsStore';
 import { useThemeStore } from '../store/useThemeStore';
 import { useAppUpdateStore } from '../store/useAppUpdateStore';
 import { useAuthStore } from '../store/useAuthStore';
+import { useCloudSync } from '../hooks/useCloudSync';
 import { APP_VERSION } from '../config/version';
 
 export default function More() {
@@ -24,10 +26,16 @@ export default function More() {
   const [confirmInfo, setConfirmInfo] = useState<{title: string, message: string, onConfirm: () => void, requireInput?: string} | null>(null);
   const [confirmInput, setConfirmInput] = useState('');
   
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [editFullName, setEditFullName] = useState('');
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  
+  const { isOnline, syncStatus, lastSyncedAt, syncNow } = useCloudSync();
+  
   const { setBadge, clearBadge } = useAppBadge();
   const { permission: pushPermission, requestPermission, showLocalNotification } = useWebPush();
-  const addToast = useToastStore(state => state.addToast);
-  const teamName = useSettingsStore(state => state.settings.teamName);
+  const { settings, updateSettings } = useSettingsStore();
+  const teamName = settings.teamName;
   const { theme, setTheme } = useThemeStore();
   const { hasUpdate, latestVersion, setShowUpdateModal } = useAppUpdateStore();
   const { session, isGuest, signOut, setGuest } = useAuthStore();
@@ -38,6 +46,66 @@ export default function More() {
     const timer = setTimeout(() => setIsLoading(false), 300); // 300ms is enough for this screen
     return () => clearTimeout(timer);
   }, []);
+
+  const handleOpenProfile = () => {
+    if (session) {
+      const currentName = session.user.user_metadata?.custom_display_name || session.user.user_metadata?.full_name || settings.userDisplayName || '';
+      setEditFullName(currentName);
+      setIsProfileOpen(true);
+    } else {
+      setGuest(false);
+    }
+  };
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editFullName.trim()) return;
+    setIsUpdatingProfile(true);
+    try {
+      const existingMeta = session?.user?.user_metadata || {};
+      const newFullName = editFullName.trim();
+
+      const { data, error } = await supabase.auth.updateUser({
+        data: {
+          ...existingMeta,
+          custom_display_name: newFullName,
+          full_name: newFullName
+        }
+      });
+      if (error) throw error;
+
+      // Update settings store so it persists in cloud sync
+      updateSettings({ userDisplayName: newFullName });
+
+      // Also upsert to public.profiles table in Supabase DB
+      try {
+        if (session?.user?.id) {
+          await supabase.from('profiles').upsert({
+            id: session.user.id,
+            full_name: newFullName,
+            updated_at: new Date().toISOString()
+          });
+        }
+      } catch (dbErr) {
+        console.warn('Could not update profiles table:', dbErr);
+      }
+
+      // Update local auth store reactively without reloading the browser
+      if (data.user && session) {
+        useAuthStore.setState({
+          session: { ...session, user: data.user },
+          user: data.user
+        });
+      }
+
+      addToast({ type: 'success', message: t('toast.profile_updated', 'Cập nhật thông tin thành công!') });
+      setIsProfileOpen(false);
+    } catch (err: any) {
+      addToast({ type: 'error', message: err.message });
+    } finally {
+      setIsUpdatingProfile(false);
+    }
+  };
 
   const handleTestBadge = () => {
     const nextCount = badgeCount + 1;
@@ -233,11 +301,16 @@ export default function More() {
       
       {/* Account Section */}
       <div className="mb-8">
-        <h2 className="text-sm font-display font-bold text-text-muted uppercase tracking-widest mb-4">TÀI KHOẢN & XÁC THỰC</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <h2 className="text-sm font-display font-bold text-text-muted uppercase tracking-widest mb-4">
+          {t('more.account_section', 'TÀI KHOẢN & XÁC THỰC')}
+        </h2>
+        <div>
           {/* Account Profile Card */}
-          <div className="hallmark-card p-4 flex items-center border-2 border-border-main hover:border-primary transition-all">
-            <div className="w-14 h-14 border-2 border-primary bg-primary/10 flex items-center justify-center mr-4 shrink-0 overflow-hidden">
+          <div 
+            onClick={handleOpenProfile}
+            className="hallmark-card p-4 flex items-center border-2 border-border-main hover:border-primary transition-all cursor-pointer group"
+          >
+            <div className="w-14 h-14 border-2 border-primary bg-primary/10 flex items-center justify-center mr-4 shrink-0 overflow-hidden group-hover:scale-105 transition-transform">
               {session?.user?.user_metadata?.avatar_url ? (
                 <img src={session.user.user_metadata.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
@@ -247,50 +320,27 @@ export default function More() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <h3 className="font-display font-bold text-xl uppercase text-primary truncate">
-                  {session?.user?.user_metadata?.full_name || (session ? 'Thành viên 5TactiQ' : 'Tài khoản Khách')}
+                  {session?.user?.user_metadata?.custom_display_name || 
+                   session?.user?.user_metadata?.full_name || 
+                   settings.userDisplayName || 
+                   (session ? t('more.member_default', 'Thành viên 5TactiQ') : t('more.guest_title', 'Tài khoản Khách'))}
                 </h3>
-                <span className={`px-2 py-0.5 text-[10px] font-bold font-mono uppercase tracking-wide border ${session ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' : 'bg-amber-500/10 text-amber-600 border-amber-500/30'}`}>
-                  {session ? 'Đã xác thực' : 'Guest Local'}
-                </span>
               </div>
               <p className="text-xs text-text-muted mt-1 truncate">
-                {session?.user?.email || 'Dữ liệu chỉ lưu trên trình duyệt thiết bị này'}
+                {session?.user?.email || t('more.guest_desc', 'Dữ liệu chỉ lưu trên trình duyệt thiết bị này')}
               </p>
               {!session && (
                 <button
                   onClick={() => setGuest(false)}
                   className="mt-2 inline-flex items-center gap-1 text-xs font-display font-bold uppercase text-secondary hover:underline cursor-pointer"
                 >
-                  <LogIn size={14} /> Đăng nhập / Tạo tài khoản để lưu Cloud
+                  <LogIn size={14} /> {t('more.login_signup_btn', 'Đăng nhập / Tạo tài khoản')}
                 </button>
               )}
             </div>
-          </div>
-
-          {/* Logout Card */}
-          <div
-            onClick={async () => {
-              if (session) {
-                await signOut();
-                addToast({ message: 'Đã đăng xuất thành công', type: 'info' });
-              } else {
-                setGuest(false);
-              }
-            }}
-            className="hallmark-card p-4 flex items-center border-2 border-red-500/30 bg-red-500/5 hover:border-red-500 transition-all cursor-pointer group"
-          >
-            <div className="w-14 h-14 border-2 border-red-500/40 bg-red-500/10 flex items-center justify-center mr-4 shrink-0 group-hover:border-red-500 transition-colors">
-              <LogOut size={26} className="text-red-500" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-display font-bold text-xl uppercase text-red-600 group-hover:text-red-700 transition-colors">
-                {session ? 'ĐĂNG XUẤT TÀI KHOẢN' : 'ĐỔI CHẾ ĐỘ ĐĂNG NHẬP'}
-              </h3>
-              <p className="text-xs text-text-muted mt-1">
-                {session ? 'Thoát khỏi phiên làm việc hiện tại' : 'Mở lại trang lựa chọn đăng nhập Email/Google'}
-              </p>
-            </div>
-            <ChevronRight className="text-red-400 group-hover:text-red-600 transition-colors" />
+            {session && (
+              <ChevronRight className="text-slate-300 group-hover:text-primary transition-colors shrink-0 ml-2" />
+            )}
           </div>
         </div>
       </div>
@@ -310,11 +360,41 @@ export default function More() {
         {renderSection(supportItems)}
       </div>
 
-      <div className="mb-4">
+      <div className="mb-6">
         <h2 className="text-sm font-display font-bold text-red-500 uppercase tracking-widest mb-4">{t('more.danger_zone', 'VÙNG NGUY HIỂM')}</h2>
         {renderSection(dangerItems)}
       </div>
       
+      {/* Logout Card (Only shown when user is logged in with an account) */}
+      {session && (
+        <div className="mt-2 mb-6">
+          <button
+            onClick={() => {
+              setConfirmInfo({
+                title: t('more.logout_confirm_title', 'XÁC NHẬN ĐĂNG XUẤT'),
+                message: t('more.logout_confirm_msg', 'Bạn có chắc chắn muốn đăng xuất khỏi tài khoản này không?'),
+                onConfirm: async () => {
+                  await signOut();
+                  addToast({ message: t('more.logout_success', 'Đã đăng xuất tài khoản thành công'), type: 'info' });
+                }
+              });
+            }}
+            className="w-full hallmark-card p-4 flex items-center border-2 border-red-500/30 bg-red-500/5 hover:border-red-500 hover:bg-red-500/10 transition-all cursor-pointer group text-left shadow-sm active:scale-[0.99]"
+          >
+            <div className="w-12 h-12 sm:w-14 sm:h-14 border-2 border-red-500/40 bg-red-500/10 flex items-center justify-center mr-4 shrink-0 group-hover:border-red-500 transition-colors">
+              <LogOut size={24} className="text-red-500" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-display font-bold text-lg sm:text-xl uppercase text-red-600 group-hover:text-red-700 transition-colors">
+                {t('more.logout_btn', 'ĐĂNG XUẤT TÀI KHOẢN')}
+              </h3>
+            </div>
+            <ChevronRight className="text-red-400 group-hover:text-red-600 transition-colors shrink-0 ml-2" />
+          </button>
+        </div>
+      )}
+      
+
 
 
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
@@ -373,7 +453,7 @@ export default function More() {
             onClick={() => setAlertInfo(null)}
             className="w-full bg-primary text-white font-display uppercase tracking-wider py-3 border-2 border-primary hover:bg-[#323d29] transition-colors active:scale-95"
           >
-            {t('more.understood')}
+            {t('more.understood', 'ĐÃ HIỂU')}
           </button>
         </div>
       </BottomSheet>
@@ -406,9 +486,9 @@ export default function More() {
           <div className="flex gap-3">
             <button 
               onClick={() => setConfirmInfo(null)}
-              className="flex-1 bg-transparent text-text-muted font-display uppercase tracking-wider py-3 border-2 border-slate-300 hover:bg-surface transition-colors active:scale-95"
+              className="flex-1 bg-transparent text-text-muted font-display uppercase tracking-wider py-3 border-2 border-slate-300 hover:bg-surface transition-colors active:scale-95 cursor-pointer"
             >
-              {t('more.cancel')}
+              {t('more.cancel', 'HỦY')}
             </button>
             <button 
               onClick={() => {
@@ -416,15 +496,14 @@ export default function More() {
                 setConfirmInfo(null);
               }}
               disabled={confirmInfo?.requireInput ? confirmInput !== confirmInfo.requireInput : false}
-              className="flex-1 bg-rose-600 text-white font-display uppercase tracking-wider py-3 border-2 border-rose-700 hover:bg-rose-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors active:scale-95"
+              className="flex-1 bg-rose-600 text-white font-display uppercase tracking-wider py-3 border-2 border-rose-700 hover:bg-rose-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors active:scale-95 cursor-pointer"
             >
-              {t('more.confirm')}
+              {t('more.confirm', 'XÁC NHẬN')}
             </button>
           </div>
         </div>
       </BottomSheet>
 
-      {/* Language Modal */}
       <BottomSheet
         isOpen={isLanguageOpen}
         onClose={() => setIsLanguageOpen(false)}
@@ -497,6 +576,127 @@ export default function More() {
               {theme === tOpt.value && <Check size={24} className="text-primary shrink-0" />}
             </button>
           ))}
+        </div>
+      </BottomSheet>
+
+      {/* Profile Edit Modal */}
+      <BottomSheet
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+        title={
+          <span className="flex items-center gap-2">
+            <UserIcon size={24} className="text-primary" /> {t('more.profile_title', 'Hồ sơ tài khoản')}
+          </span>
+        }
+      >
+        <div className="flex flex-col gap-4 p-1">
+          <form onSubmit={handleUpdateProfile} className="flex flex-col gap-4">
+            <div>
+              <label className="block text-xs font-bold text-text-muted mb-1 uppercase font-display tracking-widest">
+                {t('auth.fullname_label', 'Họ và tên')}
+              </label>
+              <input
+                type="text"
+                value={editFullName}
+                onChange={(e) => setEditFullName(e.target.value)}
+                className="w-full px-4 py-3 bg-surface-2 border-2 border-border-main text-text-main focus:outline-none focus:border-primary transition-colors text-sm font-medium"
+                placeholder={t('auth.fullname_placeholder', 'Nhập họ và tên...')}
+              />
+            </div>
+            
+            <div>
+              <label className="block text-xs font-bold text-text-muted mb-1 uppercase font-display tracking-widest">
+                {t('auth.email_label', 'Email')}
+              </label>
+              <input
+                type="email"
+                value={session?.user?.email || ''}
+                disabled
+                className="w-full px-4 py-3 bg-surface-2 opacity-70 border-2 border-border-main text-text-muted cursor-not-allowed text-sm font-medium"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isUpdatingProfile}
+              className="hallmark-btn w-full flex items-center justify-center py-3.5 mt-2 bg-secondary text-white font-display uppercase tracking-widest transition-all shadow-md gap-2 cursor-pointer"
+            >
+              {isUpdatingProfile ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <><Save size={18} /> {t('common.save_changes', 'LƯU THAY ĐỔI')}</>
+              )}
+            </button>
+          </form>
+
+          <div className="hallmark-divider my-1"></div>
+
+          {/* Cloud Sync Status Card */}
+          <div className="bg-surface-2 border-2 border-border-main p-4 flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <h4 className="font-display font-bold uppercase tracking-wider text-sm text-primary">
+                {t('sync.cloud_sync_title', 'Đồng bộ Đám mây')}
+              </h4>
+              <span 
+                className={`w-3 h-3 rounded-full shrink-0 ${isOnline ? 'bg-emerald-500' : 'bg-rose-500'}`}
+                title={isOnline ? t('sync.online', 'Trực tuyến') : t('sync.offline', 'Ngoại tuyến')}
+              ></span>
+            </div>
+
+            <div className="flex flex-col gap-1 text-xs font-sans text-text-muted">
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-text-main">{t('sync.status_label', 'Trạng thái:')}</span>
+                {syncStatus === 'syncing' && (
+                  <span className="text-secondary font-semibold">
+                    {t('sync.syncing', 'Đang đồng bộ dữ liệu...')}
+                  </span>
+                )}
+                {syncStatus === 'synced' && (
+                  <span className="text-emerald-600 font-semibold">
+                    {t('sync.synced', 'Đã đồng bộ mới nhất')}
+                  </span>
+                )}
+                {syncStatus === 'pending' && (
+                  <span className="text-amber-600 font-semibold">
+                    {t('sync.pending', 'Sẵn sàng đồng bộ')}
+                  </span>
+                )}
+                {syncStatus === 'offline' && (
+                  <span className="text-text-muted font-semibold">
+                    {t('sync.offline_desc', 'Chế độ ngoại tuyến (Lưu tại máy)')}
+                  </span>
+                )}
+                {syncStatus === 'error' && (
+                  <span className="text-rose-600 font-semibold">
+                    {t('sync.error', 'Thất bại - Thử lại')}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 text-[11px]">
+                <span className="font-bold text-text-main">{t('sync.last_synced', 'Đồng bộ lần cuối:')}</span>
+                <span>
+                  {lastSyncedAt
+                    ? new Date(lastSyncedAt).toLocaleString(i18n.language === 'vi' ? 'vi-VN' : 'en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        day: '2-digit',
+                        month: '2-digit',
+                      })
+                    : t('sync.never_synced', 'Chưa đồng bộ')}
+                </span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={syncNow}
+              disabled={syncStatus === 'syncing' || !isOnline}
+              className="hallmark-btn w-full flex items-center justify-center py-2.5 bg-primary text-white font-display text-xs uppercase tracking-widest hover:brightness-110 active:scale-[0.99] transition-all gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              <span>{syncStatus === 'syncing' ? t('sync.syncing_btn', 'ĐANG ĐỒNG BỘ...') : t('sync.sync_now_btn', 'ĐỒNG BỘ NGAY')}</span>
+            </button>
+          </div>
         </div>
       </BottomSheet>
     </div>

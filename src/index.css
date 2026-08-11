@@ -1,5 +1,21 @@
 @import "tailwindcss";
 
+/* Hide ALL browser-default password reveal / autocomplete icons */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none !important;
+}
+input::-webkit-textfield-decoration-container {
+  pointer-events: none;
+}
+input::-webkit-contacts-auto-fill-button,
+input::-webkit-credentials-auto-fill-button {
+  visibility: hidden !important;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+}
+
 :root {
   --color-primary-base: #46543b;
   --color-secondary-base: #e35d2a;

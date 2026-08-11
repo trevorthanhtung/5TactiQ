@@ -1,4 +1,9 @@
 import { capacitorStorage } from '../utils/capacitorStorage';
+import { usePlayerStore } from '../store/usePlayerStore';
+import { useMatchStore } from '../store/useMatchStore';
+import { useTacticStore } from '../store/useTacticStore';
+import { useVenueStore } from '../store/useVenueStore';
+import { useSettingsStore } from '../store/useSettingsStore';
 
 export const STORAGE_KEYS_META: Record<string, string> = {
   'katfc-player-storage': 'Đội hình, Chấn thương & Tier',
@@ -10,6 +15,20 @@ export const STORAGE_KEYS_META: Record<string, string> = {
 
 export const STORAGE_KEYS = Object.keys(STORAGE_KEYS_META);
 
+export const rehydrateAllStores = async () => {
+  try {
+    await Promise.all([
+      usePlayerStore.persist?.rehydrate?.(),
+      useMatchStore.persist?.rehydrate?.(),
+      useTacticStore.persist?.rehydrate?.(),
+      useVenueStore.persist?.rehydrate?.(),
+      useSettingsStore.persist?.rehydrate?.(),
+    ]);
+  } catch (e) {
+    console.error('Failed to rehydrate stores:', e);
+  }
+};
+
 export const exportData = async (): Promise<string> => {
   const data: Record<string, string | null> = {};
   for (const key of STORAGE_KEYS) {
@@ -18,9 +37,9 @@ export const exportData = async (): Promise<string> => {
   return JSON.stringify(data);
 };
 
-export const parseBackupData = (jsonData: string): Record<string, any> | null => {
+export const parseBackupData = (jsonData: string | object): Record<string, any> | null => {
   try {
-    let parsed = JSON.parse(jsonData);
+    let parsed = typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
     
     // Handle double-stringified JSON from older backups
     if (typeof parsed === 'string') {
@@ -60,7 +79,6 @@ export const mergeZustandState = (existingRaw: string | null, incomingRaw: any):
         const existingVal = existing.state[key];
 
         if (Array.isArray(incomingVal) && Array.isArray(existingVal)) {
-          // If arrays contain objects with 'id', merge them by id
           if ((incomingVal.length > 0 && typeof incomingVal[0] === 'object' && incomingVal[0] !== null && 'id' in incomingVal[0]) ||
               (existingVal.length > 0 && typeof existingVal[0] === 'object' && existingVal[0] !== null && 'id' in existingVal[0])) {
             const map = new Map();
@@ -68,11 +86,10 @@ export const mergeZustandState = (existingRaw: string | null, incomingRaw: any):
               if (item && item.id) map.set(item.id, item);
             });
             incomingVal.forEach((item: any) => {
-              if (item && item.id) map.set(item.id, item); // Incoming overwrites existing on ID conflict
+              if (item && item.id) map.set(item.id, item);
             });
             newState[key] = Array.from(map.values());
           } else {
-            // Otherwise, incoming array overwrites
             newState[key] = incomingVal;
           }
         } else if (typeof incomingVal === 'object' && incomingVal !== null && typeof existingVal === 'object' && existingVal !== null && !Array.isArray(incomingVal)) {
@@ -110,7 +127,8 @@ export const importSelectedData = async (parsedData: Record<string, any>, select
       }
     }
     
-    console.log(`[Sync] Imported ${importedCount} selected storage keys (Mode: ${mode})`);
+    await rehydrateAllStores();
+    console.log(`[Sync] Imported ${importedCount} selected storage keys and rehydrated all stores (Mode: ${mode})`);
     return importedCount > 0;
   } catch (error) {
     console.error("Failed to import selected data", error);

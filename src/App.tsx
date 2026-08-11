@@ -11,9 +11,11 @@ import { useVirtualKeyboard } from './hooks/useVirtualKeyboard';
 import { usePageVisibility } from './hooks/usePageVisibility';
 import { usePersistentStorage } from './hooks/usePersistentStorage';
 import { useBackgroundSync } from './hooks/useBackgroundSync';
+import { useCloudSync } from './hooks/useCloudSync';
 import { useThemeStore } from './store/useThemeStore';
 import { useAppUpdateStore } from './store/useAppUpdateStore';
 import { useToastStore } from './store/useToastStore';
+import { useAuthStore } from './store/useAuthStore';
 import { Capacitor } from '@capacitor/core';
 
 import { App as CapacitorApp } from '@capacitor/app';
@@ -22,6 +24,12 @@ import { useTranslation } from 'react-i18next';
 function App() {
   usePersistentStorage();
   useBackgroundSync();
+  useCloudSync();
+
+  useEffect(() => {
+    // Initialize Auth state
+    useAuthStore.getState().initialize();
+  }, []);
 
   const theme = useThemeStore((state) => state.theme);
   const { checkUpdate, hasUpdate, latestVersion, setShowUpdateModal } = useAppUpdateStore();

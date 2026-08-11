@@ -122,6 +122,7 @@ export interface Venue {
 export interface TeamSettings {
   teamName: string;
   logoUrl: string;
+  userDisplayName?: string;
   foundedYear?: number;
   primaryColor?: string;
   secondaryColor?: string;

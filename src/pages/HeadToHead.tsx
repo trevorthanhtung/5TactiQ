@@ -19,6 +19,7 @@ export default function HeadToHead() {
   const [expandedOpponent, setExpandedOpponent] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterMode, setFilterMode] = useState<'all_time' | 'current_season'>('current_season');
+  const [matchTypeFilter, setMatchTypeFilter] = useState<'all' | 'external' | 'internal'>('all');
   const [isLoading, setIsLoading] = useState(true);
 
   const seasonStart = settings.seasonStartDate ? new Date(settings.seasonStartDate) : null;
@@ -31,9 +32,12 @@ export default function HeadToHead() {
   }, []);
 
   const stats = useMemo(() => {
-    // 1. Filter out unfinished matches (include internal now) and apply season filter
+    // 1. Filter out unfinished matches and apply season & match type filters
     const validMatches = matches.filter(m => {
       if (m.status !== 'finished') return false;
+      if (matchTypeFilter === 'external' && m.matchType === 'internal') return false;
+      if (matchTypeFilter === 'internal' && m.matchType !== 'internal') return false;
+      
       if (filterMode === 'current_season' && hasSeasonConfig) {
         if (!m.date) return true;
         const matchDate = new Date(m.date);
@@ -209,6 +213,40 @@ export default function HeadToHead() {
           </div>
 
           <div className="hallmark-divider mb-6"></div>
+
+          {/* Match Type Filter Tabs */}
+          <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
+            <button
+              onClick={() => setMatchTypeFilter('all')}
+              className={`px-3.5 py-1.5 text-xs font-display font-bold uppercase tracking-wider border-2 transition-all ${
+                matchTypeFilter === 'all'
+                  ? 'bg-primary text-white border-primary shadow-sm'
+                  : 'bg-surface text-text-muted border-border-main hover:border-primary/50'
+              }`}
+            >
+              {t('h2h.filter_all', 'TẤT CẢ ĐỐI THỦ')}
+            </button>
+            <button
+              onClick={() => setMatchTypeFilter('external')}
+              className={`px-3.5 py-1.5 text-xs font-display font-bold uppercase tracking-wider border-2 transition-all ${
+                matchTypeFilter === 'external'
+                  ? 'bg-primary text-white border-primary shadow-sm'
+                  : 'bg-surface text-text-muted border-border-main hover:border-primary/50'
+              }`}
+            >
+              {t('h2h.filter_external', 'ĐỐI THỦ NGOÀI')}
+            </button>
+            <button
+              onClick={() => setMatchTypeFilter('internal')}
+              className={`px-3.5 py-1.5 text-xs font-display font-bold uppercase tracking-wider border-2 transition-all ${
+                matchTypeFilter === 'internal'
+                  ? 'bg-primary text-white border-primary shadow-sm'
+                  : 'bg-surface text-text-muted border-border-main hover:border-primary/50'
+              }`}
+            >
+              {t('h2h.filter_internal', 'ĐÁ NỘI BỘ')}
+            </button>
+          </div>
 
           {/* Search Bar & Season Filter Row */}
           <div className="mb-6 flex flex-col @md:flex-row gap-3 items-stretch @md:items-center justify-between">
