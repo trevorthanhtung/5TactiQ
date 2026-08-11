@@ -120,22 +120,104 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
           snapOsc.stop(now + 0.65);
         };
 
-        if (ctx.state === 'suspended') {
-          ctx.resume().then(() => {
-            startSoundEngine();
-          }).catch(() => {
-            startSoundEngine();
-          });
-        } else {
-          startSoundEngine();
+        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+        if (!AudioCtx || prefersReducedMotion) return;
+
+        ctx = new AudioCtx();
+        const now = ctx.currentTime;
+
+        // Master Gain Output
+        const masterGain = ctx.createGain();
+        masterGain.gain.setValueAtTime(0.5, now);
+        masterGain.connect(ctx.destination);
+
+        // 1. HOLLYWOOD CINEMATIC TRAILER BOOM
+        const subOsc = ctx.createOscillator();
+        const subGain = ctx.createGain();
+        subOsc.type = 'sine';
+        subOsc.frequency.setValueAtTime(110, now);
+        subOsc.frequency.exponentialRampToValueAtTime(20, now + 1.1);
+
+        subGain.gain.setValueAtTime(0, now);
+        subGain.gain.linearRampToValueAtTime(0.45, now + 0.05);
+        subGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+
+        subOsc.connect(subGain);
+        subGain.connect(masterGain);
+        subOsc.start(now);
+        subOsc.stop(now + 1.2);
+
+        // Noise Impact Thud
+        const bufferSize = Math.floor(ctx.sampleRate * 0.35);
+        const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          output[i] = Math.random() * 2 - 1;
         }
+        const whiteNoise = ctx.createBufferSource();
+        whiteNoise.buffer = noiseBuffer;
+
+        const noiseFilter = ctx.createBiquadFilter();
+        noiseFilter.type = 'lowpass';
+        noiseFilter.frequency.setValueAtTime(1400, now);
+        noiseFilter.frequency.exponentialRampToValueAtTime(50, now + 0.35);
+
+        const noiseGain = ctx.createGain();
+        noiseGain.gain.setValueAtTime(0, now);
+        noiseGain.gain.linearRampToValueAtTime(0.2, now + 0.03);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+        whiteNoise.connect(noiseFilter);
+        noiseFilter.connect(noiseGain);
+        noiseGain.connect(masterGain);
+        whiteNoise.start(now);
+
+        // 2. LUXURY AMBIENT GLASS PAD CHORD (Dm9)
+        const chordNotes = [146.83, 220.00, 349.23, 523.25, 659.25];
+        chordNotes.forEach((freq, idx) => {
+          if (!ctx) return;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          const padFilter = ctx.createBiquadFilter();
+
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + 0.05);
+
+          padFilter.type = 'lowpass';
+          padFilter.frequency.setValueAtTime(500, now + 0.05);
+          padFilter.frequency.exponentialRampToValueAtTime(2200, now + 0.8);
+
+          const delay = idx * 0.02;
+          gain.gain.setValueAtTime(0, now + 0.05 + delay);
+          gain.gain.linearRampToValueAtTime(0.08, now + 0.4 + delay);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 1.5 + delay);
+
+          osc.connect(padFilter);
+          padFilter.connect(gain);
+          gain.connect(masterGain);
+          osc.start(now + 0.05 + delay);
+          osc.stop(now + 1.5 + delay);
+        });
+
+        // 3. SLEEK METALLIC HUD SNAP
+        const snapOsc = ctx.createOscillator();
+        const snapGain = ctx.createGain();
+        snapOsc.type = 'triangle';
+        snapOsc.frequency.setValueAtTime(1400, now + 0.4);
+        snapOsc.frequency.exponentialRampToValueAtTime(2200, now + 0.5);
+
+        snapGain.gain.setValueAtTime(0, now + 0.4);
+        snapGain.gain.linearRampToValueAtTime(0.08, now + 0.42);
+        snapGain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+
+        snapOsc.connect(snapGain);
+        snapGain.connect(masterGain);
+        snapOsc.start(now + 0.4);
+        snapOsc.stop(now + 0.65);
       } catch (e) {
         console.warn('Audio play failed', e);
       }
     };
-
-    // Try playing immediately
-    triggerAudio();
 
     const handleGesture = () => {
       triggerAudio();
@@ -147,14 +229,12 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
       window.removeEventListener('touchstart', handleGesture);
       window.removeEventListener('click', handleGesture);
       window.removeEventListener('keydown', handleGesture);
-      window.removeEventListener('pointermove', handleGesture);
     };
 
     window.addEventListener('pointerdown', handleGesture);
     window.addEventListener('touchstart', handleGesture);
     window.addEventListener('click', handleGesture);
     window.addEventListener('keydown', handleGesture);
-    window.addEventListener('pointermove', handleGesture);
 
     // Bắt đầu fade out sau 2.1s (khi animation gần xong)
     const fadeTimer = setTimeout(() => {
@@ -195,7 +275,10 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
 
   return (
     <div 
-      className={`fixed inset-0 z-[9999] splash-root transition-opacity duration-500 ease-in-out ${isFading ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+      onClick={triggerAudio}
+      onPointerDown={triggerAudio}
+      onTouchStart={triggerAudio}
+      className={`fixed inset-0 z-[9999] splash-root transition-opacity duration-500 ease-in-out cursor-pointer ${isFading ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
     >
       <style>{`
         .splash-root {
