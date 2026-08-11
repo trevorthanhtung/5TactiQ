@@ -1,9 +1,25 @@
-import { app, BrowserWindow, protocol, net, shell } from 'electron';
+import { app, BrowserWindow, protocol, shell } from 'electron';
 import path from 'path';
-import { fileURLToPath, pathToFileURL } from 'url';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const mimeTypes = {
+  '.html': 'text/html',
+  '.js': 'text/javascript',
+  '.css': 'text/css',
+  '.json': 'application/json',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+  '.wasm': 'application/wasm',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+};
 
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true, supportFetchAPI: true, corsEnabled: true } }
@@ -24,6 +40,13 @@ function createWindow() {
   });
 
   win.removeMenu(); // Remove default menu
+
+  // Shortcut F12 or Ctrl+Shift+I to toggle DevTools
+  win.webContents.on('before-input-event', (event, input) => {
+    if (input.key === 'F12' || (input.control && input.shift && input.key.toLowerCase() === 'i')) {
+      win.webContents.toggleDevTools();
+    }
+  });
 
   // Open OAuth / external links in system browser
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -49,12 +72,21 @@ function createWindow() {
         decodedPath = 'index.html';
       }
       
-      const fs = require('fs');
       let filePath = path.join(__dirname, 'dist', decodedPath);
-      if (!fs.existsSync(filePath)) {
+      if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
         filePath = path.join(__dirname, 'dist', 'index.html');
       }
-      return net.fetch(pathToFileURL(filePath).toString());
+
+      const ext = path.extname(filePath).toLowerCase();
+      const mimeType = mimeTypes[ext] || 'application/octet-stream';
+      const data = fs.readFileSync(filePath);
+
+      return new Response(data, {
+        headers: {
+          'content-type': mimeType,
+          'access-control-allow-origin': '*'
+        }
+      });
     });
 
     win.loadURL('app://-/');
