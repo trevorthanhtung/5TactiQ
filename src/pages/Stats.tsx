@@ -138,8 +138,9 @@ export default function Stats() {
               ]}
             />
           )}
-          <Link to="/matchday" className="hallmark-btn flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-bold bg-primary text-white shrink-0 h-[44px]">
-            <Calendar size={18} /> {t('stats.manage_match')}
+          <Link to="/matchday" className="hallmark-btn flex items-center justify-center gap-2 bg-primary text-white shrink-0 h-[44px] px-6">
+            <Calendar size={20} />
+            <span className="uppercase tracking-widest text-sm">{t('stats.manage_match')}</span>
           </Link>
         </div>
       </div>
