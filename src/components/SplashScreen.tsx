@@ -135,6 +135,9 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
   }, [prefersReducedMotion]);
 
   useEffect(() => {
+    // Tự động phát âm thanh ngay lập tức khi vào trang (Auto-play on load)
+    triggerAudio();
+
     const handleGesture = () => {
       triggerAudio();
       removeListeners();
