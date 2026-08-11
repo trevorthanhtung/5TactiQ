@@ -13,19 +13,22 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
   const hasPlayedRef = React.useRef(false);
   const ctxRef = React.useRef<AudioContext | null>(null);
 
-  const triggerAudio = React.useCallback(() => {
+  const triggerAudio = React.useCallback((isUserGesture = false) => {
     if (hasPlayedRef.current) return;
     try {
       if (prefersReducedMotion) return;
 
-      // 1. Pháo HTML5 Audio (Phát tự động từ file âm thanh công nghệ PCM WAV)
+      // 1. Pháo HTML5 Audio (Bằng file WAV chuẩn - Tự động phát khi trang được phép)
       const audio = new Audio('./splash_sound.wav');
       audio.volume = 0.6;
       audio.play().then(() => {
         hasPlayedRef.current = true;
       }).catch(() => {
-        // Trình duyệt chặn thì sẽ phát qua Web Audio API khi có cử chỉ
+        // Trình duyệt chặn autoplay thì im lặng, chờ cử chỉ người dùng
       });
+
+      // Chỉ kích hoạt AudioContext khi có cử chỉ người dùng chính thức (ngừa warning Chrome)
+      if (!isUserGesture) return;
 
       // 2. Web Audio API Backup Synthesizer
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
@@ -147,11 +150,11 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
   }, [prefersReducedMotion]);
 
   useEffect(() => {
-    // Tự động phát âm thanh ngay lập tức khi vào trang (Auto-play on load)
-    triggerAudio();
+    // Tự động phát âm thanh qua file HTML5 Audio ngay khi vào trang (bằng false)
+    triggerAudio(false);
 
     const handleGesture = () => {
-      triggerAudio();
+      triggerAudio(true);
       removeListeners();
     };
 
