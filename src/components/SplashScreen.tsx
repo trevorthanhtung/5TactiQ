@@ -10,58 +10,110 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   useEffect(() => {
-    // Thử phát âm thanh (có thể bị chặn nếu browser yêu cầu tương tác trước)
-    try {
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-      if (AudioContext && !prefersReducedMotion) {
-        const ctx = new AudioContext();
-        const now = ctx.currentTime;
+    let ctx: AudioContext | null = null;
+
+    const playTacticalSound = () => {
+      try {
+        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+        if (!AudioCtx || prefersReducedMotion) return;
         
-        // 1. Âm thanh lướt (Swoosh) khi các lát cắt (slices) bay vào
+        ctx = new AudioCtx();
+        if (ctx.state === 'suspended') {
+          ctx.resume();
+        }
+
+        const now = ctx.currentTime;
+
+        // 1. SUB-BASS IMPACT (Cú nổ trầm uy lực khi logo xuất hiện)
+        const subOsc = ctx.createOscillator();
+        const subGain = ctx.createGain();
+        subOsc.type = 'sine';
+        subOsc.frequency.setValueAtTime(200, now + 0.05);
+        subOsc.frequency.exponentialRampToValueAtTime(30, now + 0.85);
+
+        subGain.gain.setValueAtTime(0, now + 0.05);
+        subGain.gain.linearRampToValueAtTime(0.45, now + 0.1);
+        subGain.gain.exponentialRampToValueAtTime(0.001, now + 1.1);
+
+        subOsc.connect(subGain);
+        subGain.connect(ctx.destination);
+        subOsc.start(now + 0.05);
+        subOsc.stop(now + 1.1);
+
+        // 2. TACTICAL HUD RADAR SWOOSH (Tiếng quét radar chiến thuật lướt qua)
         const swooshOsc = ctx.createOscillator();
         const swooshGain = ctx.createGain();
-        swooshOsc.type = 'triangle';
-        swooshOsc.frequency.setValueAtTime(150, now + 0.2);
-        swooshOsc.frequency.exponentialRampToValueAtTime(800, now + 0.6);
+        swooshOsc.type = 'sawtooth';
+        swooshOsc.frequency.setValueAtTime(220, now + 0.2);
+        swooshOsc.frequency.exponentialRampToValueAtTime(1600, now + 0.65);
+
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(350, now + 0.2);
+        filter.frequency.exponentialRampToValueAtTime(2800, now + 0.65);
+
         swooshGain.gain.setValueAtTime(0, now + 0.2);
-        swooshGain.gain.linearRampToValueAtTime(0.05, now + 0.4);
-        swooshGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
-        swooshOsc.connect(swooshGain);
+        swooshGain.gain.linearRampToValueAtTime(0.18, now + 0.4);
+        swooshGain.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+
+        swooshOsc.connect(filter);
+        filter.connect(swooshGain);
         swooshGain.connect(ctx.destination);
         swooshOsc.start(now + 0.2);
-        swooshOsc.stop(now + 0.6);
+        swooshOsc.stop(now + 0.7);
 
-        // 2. Tiếng nổ trầm (Bass impact) khi vòng lan toả (pulse ring) xuất hiện
-        const boomOsc = ctx.createOscillator();
-        const boomGain = ctx.createGain();
-        boomOsc.type = 'sine';
-        boomOsc.frequency.setValueAtTime(120, now + 0.55);
-        boomOsc.frequency.exponentialRampToValueAtTime(30, now + 0.9);
-        boomGain.gain.setValueAtTime(0, now + 0.55);
-        boomGain.gain.linearRampToValueAtTime(0.2, now + 0.58);
-        boomGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
-        boomOsc.connect(boomGain);
-        boomGain.connect(ctx.destination);
-        boomOsc.start(now + 0.55);
-        boomOsc.stop(now + 1.2);
+        // 3. SCI-FI TRIPLE RADAR LOCK (Tiếng khóa mục tiêu radar 3 nốt C6 -> E6 -> G6)
+        const playPing = (freq: number, startTime: number, vol = 0.15) => {
+          if (!ctx) return;
+          const pingOsc = ctx.createOscillator();
+          const pingGain = ctx.createGain();
+          pingOsc.type = 'sine';
+          pingOsc.frequency.setValueAtTime(freq, startTime);
+          pingGain.gain.setValueAtTime(0, startTime);
+          pingGain.gain.linearRampToValueAtTime(vol, startTime + 0.02);
+          pingGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.45);
 
-        // 3. Tiếng "Ping" công nghệ cao (Tech Chime) khi logo ổn định và dải sáng lướt qua
-        const pingOsc = ctx.createOscillator();
-        const pingGain = ctx.createGain();
-        pingOsc.type = 'sine';
-        pingOsc.frequency.setValueAtTime(1200, now + 0.95);
-        pingOsc.frequency.exponentialRampToValueAtTime(2400, now + 1.05);
-        pingGain.gain.setValueAtTime(0, now + 0.95);
-        pingGain.gain.linearRampToValueAtTime(0.1, now + 0.98);
-        pingGain.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
-        pingOsc.connect(pingGain);
-        pingGain.connect(ctx.destination);
-        pingOsc.start(now + 0.95);
-        pingOsc.stop(now + 1.8);
+          pingOsc.connect(pingGain);
+          pingGain.connect(ctx.destination);
+          pingOsc.start(startTime);
+          pingOsc.stop(startTime + 0.45);
+        };
+
+        playPing(1046.50, now + 0.85, 0.22); // Note C6
+        playPing(1318.51, now + 0.95, 0.20); // Note E6
+        playPing(1567.98, now + 1.05, 0.25); // Note G6
+
+        // 4. FUTSAL ELECTRONIC WHISTLE (Tiếng còi trọng tài điện tử chốt hạ)
+        const whistleOsc = ctx.createOscillator();
+        const whistleGain = ctx.createGain();
+        whistleOsc.type = 'triangle';
+        whistleOsc.frequency.setValueAtTime(2800, now + 1.15);
+        whistleOsc.frequency.linearRampToValueAtTime(2950, now + 1.25);
+
+        whistleGain.gain.setValueAtTime(0, now + 1.15);
+        whistleGain.gain.linearRampToValueAtTime(0.08, now + 1.18);
+        whistleGain.gain.exponentialRampToValueAtTime(0.001, now + 1.55);
+
+        whistleOsc.connect(whistleGain);
+        whistleGain.connect(ctx.destination);
+        whistleOsc.start(now + 1.15);
+        whistleOsc.stop(now + 1.55);
+      } catch (e) {
+        console.warn('Audio play failed', e);
       }
-    } catch (e) {
-      console.warn('Audio autoplay blocked by browser', e);
-    }
+    };
+
+    playTacticalSound();
+
+    const handleUserInteraction = () => {
+      if (ctx && ctx.state === 'suspended') {
+        ctx.resume();
+      } else {
+        playTacticalSound();
+      }
+      window.removeEventListener('pointerdown', handleUserInteraction);
+    };
+    window.addEventListener('pointerdown', handleUserInteraction);
 
     // Bắt đầu fade out sau 2.1s (khi animation gần xong)
     const fadeTimer = setTimeout(() => {
