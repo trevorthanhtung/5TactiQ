@@ -16,8 +16,20 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
   const triggerAudio = React.useCallback(() => {
     if (hasPlayedRef.current) return;
     try {
+      if (prefersReducedMotion) return;
+
+      // 1. Pháo HTML5 Audio (Phát tự động từ file âm thanh công nghệ PCM WAV)
+      const audio = new Audio('./splash_sound.wav');
+      audio.volume = 0.6;
+      audio.play().then(() => {
+        hasPlayedRef.current = true;
+      }).catch(() => {
+        // Trình duyệt chặn thì sẽ phát qua Web Audio API khi có cử chỉ
+      });
+
+      // 2. Web Audio API Backup Synthesizer
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioCtx || prefersReducedMotion) return;
+      if (!AudioCtx) return;
 
       if (!ctxRef.current || ctxRef.current.state === 'closed') {
         ctxRef.current = new AudioCtx();
