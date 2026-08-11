@@ -3,8 +3,9 @@ import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
 import { useNavigate } from 'react-router-dom';
 import { useToastStore } from '../store/useToastStore';
-import { Mail, Key, LogIn, UserPlus, ShieldAlert, ArrowRight } from 'lucide-react';
+import { Mail, Key, LogIn, UserPlus, ShieldAlert, ArrowRight, Laptop, ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { BottomSheet } from '../components/ui/BottomSheet';
 
 const Auth: React.FC = () => {
   const { t } = useTranslation();
@@ -12,6 +13,7 @@ const Auth: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   
   const { setGuest } = useAuthStore();
   const addToast = useToastStore(state => state.addToast);
@@ -76,7 +78,7 @@ const Auth: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 sm:p-6 relative">
-      <div className="w-full max-w-md animate-fade-in-up relative z-10">
+      <div className="w-full max-w-md animate-fade-in-up relative z-10 my-auto">
         {/* Logo/Brand Section */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-surface border-2 border-primary shadow-lg mb-4 p-3 transform -rotate-2 hover:rotate-0 transition-transform duration-300">
@@ -181,7 +183,7 @@ const Auth: React.FC = () => {
         </div>
 
         {/* Guest Option */}
-        <div className="text-center">
+        <div className="text-center mb-8">
           <button
             onClick={handleGuestLogin}
             className="group inline-flex items-center justify-center w-full py-3.5 px-6 bg-surface/80 hover:bg-surface border-2 border-border-main hover:border-primary text-text-main transition-all font-display uppercase tracking-widest text-xs font-bold gap-2 shadow-sm cursor-pointer"
@@ -189,12 +191,62 @@ const Auth: React.FC = () => {
             <span>{t('auth.guest_btn', 'TRẢI NGHIỆM VỚI TƯ CÁCH KHÁCH')}</span>
             <ArrowRight size={16} className="text-secondary transform group-hover:translate-x-1 transition-transform" />
           </button>
-          <div className="mt-3 flex items-center justify-center text-[11px] text-text-muted font-medium tracking-wide">
+          <div className="mt-2.5 flex items-center justify-center text-[11px] text-text-muted font-medium tracking-wide">
             <ShieldAlert size={13} className="mr-1.5 text-amber-500 shrink-0" />
             <span>{t('auth.guest_note', 'Dữ liệu khách chỉ lưu trực tiếp trên trình duyệt thiết bị này')}</span>
           </div>
         </div>
+
+        {/* Platform Icons & Terms Footer */}
+        <div className="text-center pt-2 border-t border-border-main/40 space-y-3">
+          <div className="flex items-center justify-center gap-5 text-text-muted opacity-60">
+            <Laptop size={18} className="hover:opacity-100 transition-opacity" title="Web & Desktop" />
+            <svg className="w-4 h-4 hover:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="currentColor" title="Android">
+              <path d="M17.523 15.3414C17.06 15.3414 16.691 14.966 16.691 14.5085C16.691 14.0511 17.06 13.6757 17.523 13.6757C17.986 13.6757 18.355 14.0511 18.355 14.5085C18.355 14.966 17.986 15.3414 17.523 15.3414ZM6.477 15.3414C6.014 15.3414 5.645 14.966 5.645 14.5085C5.645 14.0511 6.014 13.6757 6.477 13.6757C6.94 13.6757 7.309 14.0511 7.309 14.5085C7.309 14.966 6.94 15.3414 6.477 15.3414ZM17.98 10.4571L19.53 7.7471C19.67 7.5021 19.58 7.1931 19.34 7.0541C19.1 6.9151 18.79 7.0041 18.65 7.2481L17.07 10.0131C15.56 9.3171 13.85 8.9221 12 8.9221C10.15 8.9221 8.44 9.3171 6.93 10.0131L5.35 7.2481C5.21 7.0041 4.9 6.9151 4.66 7.0541C4.42 7.1931 4.33 7.5021 4.47 7.7471L6.02 10.4571C2.65 12.3161 0.38 15.7481 0 19.8331H24C23.62 15.7481 21.35 12.3161 17.98 10.4571Z" />
+            </svg>
+            <svg className="w-4 h-4 hover:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="currentColor" title="iOS & macOS">
+              <path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.09999 22C7.78999 22.05 6.79999 20.68 5.95999 19.47C4.24999 17 2.93999 12.45 4.69999 9.39C5.56999 7.87 7.12999 6.91 8.81999 6.88C10.1 6.86 11.32 7.75 12.11 7.75C12.89 7.75 14.37 6.68 15.92 6.84C16.57 6.87 18.39 7.1 19.56 8.82C19.47 8.88 17.39 10.1 17.41 12.63C17.44 15.65 20.06 16.66 20.09 16.67C20.06 16.74 19.67 18.11 18.71 19.5ZM13 3.5C13.73 2.67 14.94 2.04 15.94 2C16.07 3.17 15.6 4.35 14.9 5.19C14.21 6.04 13.07 6.7 11.95 6.61C11.8 5.46 12.36 4.26 13 3.5Z" />
+            </svg>
+          </div>
+          <p className="text-[11px] text-text-muted/70 leading-relaxed font-sans px-2">
+            {t('auth.terms_agree', 'Bằng việc tiếp tục, bạn đồng ý với')}{' '}
+            <button onClick={() => setShowTermsModal(true)} className="font-bold underline text-text-main hover:text-primary transition-colors cursor-pointer">
+              {t('auth.terms_of_use', 'Điều khoản Sử dụng')}
+            </button>
+            {', '}
+            <button onClick={() => setShowTermsModal(true)} className="font-bold underline text-text-main hover:text-primary transition-colors cursor-pointer">
+              {t('auth.privacy_policy', 'Chính sách Quyền riêng tư')}
+            </button>{' '}
+            {t('auth.and', 'và')}{' '}
+            <button onClick={() => setShowTermsModal(true)} className="font-bold underline text-text-main hover:text-primary transition-colors cursor-pointer">
+              {t('auth.cookie_policy', 'Chính sách Cookie')}
+            </button>{' '}
+            {t('auth.of_us', 'của chúng tôi.')}
+          </p>
+        </div>
       </div>
+
+      {/* Terms & Privacy Modal */}
+      <BottomSheet
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        title={
+          <span className="flex items-center gap-2">
+            <ShieldCheck size={22} className="text-primary" /> {t('more.privacy_title')}
+          </span>
+        }
+      >
+        <div className="space-y-4 text-text-muted text-sm leading-relaxed p-1">
+          <p>{t('more.privacy_msg_1', 'Ứng dụng 5TactiQ cam kết bảo vệ quyền riêng tư và an toàn dữ liệu của bạn.')}</p>
+          <p>{t('more.privacy_msg_2', 'Tất cả dữ liệu trận đấu, danh sách cầu thủ và sơ đồ chiến thuật được lưu trữ an toàn. Bạn có toàn quyền sao lưu, xuất hoặc xóa dữ liệu bất cứ lúc nào.')}</p>
+          <button 
+            onClick={() => setShowTermsModal(false)}
+            className="w-full bg-primary text-white font-display uppercase tracking-widest py-3 border-2 border-primary hover:bg-primary/90 transition-colors mt-4 text-sm font-bold"
+          >
+            {t('common.close', 'ĐÓNG')}
+          </button>
+        </div>
+      </BottomSheet>
     </div>
   );
 };
