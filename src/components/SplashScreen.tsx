@@ -13,7 +13,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
   useEffect(() => {
     let played = false;
 
-    const playSound = async () => {
+    const playSound = async (isUserAction = false) => {
       if (played || prefersReducedMotion) return;
       try {
         const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
@@ -23,10 +23,17 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
         
         // Tránh spam console warning nếu trình duyệt chặn autoplay
         if (ctx.state === 'suspended') {
-          try {
-            await ctx.resume();
-          } catch (e) {
-            // Ignore resume errors
+          // Chỉ cố gắng resume() nếu đây là do người dùng tương tác
+          // Gọi resume() lúc trang tự load sẽ bị Chrome phạt cảnh báo vàng khè
+          if (isUserAction) {
+            try {
+              await ctx.resume();
+            } catch (e) {
+              // Ignore
+            }
+          } else {
+            // Đang tự động load mà bị chặn -> im lặng rút lui
+            return;
           }
         }
         
@@ -132,11 +139,11 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
     };
 
     // Thử phát ngay lập tức khi vừa load trang
-    playSound();
+    playSound(false);
 
     // Sự kiện mở khóa tự động nếu trình duyệt hoãn lại nhè nhẹ
     const handleUnlock = () => {
-      playSound();
+      playSound(true);
       window.removeEventListener('pointerdown', handleUnlock);
       window.removeEventListener('touchstart', handleUnlock);
       window.removeEventListener('click', handleUnlock);
