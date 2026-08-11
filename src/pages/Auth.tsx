@@ -112,11 +112,10 @@ const Auth: React.FC = () => {
         <button
           type="button"
           onClick={() => setIsLanguageOpen(true)}
-          className="h-10 px-3 bg-surface border-2 border-border-main hover:border-primary text-text-main flex items-center gap-2 text-xs font-display font-bold tracking-wider transition-colors shadow-sm cursor-pointer uppercase"
+          className="w-10 h-10 bg-surface border-2 border-border-main hover:border-primary text-text-main flex items-center justify-center transition-colors shadow-sm cursor-pointer"
           title="Đổi ngôn ngữ"
         >
-          <Globe size={16} className="text-primary" />
-          <span>{languages.find(l => l.code === i18n.language)?.flag || '🌐'} {i18n.language.toUpperCase()}</span>
+          <Globe size={18} className="text-primary" />
         </button>
       </div>
 
