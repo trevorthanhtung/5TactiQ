@@ -213,12 +213,41 @@ export default function TierRanking() {
 
   if (isLoading) {
     return (
-      <div className="p-4 md:p-6 max-w-5xl mx-auto w-full animate-pulse space-y-4">
-        <div className="h-10 bg-surface rounded w-48" />
-        <div className="h-6 bg-surface rounded w-32" />
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="h-16 bg-surface rounded" />
-        ))}
+      <div className="p-4 md:p-6 max-w-5xl mx-auto w-full pb-24 animate-pulse">
+        {/* Header Skeleton */}
+        <div className="mb-5 pt-2">
+          <div className="flex items-center gap-2 mb-3">
+            <ArrowLeft size={16} className="text-text-muted/40" />
+            <div className="h-4 w-20 bg-text-muted/20 rounded" />
+          </div>
+          <div className="h-10 w-48 bg-text-muted/25 rounded" />
+          <div className="hallmark-divider mt-4 opacity-30" />
+        </div>
+
+        {/* Tier Rows Skeleton */}
+        <div className="space-y-3 mb-6">
+          {['S', 'A', 'B', 'C'].map((tier) => (
+            <div key={tier} className="flex border-2 border-border-main min-h-[56px] bg-surface">
+              <div className="w-14 shrink-0 bg-text-muted/15 border-r-2 border-border-main flex items-center justify-center">
+                <div className="h-6 w-5 bg-text-muted/30 rounded" />
+              </div>
+              <div className="flex-1 flex flex-wrap gap-2 p-2.5 items-center">
+                <div className="h-7 w-24 bg-text-muted/20 rounded" />
+                <div className="h-7 w-28 bg-text-muted/15 rounded" />
+                <div className="h-7 w-20 bg-text-muted/15 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Unranked Area Skeleton */}
+        <div className="border-2 border-dashed border-border-main p-4 bg-surface rounded">
+          <div className="h-5 w-32 bg-text-muted/20 rounded mb-3" />
+          <div className="flex flex-wrap gap-2">
+            <div className="h-7 w-20 bg-text-muted/15 rounded" />
+            <div className="h-7 w-24 bg-text-muted/15 rounded" />
+          </div>
+        </div>
       </div>
     );
   }
