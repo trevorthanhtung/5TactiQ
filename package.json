@@ -88,8 +88,9 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": false,
-      "createStartMenuShortcut": false,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "warningsAsErrors": false,
       "license": "public/license.txt",
       "uninstallDisplayName": "5TactiQ",
       "shortcutName": "5TactiQ",

@@ -16,8 +16,8 @@ import { useThemeStore } from './store/useThemeStore';
 import { useAppUpdateStore } from './store/useAppUpdateStore';
 import { useToastStore } from './store/useToastStore';
 import { useAuthStore } from './store/useAuthStore';
+import { supabase } from './lib/supabase';
 import { Capacitor } from '@capacitor/core';
-
 import { App as CapacitorApp } from '@capacitor/app';
 import { useTranslation } from 'react-i18next';
 
@@ -26,15 +26,51 @@ function App() {
   useBackgroundSync();
   useCloudSync();
 
+  const theme = useThemeStore((state) => state.theme);
+  const { checkUpdate, hasUpdate, latestVersion, setShowUpdateModal } = useAppUpdateStore();
+  const addToast = useToastStore((state) => state.addToast);
+  const { t } = useTranslation();
+
   useEffect(() => {
     // Initialize Auth state
     useAuthStore.getState().initialize();
   }, []);
 
-  const theme = useThemeStore((state) => state.theme);
-  const { checkUpdate, hasUpdate, latestVersion, setShowUpdateModal } = useAppUpdateStore();
-  const addToast = useToastStore((state) => state.addToast);
-  const { t } = useTranslation();
+  // Listen for Deep Link URL open events on Mobile (Capacitor Android APK)
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    const listenerPromise = CapacitorApp.addListener('appUrlOpen', async (data) => {
+      console.log('[Capacitor DeepLink] URL opened:', data.url);
+      if (data.url.includes('com.5tactiq.app://') || data.url.includes('access_token=')) {
+        const rawUrl = data.url;
+        const hashIndex = rawUrl.indexOf('#');
+        if (hashIndex !== -1) {
+          const hash = rawUrl.substring(hashIndex + 1);
+          const params = new URLSearchParams(hash);
+          const accessToken = params.get('access_token');
+          const refreshToken = params.get('refresh_token');
+
+          if (accessToken && refreshToken) {
+            const { error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+            if (!error) {
+              addToast({
+                message: t('auth.success_login', 'Đăng nhập thành công!'),
+                type: 'success',
+              });
+            }
+          }
+        }
+      }
+    });
+
+    return () => {
+      listenerPromise.then(l => l.remove());
+    };
+  }, [addToast, t]);
 
   useEffect(() => {
     // Check for updates on startup

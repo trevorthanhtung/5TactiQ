@@ -186,10 +186,20 @@ const Auth: React.FC = () => {
 
   const handleGoogleLogin = async () => {
     try {
+      const origin = window.location.origin;
+      const isCapacitor = origin.includes('capacitor://') || !!(window as any).Capacitor?.isNativePlatform?.();
+
+      let targetDomain = origin + window.location.pathname;
+      if (isCapacitor) {
+        targetDomain = 'com.5tactiq.app://google-auth';
+      } else if (origin.startsWith('file:') || origin.includes('app://') || origin === 'null') {
+        targetDomain = 'https://5tactiq.vercel.app';
+      }
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin + window.location.pathname
+          redirectTo: targetDomain
         }
       });
       if (error) throw error;

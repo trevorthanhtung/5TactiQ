@@ -62,6 +62,17 @@ document.addEventListener('touchend', (event) => {
   lastTouchEnd = now;
 }, { passive: false });
 
+const logWatermark = () => {
+  console.log(
+    '%c 5TactiQ %c \n%c thực hiện bởi thanhtungg. ',
+    'font-size: 40px; font-weight: 900; color: #F6F3EB; background-color: #3B4E38; padding: 4px 20px; border-radius: 8px; font-family: sans-serif;',
+    '',
+    'font-size: 14px; color: #3B4E38; font-style: italic; font-weight: bold; padding: 8px 0;'
+  );
+};
+
+logWatermark();
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
