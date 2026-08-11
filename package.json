@@ -81,9 +81,12 @@
       "package.json"
     ],
     "win": {
-      "target": "nsis",
-      "artifactName": "5TactiQ-Setup.exe",
+      "target": ["nsis", "portable"],
+      "artifactName": "${productName}-${version}-Setup.exe",
       "icon": "public/logo.png"
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-Portable.exe"
     },
     "nsis": {
       "oneClick": false,
