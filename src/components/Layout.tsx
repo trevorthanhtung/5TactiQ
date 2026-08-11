@@ -112,7 +112,7 @@ export default function Layout() {
                 }}
                 className={({ isActive }) => {
                   if (isTactics) {
-                    return `relative flex flex-col items-center justify-center w-14 h-14 rounded-full border-4 border-[#f8f8f6] shadow-lg -translate-y-5 transition-transform hover:scale-105 active:scale-95 z-50 shrink-0 bg-primary text-white ${isActive ? 'shadow-[0_0_15px_rgba(71,92,68,0.5)]' : ''}`;
+                    return `relative flex flex-col items-center justify-center w-14 h-14 rounded-full border-4 border-[#f8f8f6] shadow-lg -translate-y-5 transition-transform hover:scale-105 active:scale-95 z-50 shrink-0 bg-primary text-white ${isActive ? 'shadow-[0_0_15px_rgba(71,92,68,0.5)]' : 'animate-pulse-ring'}`;
                   }
                   return `flex flex-col items-center justify-center h-full transition-colors flex-1 py-1 ${isActive ? 'text-primary' : 'text-text-muted'}`;
                 }}
