@@ -18,8 +18,8 @@ function createWindow() {
     icon: path.join(__dirname, process.env.VITE_DEV_SERVER_URL ? 'public' : 'dist', 'logo.png'),
     title: "5TactiQ",
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
+      nodeIntegration: false,
+      contextIsolation: true
     }
   });
 
@@ -49,7 +49,11 @@ function createWindow() {
         decodedPath = 'index.html';
       }
       
-      const filePath = path.join(__dirname, 'dist', decodedPath);
+      const fs = require('fs');
+      let filePath = path.join(__dirname, 'dist', decodedPath);
+      if (!fs.existsSync(filePath)) {
+        filePath = path.join(__dirname, 'dist', 'index.html');
+      }
       return net.fetch(pathToFileURL(filePath).toString());
     });
 
