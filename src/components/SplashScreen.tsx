@@ -10,39 +10,16 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
   const [isFading, setIsFading] = useState(false);
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  const hasPlayedRef = React.useRef(false);
-  const ctxRef = React.useRef<AudioContext | null>(null);
+  useEffect(() => {
+    let played = false;
 
-  const triggerAudio = React.useCallback((isUserGesture = false) => {
-    if (hasPlayedRef.current) return;
-    try {
-      if (prefersReducedMotion) return;
+    const playSound = () => {
+      if (played || prefersReducedMotion) return;
+      try {
+        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+        if (!AudioCtx) return;
 
-      // 1. Pháo HTML5 Audio (Bằng file WAV chuẩn - Tự động phát khi trang được phép)
-      const audio = new Audio('./splash_sound.wav');
-      audio.volume = 0.6;
-      audio.play().then(() => {
-        hasPlayedRef.current = true;
-      }).catch(() => {
-        // Trình duyệt chặn autoplay thì im lặng, chờ cử chỉ người dùng
-      });
-
-      // Chỉ kích hoạt AudioContext khi có cử chỉ người dùng chính thức (ngừa warning Chrome)
-      if (!isUserGesture) return;
-
-      // 2. Web Audio API Backup Synthesizer
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioCtx) return;
-
-      if (!ctxRef.current || ctxRef.current.state === 'closed') {
-        ctxRef.current = new AudioCtx();
-      }
-      const ctx = ctxRef.current;
-
-      const startSoundEngine = () => {
-        if (!ctx || hasPlayedRef.current) return;
-        hasPlayedRef.current = true;
-
+        const ctx = new AudioCtx();
         const now = ctx.currentTime;
 
         // Master Gain Output (Âm lượng vừa phải 0.5)
@@ -50,7 +27,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
         masterGain.gain.setValueAtTime(0.5, now);
         masterGain.connect(ctx.destination);
 
-        // 1. HOLLYWOOD CINEMATIC TRAILER BOOM (Cú nổ điện ảnh trầm u mịt)
+        // 1. HOLLYWOOD CINEMATIC TRAILER BOOM (Cú nổ trầm u mịt)
         const subOsc = ctx.createOscillator();
         const subGain = ctx.createGain();
         subOsc.type = 'sine';
@@ -66,7 +43,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
         subOsc.start(now);
         subOsc.stop(now + 1.2);
 
-        // Noise Impact Thud (Tiếng va đập không khí)
+        // 2. NOISE IMPACT THUD (Tiếng va đập không khí)
         const bufferSize = Math.floor(ctx.sampleRate * 0.35);
         const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
         const output = noiseBuffer.getChannelData(0);
@@ -91,10 +68,9 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
         noiseGain.connect(masterGain);
         whiteNoise.start(now);
 
-        // 2. LUXURY AMBIENT GLASS PAD CHORD (Hợp âm Dm9 sang trọng kiểu PlayStation)
+        // 3. LUXURY AMBIENT PAD CHORD (Hợp âm Dm9 sang trọng kiểu PlayStation)
         const chordNotes = [146.83, 220.00, 349.23, 523.25, 659.25];
         chordNotes.forEach((freq, idx) => {
-          if (!ctx) return;
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           const padFilter = ctx.createBiquadFilter();
@@ -118,7 +94,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
           osc.stop(now + 1.5 + delay);
         });
 
-        // 3. SLEEK METALLIC HUD SNAP (Cú snap kim loại mỏng)
+        // 4. SLEEK METALLIC HUD SNAP (Cú snap kim loại mỏng)
         const snapOsc = ctx.createOscillator();
         const snapGain = ctx.createGain();
         snapOsc.type = 'triangle';
@@ -133,42 +109,27 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
         snapGain.connect(masterGain);
         snapOsc.start(now + 0.4);
         snapOsc.stop(now + 0.65);
-      };
 
-      if (ctx.state === 'suspended') {
-        ctx.resume().then(() => {
-          startSoundEngine();
-        }).catch(() => {
-          startSoundEngine();
-        });
-      } else {
-        startSoundEngine();
+        played = true;
+      } catch (e) {
+        console.warn('Audio play error', e);
       }
-    } catch (e) {
-      console.warn('Audio play failed', e);
-    }
-  }, [prefersReducedMotion]);
-
-  useEffect(() => {
-    // Tự động phát âm thanh qua file HTML5 Audio ngay khi vào trang (bằng false)
-    triggerAudio(false);
-
-    const handleGesture = () => {
-      triggerAudio(true);
-      removeListeners();
     };
 
-    const removeListeners = () => {
-      window.removeEventListener('pointerdown', handleGesture);
-      window.removeEventListener('touchstart', handleGesture);
-      window.removeEventListener('click', handleGesture);
-      window.removeEventListener('keydown', handleGesture);
+    // Thử phát ngay lập tức khi vừa load trang
+    playSound();
+
+    // Sự kiện mở khóa tự động nếu trình duyệt hoãn lại nhè nhẹ
+    const handleUnlock = () => {
+      playSound();
+      window.removeEventListener('pointerdown', handleUnlock);
+      window.removeEventListener('touchstart', handleUnlock);
+      window.removeEventListener('click', handleUnlock);
     };
 
-    window.addEventListener('pointerdown', handleGesture);
-    window.addEventListener('touchstart', handleGesture);
-    window.addEventListener('click', handleGesture);
-    window.addEventListener('keydown', handleGesture);
+    window.addEventListener('pointerdown', handleUnlock);
+    window.addEventListener('touchstart', handleUnlock);
+    window.addEventListener('click', handleUnlock);
 
     // Bắt đầu fade out sau 2.1s (khi animation gần xong)
     const fadeTimer = setTimeout(() => {
@@ -182,11 +143,13 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
     }, 2500);
 
     return () => {
-      removeListeners();
+      window.removeEventListener('pointerdown', handleUnlock);
+      window.removeEventListener('touchstart', handleUnlock);
+      window.removeEventListener('click', handleUnlock);
       clearTimeout(fadeTimer);
       clearTimeout(unmountTimer);
     };
-  }, [onComplete, triggerAudio]);
+  }, [onComplete, prefersReducedMotion]);
 
   if (!isVisible) return null;
 
