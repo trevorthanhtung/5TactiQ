@@ -75,11 +75,7 @@ const Auth: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden">
-      {/* Ambient Tactical Backdrop Glows */}
-      <div className="absolute -top-32 -left-32 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-secondary/10 rounded-full blur-3xl pointer-events-none" />
-
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 sm:p-6 relative">
       <div className="w-full max-w-md animate-fade-in-up relative z-10">
         {/* Logo/Brand Section */}
         <div className="text-center mb-8">
