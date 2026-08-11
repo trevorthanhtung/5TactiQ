@@ -54,10 +54,6 @@ function createWindow() {
     });
 
     win.loadURL('app://-/');
-    
-    win.webContents.on('console-message', (event, level, message, line, sourceId) => {
-      require('fs').appendFileSync(path.join(__dirname, 'electron-log.txt'), `[${level}] ${message} at ${sourceId}:${line}\n`);
-    });
   }
 }
 
