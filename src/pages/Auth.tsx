@@ -9,12 +9,12 @@ import { useTranslation } from 'react-i18next';
 import { BottomSheet } from '../components/ui/BottomSheet';
 
 const languages = [
-  { code: 'vi', name: 'Tiếng Việt', flag: '🇻🇳' },
-  { code: 'en', name: 'English', flag: '🇬🇧' },
-  { code: 'es', name: 'Español', flag: '🇪🇸' },
-  { code: 'pt', name: 'Português', flag: '🇵🇹' },
-  { code: 'ru', name: 'Русский', flag: '🇷🇺' },
-  { code: 'ar', name: 'العربية', flag: '🇸🇦' },
+  { code: 'vi', name: 'Tiếng Việt', label: 'VN' },
+  { code: 'en', name: 'English', label: 'GB' },
+  { code: 'es', name: 'Español', label: 'ES' },
+  { code: 'pt', name: 'Português', label: 'PT' },
+  { code: 'ru', name: 'Русский', label: 'RU' },
+  { code: 'ar', name: 'العربية', label: 'SA' },
 ];
 
 const Auth: React.FC = () => {
@@ -300,7 +300,7 @@ const Auth: React.FC = () => {
               className={`flex items-center justify-between p-4 border-2 transition-all cursor-pointer active:scale-95 ${i18n.language === lang.code ? 'border-primary bg-primary/5 text-primary shadow-[4px_4px_0px_0px_var(--color-primary)]' : 'border-border-main text-text-muted hover:border-primary/50'}`}
             >
               <div className="flex items-center gap-3">
-                <span className="text-2xl">{lang.flag}</span>
+                <span className="text-xs font-mono font-bold px-2 py-0.5 border border-border-main bg-surface-2">{lang.label}</span>
                 <span className="font-display font-bold uppercase tracking-wider">{lang.name}</span>
               </div>
               {i18n.language === lang.code && <ShieldCheck size={20} className="text-primary" />}

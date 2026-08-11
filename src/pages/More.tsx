@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { HeartPulse, History, Settings, ChevronRight, MapPin, RefreshCw, ShieldCheck, Info, Coffee, MessageSquare, Package, Eraser, AlertTriangle, Smartphone, BellRing, Globe, Check, Moon, Sun, Monitor, Crown } from 'lucide-react';
+import { HeartPulse, History, Settings, ChevronRight, MapPin, RefreshCw, ShieldCheck, Info, Coffee, MessageSquare, Package, Eraser, AlertTriangle, Smartphone, BellRing, Globe, Check, Moon, Sun, Monitor, Crown, LogOut, User as UserIcon, LogIn } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAppBadge } from '../hooks/useAppBadge';
 import { useWebPush } from '../hooks/useWebPush';
@@ -12,6 +12,7 @@ import SettingsModal from './Settings';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useThemeStore } from '../store/useThemeStore';
 import { useAppUpdateStore } from '../store/useAppUpdateStore';
+import { useAuthStore } from '../store/useAuthStore';
 import { APP_VERSION } from '../config/version';
 
 export default function More() {
@@ -29,6 +30,7 @@ export default function More() {
   const teamName = useSettingsStore(state => state.settings.teamName);
   const { theme, setTheme } = useThemeStore();
   const { hasUpdate, latestVersion, setShowUpdateModal } = useAppUpdateStore();
+  const { session, isGuest, signOut, setGuest } = useAuthStore();
   const [badgeCount, setBadgeCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -65,12 +67,12 @@ export default function More() {
   ];
 
   const languages = [
-    { code: 'vi', name: 'Tiếng Việt' },
-    { code: 'en', name: 'English' },
-    { code: 'es', name: 'Español' },
-    { code: 'pt', name: 'Português' },
-    { code: 'ar', name: 'العربية' },
-    { code: 'ru', name: 'Русский' }
+    { code: 'vi', name: 'Tiếng Việt', label: 'VN' },
+    { code: 'en', name: 'English', label: 'GB' },
+    { code: 'es', name: 'Español', label: 'ES' },
+    { code: 'pt', name: 'Português', label: 'PT' },
+    { code: 'ru', name: 'Русский', label: 'RU' },
+    { code: 'ar', name: 'العربية', label: 'SA' }
   ];
 
   const systemItems = [
@@ -229,6 +231,70 @@ export default function More() {
         <div className="hallmark-divider"></div>
       </header>
       
+      {/* Account Section */}
+      <div className="mb-8">
+        <h2 className="text-sm font-display font-bold text-text-muted uppercase tracking-widest mb-4">TÀI KHOẢN & XÁC THỰC</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Account Profile Card */}
+          <div className="hallmark-card p-4 flex items-center border-2 border-border-main hover:border-primary transition-all">
+            <div className="w-14 h-14 border-2 border-primary bg-primary/10 flex items-center justify-center mr-4 shrink-0 overflow-hidden">
+              {session?.user?.user_metadata?.avatar_url ? (
+                <img src={session.user.user_metadata.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <UserIcon size={28} className="text-primary" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <h3 className="font-display font-bold text-xl uppercase text-primary truncate">
+                  {session?.user?.user_metadata?.full_name || (session ? 'Thành viên 5TactiQ' : 'Tài khoản Khách')}
+                </h3>
+                <span className={`px-2 py-0.5 text-[10px] font-bold font-mono uppercase tracking-wide border ${session ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' : 'bg-amber-500/10 text-amber-600 border-amber-500/30'}`}>
+                  {session ? 'Đã xác thực' : 'Guest Local'}
+                </span>
+              </div>
+              <p className="text-xs text-text-muted mt-1 truncate">
+                {session?.user?.email || 'Dữ liệu chỉ lưu trên trình duyệt thiết bị này'}
+              </p>
+              {!session && (
+                <button
+                  onClick={() => setGuest(false)}
+                  className="mt-2 inline-flex items-center gap-1 text-xs font-display font-bold uppercase text-secondary hover:underline cursor-pointer"
+                >
+                  <LogIn size={14} /> Đăng nhập / Tạo tài khoản để lưu Cloud
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Logout Card */}
+          <div
+            onClick={async () => {
+              if (session) {
+                await signOut();
+                addToast({ message: 'Đã đăng xuất thành công', type: 'info' });
+              } else {
+                setGuest(false);
+              }
+            }}
+            className="hallmark-card p-4 flex items-center border-2 border-red-500/30 bg-red-500/5 hover:border-red-500 transition-all cursor-pointer group"
+          >
+            <div className="w-14 h-14 border-2 border-red-500/40 bg-red-500/10 flex items-center justify-center mr-4 shrink-0 group-hover:border-red-500 transition-colors">
+              <LogOut size={26} className="text-red-500" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-display font-bold text-xl uppercase text-red-600 group-hover:text-red-700 transition-colors">
+                {session ? 'ĐĂNG XUẤT TÀI KHOẢN' : 'ĐỔI CHẾ ĐỘ ĐĂNG NHẬP'}
+              </h3>
+              <p className="text-xs text-text-muted mt-1">
+                {session ? 'Thoát khỏi phiên làm việc hiện tại' : 'Mở lại trang lựa chọn đăng nhập Email/Google'}
+              </p>
+            </div>
+            <ChevronRight className="text-red-400 group-hover:text-red-600 transition-colors" />
+          </div>
+        </div>
+      </div>
+      
       <div className="mb-8">
         <h2 className="text-sm font-display font-bold text-text-muted uppercase tracking-widest mb-4">{t('more.section_features')}</h2>
         {renderSection(featureItems)}
@@ -368,7 +434,7 @@ export default function More() {
           </span>
         }
       >
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 p-1">
           {languages.map((lang) => (
             <button
               key={lang.code}
@@ -381,10 +447,13 @@ export default function More() {
                   duration: 3000
                 });
               }}
-              className={`flex items-center justify-between p-4 border-2 transition-all active:scale-95 ${i18n.language === lang.code ? 'border-primary bg-primary/5 text-primary shadow-[4px_4px_0px_0px_var(--color-primary)]' : 'border-border-main text-text-muted hover:border-primary/50'}`}
+              className={`flex items-center justify-between p-4 border-2 transition-all cursor-pointer active:scale-95 ${i18n.language === lang.code ? 'border-primary bg-primary/5 text-primary shadow-[4px_4px_0px_0px_var(--color-primary)]' : 'border-border-main text-text-muted hover:border-primary/50'}`}
             >
-              <span className="font-display uppercase tracking-wider font-bold text-lg">{lang.name}</span>
-              {i18n.language === lang.code && <Check size={24} className="text-primary" />}
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-mono font-bold px-2 py-0.5 border border-border-main bg-surface-2">{lang.label}</span>
+                <span className="font-display font-bold uppercase tracking-wider">{lang.name}</span>
+              </div>
+              {i18n.language === lang.code && <ShieldCheck size={20} className="text-primary" />}
             </button>
           ))}
         </div>
