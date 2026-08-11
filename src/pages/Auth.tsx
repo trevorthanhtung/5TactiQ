@@ -121,11 +121,9 @@ const Auth: React.FC = () => {
 
       <div className="w-full max-w-md animate-fade-in-up relative z-10 my-auto">
         {/* Logo/Brand Section */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-surface border-2 border-primary shadow-lg mb-4 p-3 transform -rotate-2 hover:rotate-0 transition-transform duration-300">
-            <img src="./logo.png" alt="5TactiQ Logo" className="w-full h-full object-contain drop-shadow-md" />
-          </div>
-          <h1 className="text-4xl font-display uppercase tracking-widest text-primary mb-1.5 font-bold">5TactiQ</h1>
+        <div className="text-center mb-6">
+          <img src="./logo.png" alt="5TactiQ Logo" className="w-20 h-20 object-contain mx-auto mb-3 drop-shadow-md" />
+          <h1 className="text-4xl font-display uppercase tracking-widest text-primary mb-1 font-bold">5TactiQ</h1>
           <p className="text-text-muted text-sm font-sans tracking-wide">
             {isLogin 
               ? t('auth.subtitle_login', 'Đăng nhập để đồng bộ chiến thuật & dữ liệu của bạn')
