@@ -3,21 +3,39 @@ import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
 import { useNavigate } from 'react-router-dom';
 import { useToastStore } from '../store/useToastStore';
-import { Mail, Key, LogIn, UserPlus, ShieldAlert, ArrowRight, Laptop, ShieldCheck } from 'lucide-react';
+import { useThemeStore } from '../store/useThemeStore';
+import { Mail, Key, LogIn, UserPlus, ShieldAlert, ArrowRight, Laptop, ShieldCheck, Sun, Moon, Monitor, Globe } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { BottomSheet } from '../components/ui/BottomSheet';
 
+const languages = [
+  { code: 'vi', name: 'Tiếng Việt', flag: '🇻🇳' },
+  { code: 'en', name: 'English', flag: '🇬🇧' },
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: 'pt', name: 'Português', flag: '🇵🇹' },
+  { code: 'ru', name: 'Русский', flag: '🇷🇺' },
+  { code: 'ar', name: 'العربية', flag: '🇸🇦' },
+];
+
 const Auth: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   
+  const { theme, setTheme } = useThemeStore();
   const { setGuest } = useAuthStore();
   const addToast = useToastStore(state => state.addToast);
   const navigate = useNavigate();
+
+  const toggleTheme = () => {
+    if (theme === 'dark') setTheme('light');
+    else if (theme === 'light') setTheme('dark');
+    else setTheme('dark');
+  };
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,6 +96,30 @@ const Auth: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 sm:p-6 relative">
+      {/* Top Right Quick Controls: Theme & Language */}
+      <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+        {/* Theme Toggle Button */}
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="w-10 h-10 bg-surface border-2 border-border-main hover:border-primary text-text-main flex items-center justify-center transition-colors shadow-sm cursor-pointer"
+          title={theme === 'dark' ? 'Giao diện Tối' : theme === 'light' ? 'Giao diện Sáng' : 'Giao diện Hệ thống'}
+        >
+          {theme === 'dark' ? <Moon size={18} className="text-sky-400" /> : theme === 'light' ? <Sun size={18} className="text-amber-500" /> : <Monitor size={18} className="text-text-muted" />}
+        </button>
+
+        {/* Language Picker Button */}
+        <button
+          type="button"
+          onClick={() => setIsLanguageOpen(true)}
+          className="h-10 px-3 bg-surface border-2 border-border-main hover:border-primary text-text-main flex items-center gap-2 text-xs font-display font-bold tracking-wider transition-colors shadow-sm cursor-pointer uppercase"
+          title="Đổi ngôn ngữ"
+        >
+          <Globe size={16} className="text-primary" />
+          <span>{languages.find(l => l.code === i18n.language)?.flag || '🌐'} {i18n.language.toUpperCase()}</span>
+        </button>
+      </div>
+
       <div className="w-full max-w-md animate-fade-in-up relative z-10 my-auto">
         {/* Logo/Brand Section */}
         <div className="text-center mb-8">
@@ -225,13 +267,48 @@ const Auth: React.FC = () => {
       >
         <div className="space-y-4 text-text-muted text-sm leading-relaxed p-1">
           <p>{t('more.privacy_msg_1', 'Ứng dụng 5TactiQ cam kết bảo vệ quyền riêng tư và an toàn dữ liệu của bạn.')}</p>
-          <p>{t('more.privacy_msg_2', 'Tất cả dữ liệu trận đấu, danh sách cầu thủ và sơ đồ chiến thuật được lưu trữ an toàn. Bạn có toàn quyền sao lưu, xuất hoặc xóa dữ liệu bất cứ lúc nào.')}</p>
+          <p>{t('more.privacy_msg_2', 'Dữ liệu khi đăng nhập (Email/Google) được mã hóa và đồng bộ an toàn trên đám mây Supabase Cloud. Ở chế độ Khách, dữ liệu được lưu trực tiếp trên thiết bị của bạn (Local Storage). Chúng tôi tuyệt đối không chia sẻ dữ liệu của bạn cho bất kỳ bên thứ ba nào.')}</p>
           <button 
             onClick={() => setShowTermsModal(false)}
-            className="w-full bg-primary text-white font-display uppercase tracking-widest py-3 border-2 border-primary hover:bg-primary/90 transition-colors mt-4 text-sm font-bold"
+            className="w-full bg-primary text-white font-display uppercase tracking-widest py-3 border-2 border-primary hover:bg-primary/90 transition-colors mt-4 text-sm font-bold cursor-pointer"
           >
             {t('common.close', 'ĐÓNG')}
           </button>
+        </div>
+      </BottomSheet>
+
+      {/* Language Selector Modal */}
+      <BottomSheet
+        isOpen={isLanguageOpen}
+        onClose={() => setIsLanguageOpen(false)}
+        title={
+          <span className="flex items-center gap-2">
+            <Globe size={24} className="text-primary" /> {t('more.language', 'Ngôn ngữ')}
+          </span>
+        }
+      >
+        <div className="flex flex-col gap-3 p-1">
+          {languages.map((lang) => (
+            <button
+              key={lang.code}
+              onClick={() => {
+                i18n.changeLanguage(lang.code);
+                setIsLanguageOpen(false);
+                addToast({ 
+                  type: 'success', 
+                  message: `${t('more.language_changed')} ${lang.name}`,
+                  duration: 3000
+                });
+              }}
+              className={`flex items-center justify-between p-4 border-2 transition-all cursor-pointer active:scale-95 ${i18n.language === lang.code ? 'border-primary bg-primary/5 text-primary shadow-[4px_4px_0px_0px_var(--color-primary)]' : 'border-border-main text-text-muted hover:border-primary/50'}`}
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">{lang.flag}</span>
+                <span className="font-display font-bold uppercase tracking-wider">{lang.name}</span>
+              </div>
+              {i18n.language === lang.code && <ShieldCheck size={20} className="text-primary" />}
+            </button>
+          ))}
         </div>
       </BottomSheet>
     </div>
