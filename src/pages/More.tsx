@@ -283,7 +283,9 @@ export default function More() {
             <>
               {alertInfo?.image && (
                 <div className="mb-4 flex justify-center">
-                  <img src={alertInfo.image} alt="QR Code" className="w-full max-w-[200px] h-auto object-contain border-2 border-border-main p-2 bg-surface rounded-lg shadow-sm" />
+                  <div className="w-full max-w-[200px] p-2 bg-white rounded-xl border-2 border-border-main shadow-sm overflow-hidden flex justify-center items-center">
+                    <img src={alertInfo.image} alt="QR Code" className="w-full h-auto object-contain rounded-lg" />
+                  </div>
                 </div>
               )}
               <p className="text-text-muted text-sm md:text-base font-sans mb-6 whitespace-pre-line leading-relaxed">{alertInfo?.message}</p>
