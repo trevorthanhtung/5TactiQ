@@ -83,7 +83,7 @@ export function useCloudSync() {
     };
   }, [applyIncomingPayload]);
 
-  // 2. Setup Persistent Supabase Realtime Channel for cross-device updates
+  // 2. Setup Persistent Supabase Realtime Channel & Postgres Changes for cross-device real-time updates
   useEffect(() => {
     if (!session?.user?.id) return;
 
@@ -92,6 +92,21 @@ export function useCloudSync() {
     supabaseChannelRef.current = channel;
 
     channel
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_sync',
+          filter: `user_id=eq.${session.user.id}`,
+        },
+        async (payload: any) => {
+          console.log('[Supabase Postgres Changes] user_sync updated:', payload);
+          if (payload?.new?.data) {
+            await applyIncomingPayload(payload.new.data, payload.new.updated_at);
+          }
+        }
+      )
       .on('broadcast', { event: 'cloud_sync_updated' }, async (payload) => {
         console.log('[Realtime Supabase] Received cloud_sync_updated event', payload);
         if (payload?.payload?.data) {
@@ -261,7 +276,7 @@ export function useCloudSync() {
     }
   }, [session, addToast, t]);
 
-  // Auto-subscribe to all Zustand stores to trigger silent cloud sync on ANY mutation
+  // 3. Auto-subscribe to all Zustand stores to trigger silent cloud sync on ANY mutation
   useEffect(() => {
     if (!session?.user?.id) return;
 
@@ -288,6 +303,36 @@ export function useCloudSync() {
       unsubSettings();
       clearTimeout(timer);
     };
+  }, [session?.user?.id, syncNow]);
+
+  // 4. Auto-sync on Window Focus & Tab Visibility Change
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    const handleFocus = () => {
+      syncNow(false);
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleFocus);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleFocus);
+    };
+  }, [session?.user?.id, syncNow]);
+
+  // 5. Silent Background Heartbeat (Checks & syncs automatically every 5 seconds)
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    syncNow(false);
+
+    const interval = setInterval(() => {
+      syncNow(false);
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, [session?.user?.id, syncNow]);
 
   // Global Capture Phase Keyboard Shortcut Listener (Alt+S, F9, Ctrl+Shift+S)
