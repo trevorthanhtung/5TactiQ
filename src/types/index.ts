@@ -117,6 +117,7 @@ export interface Venue {
   name: string;
   address: string;
   phone: string;
+  note?: string;
 }
 
 export interface TeamSettings {

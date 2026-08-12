@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useInstallPrompt } from '../../hooks/useInstallPrompt';
 import { X, Download, Share } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useAppUpdateStore } from '../../store/useAppUpdateStore';
+import { useAuthStore } from '../../store/useAuthStore';
 
 export default function InstallPrompt() {
+  const location = useLocation();
+  const { session, isGuest } = useAuthStore();
   const { t } = useTranslation();
   const { isInstallable, promptInstall } = useInstallPrompt();
   const [isVisible, setIsVisible] = useState(false);
@@ -14,7 +18,14 @@ export default function InstallPrompt() {
   const { showUpdateModal, setShowUpdateModal, latestVersion } = useAppUpdateStore();
   const isUpdate = showUpdateModal;
 
+  const isLandingPage = location.pathname === '/landing' || 
+                        location.pathname === '/landing/' ||
+                        window.location.hash.includes('landing') || 
+                        (!session && !isGuest);
+
   useEffect(() => {
+    if (isLandingPage) return;
+
     import('@capacitor/core').then(({ Capacitor }) => {
       // Hide if already running as an installed app (Capacitor, Electron, or PWA Standalone)
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches || ('standalone' in navigator && (navigator as any).standalone === true);
@@ -47,7 +58,11 @@ export default function InstallPrompt() {
       }, 3000);
       return () => clearTimeout(timer);
     });
-  }, []);
+  }, [isLandingPage]);
+
+  if (isLandingPage) {
+    return null;
+  }
 
   const handleDismiss = () => {
     if (isUpdate) {
@@ -71,7 +86,7 @@ export default function InstallPrompt() {
           <p className="text-xs text-text-muted mb-3 font-sans">
             {platform === 'ios' ? t('install_prompt.desc_ios_1') : t('install_prompt.desc_mac_1', 'Mở menu trình duyệt (Safari/Chrome)')} <br/>
             <span className="font-bold text-primary">
-              {platform === 'ios' ? t('install_prompt.desc_ios_2') : t('install_prompt.desc_mac_2', 'Chọn \\\'Add to Dock\\\' hoặc \\\'Install App\\\' để cài đặt')}
+              {platform === 'ios' ? t('install_prompt.desc_ios_2') : t('install_prompt.desc_mac_2', 'Chọn \'Add to Dock\' hoặc \'Install App\' để cài đặt')}
             </span>
           </p>
         </>
@@ -85,10 +100,10 @@ export default function InstallPrompt() {
             {t('install_prompt.desc_apk', 'Tải bản App chính thức (APK) để có trải nghiệm cực mượt và đầy đủ tính năng nhất!')}
           </p>
           <button 
-            onClick={() => handleDownload('https://github.com/trevorthanhtung/5TactiQ/releases/download/latest/5TactiQ.apk')}
+            onClick={() => handleDownload('https://github.com/trevorthanhtung/5TactiQ/releases/latest/download/5TactiQ.apk')}
             className="w-full hallmark-btn bg-primary text-white py-2 text-xs flex items-center justify-center gap-1"
           >
-            <Download size={14} /> {t('install_prompt.download_apk', 'TẢI APK NGAY')}
+            <Download size={14} /> {t('install_prompt.download_apk', 'TẢI FILE APK')}
           </button>
         </>
       );
@@ -98,10 +113,10 @@ export default function InstallPrompt() {
       return (
         <>
           <p className="text-xs text-text-muted mb-3 font-sans">
-            {t('install_prompt.desc_windows', 'Tải phần mềm cài đặt (.exe) độc lập dành riêng cho Windows. Tận hưởng hiệu năng tối đa!')}
+            {t('install_prompt.desc_windows', 'Tải phần mềm (.exe) dành riêng cho Windows. Tận hưởng hiệu năng tối đa!')}
           </p>
           <button 
-            onClick={() => handleDownload('https://github.com/trevorthanhtung/5TactiQ/releases/download/latest/5TactiQ-Setup.exe')}
+            onClick={() => handleDownload('https://github.com/trevorthanhtung/5TactiQ/releases/latest/download/5TactiQ-1.0.0-Portable.exe')}
             className="w-full hallmark-btn bg-primary text-white py-2 text-xs flex items-center justify-center gap-1"
           >
             <Download size={14} /> {t('install_prompt.download_windows', 'TẢI BẢN WINDOWS (.EXE)')}
@@ -117,13 +132,13 @@ export default function InstallPrompt() {
             {t('install_prompt.desc_linux', 'Tải phần mềm độc lập (.AppImage) dành riêng cho Linux. Tải về chạy luôn không cần cài đặt!')}
           </p>
           <button 
-            onClick={() => handleDownload('https://github.com/trevorthanhtung/5TactiQ/releases/download/latest/5TactiQ.AppImage')}
+            onClick={() => handleDownload('https://github.com/trevorthanhtung/5TactiQ/releases/latest/download/5TactiQ.AppImage')}
             className="w-full hallmark-btn bg-primary text-white py-2 text-xs flex items-center justify-center gap-1"
           >
-            <Download size={14} /> {t('install_prompt.download_linux', 'TẢI BẢN LINUX')}
+            <Download size={14} /> {t('install_prompt.download_linux', 'TẢI BẢN LINUX (APPIMAGE)')}
           </button>
         </>
-    );
+      );
     }
 
     // Default / Web Fallback (PWA)

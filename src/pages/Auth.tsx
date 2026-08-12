@@ -673,7 +673,7 @@ const Auth: React.FC = () => {
                 <span className="text-xs font-mono font-bold px-2 py-0.5 border border-border-main bg-surface-2">{lang.label}</span>
                 <span className="font-display font-bold uppercase tracking-wider">{lang.name}</span>
               </div>
-              {i18n.language === lang.code && <ShieldCheck size={20} className="text-primary" />}
+              {i18n.language === lang.code && <Check size={20} className="text-primary stroke-[3]" />}
             </button>
           ))}
         </div>

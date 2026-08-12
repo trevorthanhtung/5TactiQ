@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Landmark, Shirt, MapPin } from 'lucide-react';
+import { ArrowLeft, Landmark, Shirt, MapPin, Calculator } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
@@ -42,10 +42,16 @@ export default function Operations() {
             <div className="hallmark-card bg-primary text-white p-6 text-center border-primary">
                <div className="text-sm font-bold uppercase tracking-widest text-accent mb-2">{t('operations.current_balance', 'Số dư quỹ hiện tại')}</div>
                <div className="text-5xl @sm:text-7xl font-display">2.500.000đ</div>
-               <button className="mt-6 bg-accent text-primary px-6 py-2 font-display uppercase tracking-widest hover:bg-surface transition-colors">
-                 {t('operations.add_tx_btn', '+ Thêm thu/chi')}
-               </button>
+               <div className="flex items-center justify-center gap-3 mt-6 flex-wrap">
+                 <button className="bg-accent text-primary px-6 py-2 font-display uppercase tracking-widest hover:bg-surface transition-colors">
+                   {t('operations.add_tx_btn', '+ Thêm thu/chi')}
+                 </button>
+                 <Link to="/fee-splitter" className="bg-surface text-primary border border-surface/20 px-6 py-2 font-display uppercase tracking-widest hover:bg-white transition-colors flex items-center gap-2">
+                   <Calculator size={18} /> {t('fee_splitter.title', 'Chia tiền sân')}
+                 </Link>
+               </div>
             </div>
+
             
             <h3 className="font-display text-2xl uppercase text-primary pt-4">{t('operations.recent_history', 'Lịch sử gần đây')}</h3>
             <div className="space-y-0 border-t-2 border-border-main">

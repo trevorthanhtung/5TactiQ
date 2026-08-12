@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { HeartPulse, History, Settings, ChevronRight, MapPin, RefreshCw, ShieldCheck, Info, Coffee, MessageSquare, Package, Eraser, AlertTriangle, Smartphone, BellRing, Globe, Check, Moon, Sun, Monitor, Crown, LogOut, User as UserIcon, LogIn, Save, Cloud, CloudOff, Wifi, WifiOff, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { HeartPulse, History, Settings, ChevronRight, MapPin, RefreshCw, ShieldCheck, Info, Coffee, MessageSquare, Package, Eraser, AlertTriangle, Smartphone, BellRing, Globe, Check, Moon, Sun, Monitor, Crown, LogOut, User as UserIcon, LogIn, Save, Cloud, CloudOff, Wifi, WifiOff, CheckCircle2, AlertCircle, Calculator } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { useAppBadge } from '../hooks/useAppBadge';
@@ -18,6 +18,7 @@ import { useCloudSync } from '../hooks/useCloudSync';
 import { APP_VERSION } from '../config/version';
 
 export default function More() {
+  const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
@@ -54,7 +55,7 @@ export default function More() {
       setEditFullName(currentName);
       setIsProfileOpen(true);
     } else {
-      setGuest(false);
+      navigate('/auth');
     }
   };
 
@@ -119,6 +120,12 @@ export default function More() {
     });
   };
   const featureItems = [
+    { 
+      icon: <Calculator className="text-blue-500" size={24} />, 
+      title: t('fee_splitter.title', 'CHIA TIỀN SÂN'), 
+      path: '/fee-splitter', 
+      desc: t('fee_splitter.subtitle', 'Tính toán & chia tiền sân, tiền nước cho các trận đấu') 
+    },
     { icon: <MapPin className="text-amber-600" size={24} />, title: t('more.venues_title'), path: '/venues', desc: t('more.venues_desc') },
     { icon: <HeartPulse className="text-rose-500" size={24} />, title: t('more.fitness_title'), path: '/fitness', desc: t('more.fitness_desc') },
     { 
@@ -134,6 +141,7 @@ export default function More() {
       desc: t('more.tier_desc')
     },
   ];
+
 
   const languages = [
     { code: 'vi', name: 'Tiếng Việt', label: 'VN' },
@@ -332,7 +340,10 @@ export default function More() {
               </p>
               {!session && (
                 <button
-                  onClick={() => setGuest(false)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate('/auth');
+                  }}
                   className="mt-2 inline-flex items-center gap-1 text-xs font-display font-bold uppercase text-secondary hover:underline cursor-pointer"
                 >
                   <LogIn size={14} /> {t('more.login_signup_btn', 'Đăng nhập / Tạo tài khoản')}
@@ -372,6 +383,7 @@ export default function More() {
                 onConfirm: async () => {
                   await signOut();
                   addToast({ message: t('more.logout_success', 'Đã đăng xuất tài khoản thành công'), type: 'info' });
+                  navigate('/auth');
                 }
               });
             }}
@@ -419,7 +431,8 @@ export default function More() {
               <div className="bg-primary text-[#f6f4ed] px-4 py-1.5 rounded-sm text-xs font-bold tracking-widest mb-4">{t('more.version_title')} {APP_VERSION}</div>
               <p className="text-text-muted text-sm leading-relaxed mb-4">{t('more.app_info_desc')}</p>
               <div className="w-12 h-1 bg-primary/20 mb-4 rounded-full"></div>
-              <a href="https://www.youtube.com/@kat.thanhtungg" target="_blank" rel="noopener noreferrer" className="text-gray-400 text-xs font-medium uppercase tracking-wider hover:text-primary transition-colors cursor-pointer">{t('more.app_info_author')}</a>
+              <a href="https://tranthanhtung-trevor.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-gray-400 text-xs font-medium uppercase tracking-wider hover:text-primary transition-colors cursor-pointer">{t('more.app_info_author')}</a>
+
             </div>
           ) : (
             <>
@@ -528,7 +541,7 @@ export default function More() {
                 <span className="text-xs font-mono font-bold px-2 py-0.5 border border-border-main bg-surface-2">{lang.label}</span>
                 <span className="font-display font-bold uppercase tracking-wider">{lang.name}</span>
               </div>
-              {i18n.language === lang.code && <ShieldCheck size={20} className="text-primary" />}
+              {i18n.language === lang.code && <Check size={20} className="text-primary stroke-[3]" />}
             </button>
           ))}
         </div>

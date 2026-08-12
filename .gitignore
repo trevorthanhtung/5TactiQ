@@ -23,4 +23,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-dist_electron/  
+dist_electron/
+app_unpacked/
+*.cjs
+*.txt
+*.patch

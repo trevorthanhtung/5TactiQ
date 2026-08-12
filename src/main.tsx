@@ -4,6 +4,7 @@ import './index.css'
 import App from './App.tsx'
 import { hapticImpact } from './utils/haptics'
 import './lib/i18n'; // Import i18n configuration
+import { CloudSyncProvider } from './hooks/useCloudSync';
 
 // Global Micro-interactions (Ripple + Haptics)
 document.addEventListener('pointerdown', (e) => {
@@ -75,6 +76,8 @@ logWatermark();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <CloudSyncProvider>
+      <App />
+    </CloudSyncProvider>
   </StrictMode>,
 )

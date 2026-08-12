@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
 import { useToastStore } from '../store/useToastStore';
@@ -12,7 +12,16 @@ import { useTranslation } from 'react-i18next';
 
 export type SyncStatusType = 'synced' | 'syncing' | 'pending' | 'offline' | 'error';
 
-export function useCloudSync() {
+interface CloudSyncContextType {
+  isOnline: boolean;
+  syncStatus: SyncStatusType;
+  lastSyncedAt: string | null;
+  syncNow: (showToast?: boolean) => Promise<void>;
+}
+
+const CloudSyncContext = createContext<CloudSyncContextType | null>(null);
+
+export function CloudSyncProvider({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
   const session = useAuthStore((state) => state.session);
   const addToast = useToastStore((state) => state.addToast);
@@ -26,6 +35,8 @@ export function useCloudSync() {
   const supabaseChannelRef = useRef<any>(null);
   const localBcRef = useRef<BroadcastChannel | null>(null);
   const isInternalSyncRef = useRef<boolean>(false);
+  const isSyncingRef = useRef<boolean>(false);
+  const lastPushedPayloadRef = useRef<string | null>(null);
 
   // Track online / offline status
   useEffect(() => {
@@ -47,19 +58,25 @@ export function useCloudSync() {
     };
   }, [syncStatus]);
 
-  // Helper function to apply incoming cloud payload
+  // Helper function to apply incoming cloud payload safely
   const applyIncomingPayload = useCallback(async (payloadStr: string | object, timestamp?: string) => {
     const parsed = parseBackupData(payloadStr);
-    if (parsed) {
-      isInternalSyncRef.current = true;
+    if (!parsed) return;
+
+    isInternalSyncRef.current = true;
+    try {
       await importSelectedData(parsed, STORAGE_KEYS, 'overwrite');
       const time = timestamp || new Date().toISOString();
       localStorage.setItem('katfc_last_synced_at', time);
       setLastSyncedAt(time);
       setSyncStatus('synced');
+      lastPushedPayloadRef.current = await exportData();
+    } catch (err) {
+      console.error('[CloudSync] Failed to apply incoming payload:', err);
+    } finally {
       setTimeout(() => {
         isInternalSyncRef.current = false;
-      }, 300);
+      }, 1000);
     }
   }, []);
 
@@ -72,8 +89,14 @@ export function useCloudSync() {
 
     bc.onmessage = async (event) => {
       if (event.data?.type === 'cloud_sync_updated' && event.data?.payload) {
-        console.log('[Local BC] Received sync update from another tab/window', event.data);
-        await applyIncomingPayload(event.data.payload, event.data.timestamp);
+        const localTime = localStorage.getItem('katfc_last_synced_at')
+          ? new Date(localStorage.getItem('katfc_last_synced_at')!).getTime()
+          : 0;
+        const incomingTime = event.data.timestamp ? new Date(event.data.timestamp).getTime() : 0;
+        if (incomingTime > localTime + 500) {
+          console.log('[Local BC] Received sync update from another tab/window', event.data);
+          await applyIncomingPayload(event.data.payload, event.data.timestamp);
+        }
       }
     };
 
@@ -88,41 +111,83 @@ export function useCloudSync() {
     if (!session?.user?.id) return;
 
     const channelName = `cloud-sync-${session.user.id}`;
+    const realtimeTopic = `realtime:${channelName}`;
+
+    // Clean up any existing channel with the same topic/name to prevent duplicate subscription errors
+    const existing = supabase.getChannels().find(
+      (c) => c.topic === realtimeTopic || (c as any).name === channelName
+    );
+    if (existing) {
+      supabase.removeChannel(existing);
+      (supabase.realtime as any).channels = (supabase.realtime as any).channels.filter(
+        (c: any) => c.topic !== realtimeTopic && c.name !== channelName
+      );
+    }
+
     const channel = supabase.channel(channelName);
     supabaseChannelRef.current = channel;
 
-    channel
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'user_sync',
-          filter: `user_id=eq.${session.user.id}`,
-        },
-        async (payload: any) => {
-          console.log('[Supabase Postgres Changes] user_sync updated:', payload);
-          if (payload?.new?.data) {
-            await applyIncomingPayload(payload.new.data, payload.new.updated_at);
+    try {
+      channel
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'user_sync',
+            filter: `user_id=eq.${session.user.id}`,
+          },
+          async (payload: any) => {
+            const localTime = localStorage.getItem('katfc_last_synced_at')
+              ? new Date(localStorage.getItem('katfc_last_synced_at')!).getTime()
+              : 0;
+            const incomingTime = payload?.new?.updated_at ? new Date(payload.new.updated_at).getTime() : 0;
+            if (incomingTime > localTime + 1000 && payload?.new?.data) {
+              console.log('[Supabase Postgres Changes] user_sync updated:', payload);
+              await applyIncomingPayload(payload.new.data, payload.new.updated_at);
+            }
           }
-        }
-      )
-      .on('broadcast', { event: 'cloud_sync_updated' }, async (payload) => {
-        console.log('[Realtime Supabase] Received cloud_sync_updated event', payload);
-        if (payload?.payload?.data) {
-          await applyIncomingPayload(payload.payload.data, payload.payload.timestamp);
-        }
-      })
-      .subscribe();
+        )
+        .on('broadcast', { event: 'cloud_sync_updated' }, async (payload) => {
+          const localTime = localStorage.getItem('katfc_last_synced_at')
+            ? new Date(localStorage.getItem('katfc_last_synced_at')!).getTime()
+            : 0;
+          const incomingTime = payload?.payload?.timestamp ? new Date(payload.payload.timestamp).getTime() : 0;
+          if (incomingTime > localTime + 1000) {
+            console.log('[Realtime Supabase] Received cloud_sync_updated event', payload);
+            if (payload?.payload?.data) {
+              await applyIncomingPayload(payload.payload.data, payload.payload.timestamp);
+            } else {
+              const { data } = await supabase
+                .from('user_sync')
+                .select('data, updated_at')
+                .eq('user_id', session.user.id)
+                .maybeSingle();
+              if (data?.data) {
+                await applyIncomingPayload(data.data, data.updated_at);
+              }
+            }
+          }
+        })
+        .subscribe();
+    } catch (err) {
+      console.warn('[useCloudSync] Error subscribing to channel:', err);
+    }
 
     return () => {
-      supabase.removeChannel(channel);
-      supabaseChannelRef.current = null;
+      if (supabaseChannelRef.current) {
+        supabase.removeChannel(supabaseChannelRef.current);
+        supabaseChannelRef.current = null;
+      }
     };
   }, [session?.user?.id, applyIncomingPayload]);
 
-  // Execute Smart 2-Way Sync (PULL if Cloud is newer, PUSH if Local is newer)
+  // Execute Smart 2-Way Sync (PULL if Cloud is newer, PUSH if Local is modified)
   const syncNow = useCallback(async (showToast: boolean = true) => {
+    if (isSyncingRef.current || isInternalSyncRef.current) {
+      return;
+    }
+
     if (!navigator.onLine) {
       setIsOnline(false);
       setSyncStatus('offline');
@@ -145,13 +210,14 @@ export function useCloudSync() {
       return;
     }
 
+    isSyncingRef.current = true;
     setSyncStatus('syncing');
 
     try {
       const localTimestampStr = localStorage.getItem('katfc_last_synced_at');
       const localTime = localTimestampStr ? new Date(localTimestampStr).getTime() : 0;
 
-      // 1. Fetch latest Cloud snapshot from DB & User Metadata to find the absolute newest
+      // 1. Fetch latest Cloud snapshot from DB
       let dbDataObj: any = null;
       let dbTime = 0;
       try {
@@ -167,30 +233,28 @@ export function useCloudSync() {
         }
       } catch (e) {}
 
+      // Check legacy session metadata if DB is empty
       let metaDataObj: any = null;
       let metaTime = 0;
       const currentMeta = session.user?.user_metadata;
-      if (currentMeta?.cloud_backup) {
+      if (!dbDataObj && currentMeta?.cloud_backup) {
         metaDataObj = parseBackupData(currentMeta.cloud_backup);
         metaTime = currentMeta.last_synced_at ? new Date(currentMeta.last_synced_at).getTime() : 0;
       }
 
-      // Choose newest cloud payload
-      let bestCloudObj = dbDataObj;
-      let bestCloudTime = dbTime;
-      if (metaTime > dbTime && metaDataObj) {
-        bestCloudObj = metaDataObj;
-        bestCloudTime = metaTime;
-      }
+      const bestCloudObj = dbDataObj || metaDataObj;
+      const bestCloudTime = dbTime || metaTime;
 
       // 2. Decision: If Cloud data exists and is NEWER than local timestamp, PULL Cloud data!
       if (bestCloudObj && bestCloudTime > localTime + 1000) {
         console.log('[Smart Sync] Cloud data is newer. Pulling from Cloud...', { bestCloudTime, localTime });
+        isInternalSyncRef.current = true;
         await importSelectedData(bestCloudObj, STORAGE_KEYS, 'overwrite');
         const time = new Date(bestCloudTime).toISOString();
         localStorage.setItem('katfc_last_synced_at', time);
         setLastSyncedAt(time);
         setSyncStatus('synced');
+        lastPushedPayloadRef.current = await exportData();
 
         if (showToast) {
           addToast({
@@ -201,38 +265,36 @@ export function useCloudSync() {
 
         setTimeout(() => {
           isInternalSyncRef.current = false;
-        }, 300);
+        }, 1000);
         return;
       }
 
-      // 3. Otherwise (Local is newer or equal), PUSH Local data to Cloud!
-      console.log('[Smart Sync] Local data is latest. Pushing to Cloud...');
+      // 3. Otherwise, check if Local data has changed since last push
       const jsonPayloadStr = await exportData();
+      if (lastPushedPayloadRef.current && jsonPayloadStr === lastPushedPayloadRef.current) {
+        console.log('[Smart Sync] Local data unchanged. Skipping push.');
+        setSyncStatus('synced');
+        return;
+      }
+
+      console.log('[Smart Sync] Local data modified. Pushing to Cloud...');
       const timestamp = new Date().toISOString();
       const payloadObj = parseBackupData(jsonPayloadStr) || JSON.parse(jsonPayloadStr);
 
-      // Save to DB
-      try {
-        await supabase.from('user_sync').upsert({
-          user_id: session.user.id,
-          data: payloadObj,
-          updated_at: timestamp,
-        });
-      } catch (e) {}
+      // Save to user_sync table ONLY (do NOT call auth.updateUser to avoid 429 & 431 header errors)
+      const { error: upsertError } = await supabase.from('user_sync').upsert({
+        user_id: session.user.id,
+        data: payloadObj,
+        updated_at: timestamp,
+      });
 
-      // Save to Metadata as parallel backup (preserving full_name and other user metadata)
-      try {
-        const existingMeta = session.user?.user_metadata || {};
-        await supabase.auth.updateUser({
-          data: {
-            ...existingMeta,
-            cloud_backup: payloadObj,
-            last_synced_at: timestamp,
-          },
-        });
-      } catch (e) {}
+      if (upsertError) {
+        throw upsertError;
+      }
 
-      // 4. Broadcast to Local Tabs via BroadcastChannel
+      lastPushedPayloadRef.current = jsonPayloadStr;
+
+      // Broadcast to Local Tabs via BroadcastChannel
       if (localBcRef.current) {
         localBcRef.current.postMessage({
           type: 'cloud_sync_updated',
@@ -241,19 +303,25 @@ export function useCloudSync() {
         });
       }
 
-      // 5. Broadcast to Remote Devices via Persistent Supabase Channel
-      if (supabaseChannelRef.current) {
-        await supabaseChannelRef.current.send({
-          type: 'broadcast',
-          event: 'cloud_sync_updated',
-          payload: {
-            data: payloadObj,
-            timestamp,
-          },
-        });
+      // Broadcast to Remote Devices via Persistent Supabase Channel (Lightweight ping)
+      if (
+        supabaseChannelRef.current &&
+        (supabaseChannelRef.current.state === 'joined' || supabaseChannelRef.current.state === 'SUBSCRIBED')
+      ) {
+        try {
+          await supabaseChannelRef.current.send({
+            type: 'broadcast',
+            event: 'cloud_sync_updated',
+            payload: {
+              timestamp,
+            },
+          });
+        } catch (err) {
+          console.warn('[useCloudSync] Broadcast send failed:', err);
+        }
       }
 
-      // 6. Update local timestamp
+      // Update local timestamp
       localStorage.setItem('katfc_last_synced_at', timestamp);
       setLastSyncedAt(timestamp);
       setSyncStatus('synced');
@@ -273,20 +341,22 @@ export function useCloudSync() {
           type: 'error',
         });
       }
+    } finally {
+      isSyncingRef.current = false;
     }
   }, [session, addToast, t]);
 
-  // 3. Auto-subscribe to all Zustand stores to trigger silent cloud sync on ANY mutation
+  // 3. Auto-subscribe to Zustand stores to trigger debounced cloud sync on mutation
   useEffect(() => {
     if (!session?.user?.id) return;
 
     let timer: ReturnType<typeof setTimeout>;
     const triggerDebouncedSync = () => {
-      if (isInternalSyncRef.current) return;
+      if (isInternalSyncRef.current || isSyncingRef.current) return;
       clearTimeout(timer);
       timer = setTimeout(() => {
         syncNow(false);
-      }, 800);
+      }, 1500);
     };
 
     const unsubPlayer = usePlayerStore.subscribe(triggerDebouncedSync);
@@ -322,7 +392,7 @@ export function useCloudSync() {
     };
   }, [session?.user?.id, syncNow]);
 
-  // 5. Silent Background Heartbeat (Checks & syncs automatically every 5 seconds)
+  // 5. Background Heartbeat (Checks & syncs automatically every 30 seconds)
   useEffect(() => {
     if (!session?.user?.id) return;
 
@@ -330,7 +400,7 @@ export function useCloudSync() {
 
     const interval = setInterval(() => {
       syncNow(false);
-    }, 5000);
+    }, 30000);
 
     return () => clearInterval(interval);
   }, [session?.user?.id, syncNow]);
@@ -356,10 +426,17 @@ export function useCloudSync() {
     return () => window.removeEventListener('keydown', handleKeyDown, true);
   }, [syncNow]);
 
-  return {
-    isOnline,
-    syncStatus,
-    lastSyncedAt,
-    syncNow,
-  };
+  return (
+    <CloudSyncContext.Provider value={{ isOnline, syncStatus, lastSyncedAt, syncNow }}>
+      {children}
+    </CloudSyncContext.Provider>
+  );
+}
+
+export function useCloudSync() {
+  const context = useContext(CloudSyncContext);
+  if (!context) {
+    throw new Error('useCloudSync must be used within a CloudSyncProvider');
+  }
+  return context;
 }

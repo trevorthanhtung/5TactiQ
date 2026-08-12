@@ -1215,6 +1215,38 @@ export default function Tactics() {
               >
                 <Users size={20} className="-scale-x-100" />
               </button>
+              <button
+                onClick={() => {
+                  if (dimensions.width === 0) return;
+                  const hasBall = positions.some(p => p.isBall);
+                  if (hasBall) {
+                    const newPos = positions.filter(p => !p.isBall);
+                    setPositions(newPos);
+                    setTimeout(() => saveHistory(newPos, lines), 0);
+                  } else {
+                    const w = dimensions.width;
+                    const h = dimensions.height;
+                    const l = dimensions.isLandscape;
+                    const getPos = (rx: number, ry: number) => {
+                      if (l) return { x: (1 - ry) * w, y: rx * h };
+                      return { x: rx * w, y: ry * h };
+                    };
+                    const ballObj = { id: `ball-${Date.now()}`, isBall: true, ...getPos(0.5, 0.5) };
+                    const newPos = [...positions, ballObj];
+                    setPositions(newPos);
+                    setTimeout(() => saveHistory(newPos, lines), 0);
+                  }
+                }}
+                className={`p-2 transition-all flex items-center justify-center w-full aspect-square border ${positions.some(p => p.isBall) ? 'bg-amber-500 text-white border-amber-500 shadow-inner' : 'text-text-muted border-transparent hover:text-amber-500 hover:bg-amber-500/10'}`}
+                title={t('tactics.tool_toggle_ball', 'Quả bóng')}
+              >
+                <div className="relative w-5 h-5 flex items-center justify-center">
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="9" />
+                    <polygon points="12 7 15 9 14 12 10 12 9 9" />
+                  </svg>
+                </div>
+              </button>
               <div className="w-8 h-px bg-primary/20 mx-auto my-1"></div>
               <button
                 onClick={() => {

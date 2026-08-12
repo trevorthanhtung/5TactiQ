@@ -20,6 +20,7 @@ import { supabase } from './lib/supabase';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { useTranslation } from 'react-i18next';
+import { isInstalledApp } from './utils/platform';
 
 function App() {
   usePersistentStorage();
@@ -27,6 +28,7 @@ function App() {
   useCloudSync();
 
   const theme = useThemeStore((state) => state.theme);
+  const { session, isGuest } = useAuthStore();
   const { checkUpdate, hasUpdate, latestVersion, setShowUpdateModal } = useAppUpdateStore();
   const addToast = useToastStore((state) => state.addToast);
   const { t } = useTranslation();
@@ -184,12 +186,32 @@ function App() {
     }
   });
 
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(() => {
+    // Skip splash screen for web visitors on Landing Page
+    const isInstalled = isInstalledApp();
+    const { session, isGuest } = useAuthStore.getState();
+    const isLandingHash = window.location.hash.includes('landing');
+    if (!isInstalled && (!session && !isGuest || isLandingHash)) {
+      return false;
+    }
+    return true;
+  });
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
 
   useEffect(() => {
     // Determine which screens to show
+    const isInstalled = isInstalledApp();
+    const { session, isGuest } = useAuthStore.getState();
+    const isLandingHash = window.location.hash.includes('landing');
+
+    // On Web Landing Page, skip Onboarding and Splash completely
+    if (!isInstalled && (!session && !isGuest || isLandingHash)) {
+      setShowSplash(false);
+      setShowOnboarding(false);
+      return;
+    }
+
     const hasOnboarded = localStorage.getItem('katfc_onboarded');
     const hasPromptedInstall = localStorage.getItem('katfc_install_prompted');
     
@@ -220,10 +242,12 @@ function App() {
     setShowInstallPrompt(false);
   };
 
+  const isWebLanding = !isInstalledApp() && !session && !isGuest;
+
   return (
-    <div style={{ paddingBottom: `max(env(safe-area-inset-bottom), ${keyboardHeight}px)` }} className="w-full h-[100dvh] relative overflow-hidden transition-all duration-300 bg-background text-text-main">
-      {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
-      {!showSplash && showOnboarding && <Onboarding onComplete={handleOnboardingComplete} />}
+    <div style={{ paddingBottom: `max(env(safe-area-inset-bottom), ${keyboardHeight}px)` }} className={`w-full h-[100dvh] relative ${isWebLanding ? 'overflow-y-auto landing-scrollbar' : 'overflow-hidden'} transition-all duration-300 bg-background text-text-main`}>
+      {!isWebLanding && showSplash && <SplashScreen onComplete={handleSplashComplete} />}
+      {!isWebLanding && !showSplash && showOnboarding && <Onboarding onComplete={handleOnboardingComplete} />}
       
       {/* App Content */}
       <HashRouter>
@@ -231,7 +255,7 @@ function App() {
         <AppStatusNotifier />
         <ToastContainer />
         <AnimatedRoutes />
-        <InstallPrompt />
+        {!isWebLanding && <InstallPrompt />}
       </HashRouter>
     </div>
   );

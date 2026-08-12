@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useVenueStore } from '../store/useVenueStore';
-import { ArrowLeft, MapPin, Phone, Plus, Map, X, Trash2, Edit2, Search } from 'lucide-react';
+import { ArrowLeft, MapPin, Phone, Plus, Map, X, Trash2, Edit2, Search, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useHardwareBack } from '../hooks/useHardwareBack';
 import { VenuesSkeleton } from '../components/ui/VenuesSkeleton';
@@ -31,6 +31,7 @@ export default function Venues() {
     name: '',
     address: '',
     phone: '',
+    note: '',
   });
 
   const handleOpenModal = (venue?: Venue) => {
@@ -40,10 +41,11 @@ export default function Venues() {
         name: venue.name,
         address: venue.address,
         phone: venue.phone,
+        note: venue.note || '',
       });
     } else {
       setEditingId(null);
-      setFormData({ name: '', address: '', phone: '' });
+      setFormData({ name: '', address: '', phone: '', note: '' });
     }
     setShowModal(true);
   };
@@ -51,7 +53,7 @@ export default function Venues() {
   const handleCloseModal = () => {
     setShowModal(false);
     setEditingId(null);
-    setFormData({ name: '', address: '', phone: '' });
+    setFormData({ name: '', address: '', phone: '', note: '' });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -132,7 +134,8 @@ export default function Venues() {
           {venues
             .filter(v => 
               v.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-              (v.address && v.address.toLowerCase().includes(searchQuery.toLowerCase()))
+              (v.address && v.address.toLowerCase().includes(searchQuery.toLowerCase())) ||
+              (v.note && v.note.toLowerCase().includes(searchQuery.toLowerCase()))
             )
             .map(venue => (
             <div
@@ -144,21 +147,29 @@ export default function Venues() {
                 <h3 className="font-display font-bold text-primary uppercase text-xl leading-tight group-hover:text-secondary transition-colors">{venue.name}</h3>
               </div>
 
-              <div className="flex-1 flex flex-col text-sm text-text-muted">
+              <div className="flex-1 flex flex-col text-sm text-text-muted space-y-2.5">
                 {venue.address && (
                   <a 
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue.address)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
-                    className="flex items-start gap-2 mb-3 hover:text-secondary group/link transition-colors"
+                    className="flex items-start gap-2 hover:text-secondary group/link transition-colors"
                   >
                     <MapPin size={16} className="text-slate-400 shrink-0 mt-0.5 group-hover/link:text-secondary transition-colors" />
                     <span className="underline-offset-2 group-hover/link:underline">{venue.address}</span>
                   </a>
                 )}
+
+                {venue.note && (
+                  <div className="flex items-start gap-2 p-2.5 bg-surface-2 border border-border-main/60 text-xs text-text-muted">
+                    <FileText size={15} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                    <p className="whitespace-pre-line leading-relaxed font-sans">{venue.note}</p>
+                  </div>
+                )}
+
                 {venue.phone && (
-                  <div className="mt-auto">
+                  <div className="mt-auto pt-1">
                     <a
                       href={`tel:${venue.phone}`}
                       onClick={(e) => e.stopPropagation()}
@@ -217,11 +228,22 @@ export default function Venues() {
             <input
               type="tel"
               inputMode="tel"
-              enterKeyHint="done"
+              enterKeyHint="next"
               value={formData.phone}
               onChange={e => setFormData({ ...formData, phone: e.target.value })}
               className="w-full border-2 border-border-main bg-surface p-3 rounded-none focus:border-primary outline-none font-medium"
               placeholder={t('venues.phone_placeholder', 'Ví dụ: 0901234567')}
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">{t('venues.note', 'Ghi chú / Lưu ý')}</label>
+            <textarea
+              rows={3}
+              value={formData.note}
+              onChange={e => setFormData({ ...formData, note: e.target.value })}
+              className="w-full border-2 border-border-main bg-surface p-3 rounded-none focus:border-primary outline-none font-medium text-sm resize-none"
+              placeholder={t('venues.note_placeholder', 'Ví dụ: Sân cỏ 7 người, có đèn chiếu sáng ban đêm, bãi gửi xe ô tô rộng...')}
             />
           </div>
 

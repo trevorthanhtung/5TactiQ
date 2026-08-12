@@ -184,7 +184,7 @@ export default function Roster() {
                 className="w-full border-2 border-border-main bg-surface p-3 rounded-none focus:border-primary outline-none font-medium text-lg"
                 value={newPhone}
                 onChange={e => setNewPhone(e.target.value)}
-                placeholder={t('roster.phone_placeholder', 'VD: 090...')}
+                placeholder={t('roster.phone_placeholder', 'Ví dụ: 0912 345 678...')}
               />
             </div>
             <div>
@@ -195,7 +195,7 @@ export default function Roster() {
                 className="w-full border-2 border-border-main bg-surface p-3 rounded-none focus:border-primary outline-none font-medium text-lg"
                 value={newNote}
                 onChange={e => setNewNote(e.target.value)}
-                placeholder={t('roster.note_placeholder', 'Thông tin thêm...')}
+                placeholder={t('roster.note_placeholder', 'Biệt danh, chấn thương, chân thuận...')}
               />
             </div>
           </div>
