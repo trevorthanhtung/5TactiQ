@@ -81,12 +81,12 @@
       "package.json"
     ],
     "win": {
-      "target": ["nsis", "portable"],
-      "artifactName": "${productName}-${version}-Setup.exe",
+      "target": "portable",
+      "artifactName": "5TactiQ-Setup.exe",
       "icon": "public/logo.png"
     },
     "portable": {
-      "artifactName": "${productName}-${version}-Portable.exe"
+      "artifactName": "5TactiQ-Setup.exe"
     },
     "nsis": {
       "oneClick": false,
