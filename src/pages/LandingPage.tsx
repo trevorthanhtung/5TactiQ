@@ -242,70 +242,243 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* HERO SECTION — HALLMARK BRUTALISM STRUCTURE */}
-      <section className="pt-12 sm:pt-20 pb-14 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center space-y-6">
-        {/* Main Title */}
-        <h1 className="font-display text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-text-main uppercase leading-tight">
-          {t('landing.title_1', 'QUẢN LÝ ĐỘI BÓNG')} <br />
-          <span className="text-secondary">{t('landing.title_2', '& CHIẾN THUẬT SÂN 5')}</span>
-        </h1>
-
-        {/* Subtitle */}
-        <p className="text-sm sm:text-base text-text-muted leading-relaxed max-w-2xl mx-auto font-medium">
-          {t('landing.subtitle', 'Công cụ đắc lực cho Đội trưởng & HLV Sân 5: Vẽ sơ đồ chiến thuật, quản lý đội hình, ghi nhận lịch sử đối đầu và chia đội tự động.')}
-        </p>
-
-        {/* Hero Quick Actions */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-          <button
-            onClick={handleStartApp}
-            className="w-full sm:w-auto hallmark-btn bg-secondary text-white border-2 border-secondary hover:brightness-110 px-8 py-3.5 font-display text-sm uppercase tracking-widest font-bold flex items-center justify-center gap-2.5 shadow-[4px_4px_0px_0px_#323d29] cursor-pointer"
+      {/* HERO SECTION — 2-COLUMN ASYMMETRIC LAYOUT WITH FOOTBALL GEAR COLLAGE */}
+      <section className="pt-8 sm:pt-14 pb-14 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+          
+          {/* Left Column: Text & Hero Quick Actions */}
+          <motion.div 
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="lg:col-span-7 space-y-6 text-left"
           >
-            <Play className="w-5 h-5 fill-current" />
-            <span>{t('landing.start_guest', 'Trải Nghiệm Ngay')}</span>
-          </button>
 
-          <button
-            onClick={() => setShowPWAInstructionModal(true)}
-            className="w-full sm:w-auto hallmark-btn-outline bg-surface text-text-main border-2 border-border-main hover:bg-surface-2 px-8 py-3.5 font-display text-sm uppercase tracking-widest font-bold flex items-center justify-center gap-2.5 shadow-[4px_4px_0px_0px_#323d29] cursor-pointer"
+
+            {/* Main Title */}
+            <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-text-main uppercase leading-tight">
+              {t('landing.title_1', 'QUẢN LÝ ĐỘI BÓNG')} <br />
+              <span className="text-secondary">{t('landing.title_2', '& CHIẾN THUẬT SÂN 5')}</span>
+            </h1>
+
+            {/* Subtitle */}
+            <p className="text-sm sm:text-base text-text-muted leading-relaxed max-w-xl font-medium">
+              {t('landing.subtitle', 'Công cụ đắc lực cho Đội trưởng & HLV Sân 5: Vẽ sơ đồ chiến thuật, quản lý đội hình, ghi nhận lịch sử đối đầu và chia đội tự động.')}
+            </p>
+
+            {/* Hero Quick Actions */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleStartApp}
+                className="hallmark-btn bg-secondary text-white border-2 border-secondary hover:brightness-110 px-8 py-3.5 font-display text-sm uppercase tracking-widest font-bold flex items-center justify-center gap-2.5 shadow-[4px_4px_0px_0px_#323d29] cursor-pointer"
+              >
+                <Play className="w-5 h-5 fill-current" />
+                <span>{t('landing.start_guest', 'Trải Nghiệm Ngay')}</span>
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setShowPWAInstructionModal(true)}
+                className="hallmark-btn-outline bg-surface text-text-main border-2 border-border-main hover:bg-surface-2 px-8 py-3.5 font-display text-sm uppercase tracking-widest font-bold flex items-center justify-center gap-2.5 shadow-[4px_4px_0px_0px_#323d29] cursor-pointer"
+              >
+                <Download className="w-5 h-5 text-primary" />
+                <span>{t('landing.install_app', 'Cài Đặt Ứng Dụng')}</span>
+              </motion.button>
+            </div>
+
+            {/* Feature Badges Grid */}
+            <div className="pt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 border-t-2 border-border-main/40 text-xs font-sans">
+              <div className="hallmark-card bg-surface p-3 border-2 border-border-main shadow-sm text-left">
+                <span className="font-display font-bold text-text-main text-xs block uppercase tracking-wider mb-0.5">{t('landing.offline_badge', 'HỖ TRỢ OFFLINE')}</span>
+                <span className="text-text-muted text-[11px]">{t('landing.offline_desc', 'Sử dụng không cần mạng')}</span>
+              </div>
+              <div className="hallmark-card bg-surface p-3 border-2 border-border-main shadow-sm text-left">
+                <span className="font-display font-bold text-text-main text-xs block uppercase tracking-wider mb-0.5">{t('landing.sync_badge', 'ĐỒNG BỘ DỮ LIỆU')}</span>
+                <span className="text-text-muted text-[11px]">{t('landing.sync_desc', 'Đám mây an toàn & bảo mật')}</span>
+              </div>
+              <div className="hallmark-card bg-surface p-3 border-2 border-border-main shadow-sm text-left">
+                <span className="font-display font-bold text-text-main text-xs block uppercase tracking-wider mb-0.5">{t('landing.device_badge', 'ĐA THIẾT BỊ')}</span>
+                <span className="text-text-muted text-[11px]">{t('landing.device_desc', 'Điện thoại, Máy tính & Web')}</span>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Right Column: 3D Tactical Board with Hugging Ball & Shoe */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
+            className="lg:col-span-5 relative w-full aspect-square max-w-lg mx-auto flex items-center justify-center p-2 my-4 lg:my-0 select-none"
           >
-            <Download className="w-5 h-5 text-primary" />
-            <span>{t('landing.install_app', 'Cài Đặt Ứng Dụng')}</span>
-          </button>
-        </div>
 
-        {/* Feature Badges Grid */}
-        <div className="pt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 border-t-2 border-border-main/40 text-xs font-sans">
-          <div className="hallmark-card bg-surface p-3.5 border-2 border-border-main shadow-sm text-center">
-            <span className="font-display font-bold text-text-main text-sm block uppercase tracking-wider mb-0.5">{t('landing.offline_badge', 'HỖ TRỢ OFFLINE')}</span>
-            <span className="text-text-muted">{t('landing.offline_desc', 'Sử dụng không cần mạng')}</span>
-          </div>
-          <div className="hallmark-card bg-surface p-3.5 border-2 border-border-main shadow-sm text-center">
-            <span className="font-display font-bold text-text-main text-sm block uppercase tracking-wider mb-0.5">{t('landing.sync_badge', 'ĐỒNG BỘ DỮ LIỆU')}</span>
-            <span className="text-text-muted">{t('landing.sync_desc', 'Đám mây an toàn & bảo mật')}</span>
-          </div>
-          <div className="hallmark-card bg-surface p-3.5 border-2 border-border-main shadow-sm text-center">
-            <span className="font-display font-bold text-text-main text-sm block uppercase tracking-wider mb-0.5">{t('landing.device_badge', 'ĐA THIẾT BỊ')}</span>
-            <span className="text-text-muted">{t('landing.device_desc', 'Điện thoại, Máy tính & Web')}</span>
-          </div>
+            {/* CENTER 3D TACTICAL BOARD (Sa Bàn Chiến Thuật Sân 5) */}
+            <div className="relative w-[85%] aspect-[4/3] bg-[#1b6b33] border-4 border-[#0f441f] rounded-2xl p-3.5 shadow-[16px_20px_35px_rgba(0,0,0,0.35)] [transform:perspective(1000px)_rotateX(10deg)_rotateY(-3deg)_rotateZ(-2deg)] transition-all duration-500 hover:[transform:perspective(1000px)_rotateX(4deg)_rotateY(-1deg)_rotateZ(-1deg)] z-10">
+              
+              {/* LEFT SIDE HUGGING ITEM: CLEAN MINIMALIST 2D FUTSAL BALL */}
+              <motion.div 
+                animate={{ y: [0, -6, 0], rotate: [0, -5, 0] }}
+                transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                className="absolute -left-6 sm:-left-10 -bottom-4 sm:-bottom-6 w-20 h-20 sm:w-24 sm:h-24 z-30 drop-shadow-md [transform:rotate(-12deg)]"
+              >
+                <svg viewBox="0 0 100 100" className="w-full h-full">
+                  <defs>
+                    <clipPath id="ballCircleClip">
+                      <circle cx="50" cy="50" r="44" />
+                    </clipPath>
+                  </defs>
+
+                  {/* Outer White Sphere Frame */}
+                  <circle cx="50" cy="50" r="45" fill="#ffffff" stroke="#18181b" strokeWidth="4" />
+
+                  {/* Clipped Inner Ball Seams & Pentagons */}
+                  <g clipPath="url(#ballCircleClip)">
+                    {/* Seam lines radiating from central pentagon */}
+                    <path 
+                      d="M 50 32 L 50 6 
+                         M 66 43 L 94 24 
+                         M 60 62 L 80 88 
+                         M 40 62 L 20 88 
+                         M 34 43 L 6 24" 
+                      stroke="#18181b" 
+                      strokeWidth="3.5" 
+                      strokeLinecap="round" 
+                    />
+
+                    {/* Center Pentagon */}
+                    <polygon points="50,32 66,43 60,62 40,62 34,43" fill="#18181b" />
+
+                    {/* Top Pentagon */}
+                    <polygon points="36,4 64,4 58,16 42,16" fill="#18181b" />
+
+                    {/* Right Pentagon */}
+                    <polygon points="86,40 98,54 90,70 78,60" fill="#18181b" />
+
+                    {/* Left Pentagon */}
+                    <polygon points="14,40 22,60 10,70 2,54" fill="#18181b" />
+
+                    {/* Bottom Right Pentagon */}
+                    <polygon points="62,82 80,78 72,96 52,96" fill="#18181b" />
+
+                    {/* Bottom Left Pentagon */}
+                    <polygon points="38,82 48,96 28,96 20,78" fill="#18181b" />
+                  </g>
+                </svg>
+              </motion.div>
+
+              {/* RIGHT SIDE HUGGING ITEM: CLEAN MINIMALIST 2D FOOTBALL BOOT */}
+              <div className="absolute -right-6 sm:-right-10 -bottom-4 sm:-bottom-6 z-20 [transform:rotate(12deg)] hover:[transform:rotate(4deg)] transition-all duration-300">
+                <svg viewBox="0 0 140 80" className="w-24 h-14 sm:w-28 sm:h-16 drop-shadow-md">
+                  {/* Turf Studs (Đinh giày 2D) */}
+                  <rect x="22" y="62" width="6" height="6" rx="2" fill="#ef4444" stroke="#1f2937" strokeWidth="1.5" />
+                  <rect x="36" y="63" width="6" height="6" rx="2" fill="#ef4444" stroke="#1f2937" strokeWidth="1.5" />
+                  <rect x="50" y="63" width="6" height="6" rx="2" fill="#ef4444" stroke="#1f2937" strokeWidth="1.5" />
+                  <rect x="64" y="62" width="6" height="6" rx="2" fill="#ef4444" stroke="#1f2937" strokeWidth="1.5" />
+                  <rect x="78" y="61" width="6" height="6" rx="2" fill="#ef4444" stroke="#1f2937" strokeWidth="1.5" />
+                  <rect x="92" y="59" width="6" height="6" rx="2" fill="#ef4444" stroke="#1f2937" strokeWidth="1.5" />
+                  <rect x="106" y="57" width="6" height="6" rx="2" fill="#ef4444" stroke="#1f2937" strokeWidth="1.5" />
+                  
+                  {/* Sole Plate */}
+                  <path d="M 15 58 C 25 64, 60 64, 120 54 C 126 52, 128 48, 120 48 C 80 48, 35 50, 15 58 Z" fill="#1f2937" stroke="#1f2937" strokeWidth="2" />
+                  
+                  {/* Boot Body */}
+                  <path d="M 15 58 C 18 36, 45 30, 68 25 C 80 20, 95 10, 108 18 C 118 26, 126 44, 120 48 C 80 48, 35 50, 15 58 Z" fill="#2563eb" stroke="#1f2937" strokeWidth="2.5" strokeLinejoin="round" />
+                  
+                  {/* White Swoosh / Speed Stripes */}
+                  <path d="M 75 42 Q 88 28 105 24 M 82 44 Q 95 30 112 26" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" />
+                  
+                  {/* Heel & Ankle Detail */}
+                  <path d="M 72 24 C 80 16, 98 12, 108 18" stroke="#1f2937" strokeWidth="2" fill="none" />
+                </svg>
+              </div>
+
+              {/* Clipboard Top Metal Clip */}
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-24 h-6 bg-gradient-to-b from-zinc-300 via-zinc-200 to-zinc-400 border-2 border-zinc-800 rounded-t-lg flex items-center justify-center shadow-md">
+                <div className="w-8 h-1.5 bg-zinc-600 rounded-full" />
+              </div>
+
+              {/* Pitch Graphic Area */}
+              <div className="relative w-full h-full border-2 border-white/80 rounded-xl overflow-hidden p-2 bg-[linear-gradient(to_bottom,#1b6b33,#165a2a)] shadow-inner">
+                <div className="absolute inset-2 border border-white/70 pointer-events-none" />
+                <div className="absolute inset-y-0 left-1/2 w-0.5 bg-white/70" />
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full border-2 border-white/70" />
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-white/80" />
+                
+                {/* Goal Boxes */}
+                <div className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-24 border-r-2 border-y-2 border-white/70" />
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-24 border-l-2 border-y-2 border-white/70" />
+
+                {/* 🔴 3D Magnet Player Tokens: KAT FC (5 người: GK, FIXO, 2 ALA, PIVO - 1-2-1 Kim Cương) */}
+                <div className="absolute left-[10%] top-[45%] w-6 h-6 rounded-full bg-gradient-to-tr from-red-700 via-red-500 to-red-400 border-2 border-white text-white font-mono font-black text-[9px] flex items-center justify-center shadow-[0_4px_6px_rgba(0,0,0,0.5)] z-10" title="Thủ môn GK">GK</div>
+                <div className="absolute left-[24%] top-[45%] w-6 h-6 rounded-full bg-gradient-to-tr from-red-700 via-red-500 to-red-400 border-2 border-white text-white font-mono font-black text-[9px] flex items-center justify-center shadow-[0_4px_6px_rgba(0,0,0,0.5)] z-10" title="Hậu vệ FIXO">FX</div>
+                <div className="absolute left-[40%] top-[18%] w-6 h-6 rounded-full bg-gradient-to-tr from-red-700 via-red-500 to-red-400 border-2 border-white text-white font-mono font-black text-[9px] flex items-center justify-center shadow-[0_4px_6px_rgba(0,0,0,0.5)] z-10" title="Cánh trái ALA">ALA</div>
+                <div className="absolute left-[40%] top-[72%] w-6 h-6 rounded-full bg-gradient-to-tr from-red-700 via-red-500 to-red-400 border-2 border-white text-white font-mono font-black text-[9px] flex items-center justify-center shadow-[0_4px_6px_rgba(0,0,0,0.5)] z-10" title="Cánh phải ALA">ALA</div>
+                <div className="absolute left-[62%] top-[45%] w-6 h-6 rounded-full bg-gradient-to-tr from-red-700 via-red-500 to-red-400 border-2 border-white text-white font-mono font-black text-[9px] flex items-center justify-center shadow-[0_4px_6px_rgba(0,0,0,0.5)] z-10" title="Tiền đạo PIVO">PV</div>
+
+                {/* 🔵 3D Magnet Player Tokens: FC Phủ Phủ (Đầy đủ 5 người đối phương) */}
+                <div className="absolute right-[10%] top-[45%] w-5 h-5 rounded-full bg-gradient-to-tr from-blue-800 via-blue-600 to-blue-400 border-2 border-white shadow-[0_3px_5px_rgba(0,0,0,0.4)] z-10" title="Thủ môn đối phương" />
+                <div className="absolute right-[24%] top-[45%] w-5 h-5 rounded-full bg-gradient-to-tr from-blue-800 via-blue-600 to-blue-400 border-2 border-white shadow-[0_3px_5px_rgba(0,0,0,0.4)] z-10" title="Hậu vệ đối phương" />
+                <div className="absolute right-[38%] top-[24%] w-5 h-5 rounded-full bg-gradient-to-tr from-blue-800 via-blue-600 to-blue-400 border-2 border-white shadow-[0_3px_5px_rgba(0,0,0,0.4)] z-10" title="Cánh đối phương" />
+                <div className="absolute right-[38%] top-[66%] w-5 h-5 rounded-full bg-gradient-to-tr from-blue-800 via-blue-600 to-blue-400 border-2 border-white shadow-[0_3px_5px_rgba(0,0,0,0.4)] z-10" title="Cánh đối phương" />
+                <div className="absolute right-[56%] top-[45%] w-5 h-5 rounded-full bg-gradient-to-tr from-blue-800 via-blue-600 to-blue-400 border-2 border-white shadow-[0_3px_5px_rgba(0,0,0,0.4)] z-10" title="Tiền đạo đối phương" />
+
+                {/* Tactical Arrows SVG (Đường chuyền & di chuyển 1-2-1 từ FIXO -> ALA -> PV) */}
+                <svg className="absolute inset-0 w-full h-full pointer-events-none text-amber-300 stroke-current stroke-[2.5] stroke-dasharray-[5_3] fill-none">
+                  <defs>
+                    <marker id="amberArrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                      <path d="M 0 1 L 10 5 L 0 9 z" fill="#fde047" stroke="none" />
+                    </marker>
+                  </defs>
+                  {/* Đường chuyền từ FIXO lên ALA cánh trên */}
+                  <path d="M 110 110 Q 130 65 170 50" markerEnd="url(#amberArrow)" />
+                  {/* Đường chọc khe từ ALA tới PIVO */}
+                  <path d="M 175 55 Q 210 70 255 100" markerEnd="url(#amberArrow)" />
+                </svg>
+              </div>
+            </div>
+
+          </motion.div>
+
+
+
+
+
+
+
         </div>
       </section>
 
+
       {/* 3 PAIN POINTS OF 5V5 CAPTAINS & 5TACTIQ SOLUTIONS */}
-      <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t-2 border-border-main">
-        <div className="text-center max-w-3xl mx-auto mb-10">
+      <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t-2 border-border-main overflow-hidden">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.5 }}
+          className="text-center max-w-3xl mx-auto mb-10"
+        >
           <h2 className="font-display text-2xl sm:text-4xl font-bold uppercase tracking-tight text-text-main">
             {t('landing.pain_points_title', '3 NỖI ĐAU ĐỘI TRƯỜNG SÂN 5 & GIẢI PHÁP 5TACTIQ')}
           </h2>
           <p className="text-text-muted text-sm mt-2 font-medium">
             {t('landing.pain_points_subtitle', 'Giải quyết dứt điểm những rắc rối nhức đầu nhất khi đi đá bóng hàng tuần.')}
           </p>
-        </div>
+        </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
           {/* Card 1: Xếp hạng & Chia đội nội bộ */}
-          <div className="hallmark-card bg-surface border-2 border-border-main p-6 flex flex-col justify-between shadow-[6px_6px_0px_0px_#323d29]">
+          <motion.div 
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            whileHover={{ y: -6, transition: { duration: 0.2 } }}
+            className="hallmark-card bg-surface border-2 border-border-main p-6 flex flex-col justify-between shadow-[6px_6px_0px_0px_#323d29]"
+          >
             <div className="space-y-4">
               <div className="border-b-2 border-border-main/40 pb-3">
                 <span className="font-display text-2xl font-extrabold text-secondary tracking-widest">01</span>
@@ -328,10 +501,17 @@ export default function LandingPage() {
                 {t('landing.pain_1_sol_desc', 'Hệ thống đánh giá Tier (S/A/B/C) tự động chia 2 đội cân bằng sức mạnh, đảm bảo kèo đấu luôn kịch tính và công bằng.')}
               </p>
             </div>
-          </div>
+          </motion.div>
 
           {/* Card 2: Chia quỹ đá kèo */}
-          <div className="hallmark-card bg-surface border-2 border-border-main p-6 flex flex-col justify-between shadow-[6px_6px_0px_0px_#323d29]">
+          <motion.div 
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            whileHover={{ y: -6, transition: { duration: 0.2 } }}
+            className="hallmark-card bg-surface border-2 border-border-main p-6 flex flex-col justify-between shadow-[6px_6px_0px_0px_#323d29]"
+          >
             <div className="space-y-4">
               <div className="border-b-2 border-border-main/40 pb-3">
                 <span className="font-display text-2xl font-extrabold text-secondary tracking-widest">02</span>
@@ -354,10 +534,17 @@ export default function LandingPage() {
                 {t('landing.pain_2_sol_desc', 'Tự động cưa đôi, cưa ba chi phí ngay sau trận. Quản lý rõ ràng ai đã đóng, ai còn nợ, giúp đội trưởng thảnh thơi hơn.')}
               </p>
             </div>
-          </div>
+          </motion.div>
 
           {/* Card 3: Vẽ sơ đồ & Bài tập 5v5 */}
-          <div className="hallmark-card bg-surface border-2 border-border-main p-6 flex flex-col justify-between shadow-[6px_6px_0px_0px_#323d29]">
+          <motion.div 
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            whileHover={{ y: -6, transition: { duration: 0.2 } }}
+            className="hallmark-card bg-surface border-2 border-border-main p-6 flex flex-col justify-between shadow-[6px_6px_0px_0px_#323d29]"
+          >
             <div className="space-y-4">
               <div className="border-b-2 border-border-main/40 pb-3">
                 <span className="font-display text-2xl font-extrabold text-secondary tracking-widest">03</span>
@@ -380,20 +567,26 @@ export default function LandingPage() {
                 {t('landing.pain_3_sol_desc', 'Sa bàn điện tử 5v5 chuyên nghiệp. Kéo thả vị trí & xuất ngay ảnh động GIF gửi Zalo cho anh em hiểu bài ngay.')}
               </p>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* CORE CAPABILITIES EXPLORER — TABBED SECTION */}
-      <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t-2 border-border-main">
-        <div className="text-center max-w-2xl mx-auto mb-8">
+      <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t-2 border-border-main overflow-hidden">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.5 }}
+          className="text-center max-w-2xl mx-auto mb-8"
+        >
           <h2 className="font-display text-2xl sm:text-4xl font-bold uppercase tracking-tight">
             {t('landing.core_title', 'TÍNH NĂNG CỐT LÕI CHO ĐỘI BÓNG')}
           </h2>
           <p className="text-text-muted text-sm mt-2 font-medium">
             {t('landing.core_subtitle', 'Mọi công cụ huấn luyện & quản lý được tích hợp trong một giao diện duy nhất.')}
           </p>
-        </div>
+        </motion.div>
         {/* Tab Selector */}
         <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
           {[
@@ -404,8 +597,10 @@ export default function LandingPage() {
           ].map((tab) => {
             const isActive = activeFeatureTab === tab.id;
             return (
-              <button
+              <motion.button
                 key={tab.id}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={() => setActiveFeatureTab(tab.id as any)}
                 className={`px-4 py-2.5 font-display text-xs sm:text-sm uppercase tracking-wider font-bold transition-all border-2 cursor-pointer ${isActive
                     ? 'bg-primary text-white border-primary shadow-md'
@@ -413,13 +608,21 @@ export default function LandingPage() {
                   }`}
               >
                 <span>{tab.label}</span>
-              </button>
+              </motion.button>
             );
           })}
         </div>
 
         {/* Tab Detail Display Card */}
-        <div className="hallmark-card bg-surface border-2 border-border-main p-6 sm:p-8 shadow-[8px_8px_0px_0px_#323d29]">
+        <AnimatePresence mode="wait">
+          <motion.div 
+            key={activeFeatureTab}
+            initial={{ opacity: 0, y: 15, scale: 0.99 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -15, scale: 0.99 }}
+            transition={{ duration: 0.3 }}
+            className="hallmark-card bg-surface border-2 border-border-main p-6 sm:p-8 shadow-[8px_8px_0px_0px_#323d29]"
+          >
           {activeFeatureTab === 'tactics' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
               <div className="space-y-4">
@@ -554,9 +757,6 @@ export default function LandingPage() {
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
                     <span className="text-xs font-display font-bold text-primary uppercase tracking-wider">{t('landing.card_matchday_h2h', 'LỊCH SỬ ĐỐI ĐẦU')}</span>
                   </div>
-                  <span className="text-[10px] font-display font-bold uppercase tracking-wider px-2.5 py-0.5 bg-surface-2 border border-border-main text-text-main">
-                    {t('landing.card_matchday_last', 'LẦN GẶP GẦN NHẤT')}
-                  </span>
                 </div>
 
                 <div className="p-4 bg-surface-2 border-2 border-border-main flex items-center justify-between shadow-sm">
@@ -745,19 +945,26 @@ export default function LandingPage() {
               </div>
             </div>
           )}
-        </div>
+          </motion.div>
+        </AnimatePresence>
       </section>
 
       {/* FAQ — CÂU HỎI THƯỜNG GẶP */}
-      <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto border-t-2 border-border-main">
-        <div className="text-center space-y-2 mb-10">
+      <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto border-t-2 border-border-main overflow-hidden">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.5 }}
+          className="text-center space-y-2 mb-10"
+        >
           <h2 className="font-display text-2xl sm:text-4xl font-extrabold uppercase tracking-tight text-text-main">
-            {t('landing.faq_title', 'CÂU HỎI THƯỜNG GẶP (FAQ)')}
+            {t('landing.faq_title', 'CÂU HỎI THƯỜNG GẶP')}
           </h2>
-          <p className="text-sm text-text-muted max-w-lg mx-auto font-medium">
+          <p className="text-sm text-text-muted max-w-2xl sm:max-w-3xl mx-auto font-medium">
             {t('landing.faq_subtitle', 'Giải đáp tất cả thắc mắc về cách sử dụng, lưu trữ dữ liệu và tính phí của 5TactiQ.')}
           </p>
-        </div>
+        </motion.div>
 
         <div className="space-y-3 font-sans">
           {[
@@ -780,8 +987,12 @@ export default function LandingPage() {
           ].map((faq, idx) => {
             const isOpen = openFaqIndex === idx;
             return (
-              <div
+              <motion.div
                 key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-30px" }}
+                transition={{ duration: 0.4, delay: idx * 0.08 }}
                 className="hallmark-card bg-surface border-2 border-border-main overflow-hidden transition-all shadow-sm"
               >
                 <button
@@ -804,14 +1015,20 @@ export default function LandingPage() {
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </div>
+              </motion.div>
             );
           })}
         </div>
       </section>
 
       {/* FOOTER */}
-      <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t-2 border-border-main bg-surface text-text-muted text-xs font-sans">
+      <motion.footer 
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+        className="py-12 px-4 sm:px-6 lg:px-8 border-t-2 border-border-main bg-surface text-text-muted text-xs font-sans"
+      >
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start justify-between gap-8 pb-8 border-b-2 border-border-main/60">
           {/* Col 1: Brand & Bio */}
           <div className="space-y-3 max-w-md">
@@ -831,17 +1048,25 @@ export default function LandingPage() {
             </span>
             <ul className="space-y-2 text-xs font-medium">
               <li>
-                <a href="https://www.facebook.com/tthanhtung2306?locale=vi_VN" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-text-muted hover:text-blue-600 transition-colors">
-                  <svg className="w-4 h-4 text-blue-500 fill-current" viewBox="0 0 24 24">
+                <a 
+                  href="https://www.facebook.com/tthanhtung2306?locale=vi_VN" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="inline-flex items-center gap-2 text-text-muted hover:text-blue-600 transition-colors group cursor-pointer"
+                >
+                  <svg className="w-4 h-4 text-blue-500 fill-current group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                   </svg>
-                  <span>{t('landing.footer_fb_label', 'Facebook: Thanh Tùng')}</span>
+                  <span>Facebook: <span className="font-bold group-hover:underline underline-offset-2">Thanh Tùng</span></span>
                 </a>
               </li>
               <li>
-                <a href="mailto:trevorthanhtung@gmail.com" className="flex items-center gap-2 text-text-muted hover:text-secondary transition-colors">
-                  <Mail className="w-4 h-4 text-secondary" />
-                  <span>{t('landing.footer_email_label', 'Email: trevorthanhtung@gmail.com')}</span>
+                <a 
+                  href="mailto:trevorthanhtung@gmail.com" 
+                  className="inline-flex items-center gap-2 text-text-muted hover:text-secondary transition-colors group cursor-pointer"
+                >
+                  <Mail className="w-4 h-4 text-secondary group-hover:scale-110 transition-transform" />
+                  <span>Email: <span className="font-bold group-hover:underline underline-offset-2">trevorthanhtung@gmail.com</span></span>
                 </a>
               </li>
             </ul>
@@ -866,7 +1091,7 @@ export default function LandingPage() {
             </a>
           </div>
         </div>
-      </footer>
+      </motion.footer>
 
       {/* MULTI-PLATFORM DOWNLOAD SELECTION MODAL */}
       <BottomSheet
@@ -899,7 +1124,7 @@ export default function LandingPage() {
               </div>
               <div className="w-full hallmark-btn bg-emerald-600 text-white border-2 border-emerald-600 px-1.5 py-2 flex items-center justify-center gap-1 font-display text-[11px] sm:text-xs uppercase tracking-tight font-bold shadow-xs group-hover:bg-emerald-700 transition-colors">
                 <Download className="w-3.5 h-3.5 shrink-0" />
-                <span className="whitespace-nowrap">{t('landing.download_now')}</span>
+                <span className="whitespace-nowrap">{t('landing.install_now', 'CÀI ĐẶT')}</span>
               </div>
             </a>
 
@@ -922,7 +1147,7 @@ export default function LandingPage() {
               </div>
               <div className="w-full hallmark-btn bg-blue-600 text-white border-2 border-blue-600 px-1.5 py-2 flex items-center justify-center gap-1 font-display text-[11px] sm:text-xs uppercase tracking-tight font-bold shadow-xs group-hover:bg-blue-700 transition-colors">
                 <Download className="w-3.5 h-3.5 shrink-0" />
-                <span className="whitespace-nowrap">{t('landing.download_now')}</span>
+                <span className="whitespace-nowrap">{t('landing.install_now', 'CÀI ĐẶT')}</span>
               </div>
             </a>
 
@@ -943,7 +1168,7 @@ export default function LandingPage() {
               </div>
               <div className="w-full hallmark-btn bg-amber-600 text-white border-2 border-amber-600 px-1.5 py-2 flex items-center justify-center gap-1 font-display text-[11px] sm:text-xs uppercase tracking-tight font-bold shadow-xs group-hover:bg-amber-700 transition-colors">
                 <Download className="w-3.5 h-3.5 shrink-0" />
-                <span className="whitespace-nowrap">{t('landing.download_now')}</span>
+                <span className="whitespace-nowrap">{t('landing.install_now', 'CÀI ĐẶT')}</span>
               </div>
             </a>
 
@@ -962,7 +1187,7 @@ export default function LandingPage() {
               </div>
               <div className="w-full hallmark-btn bg-neutral-900 text-white border-2 border-neutral-900 px-1.5 py-2 flex items-center justify-center gap-1 font-display text-[11px] sm:text-xs uppercase tracking-tight font-bold shadow-xs group-hover:bg-black transition-colors">
                 <Download className="w-3.5 h-3.5 shrink-0" />
-                <span className="whitespace-nowrap">{t('landing.download_now')}</span>
+                <span className="whitespace-nowrap">{t('landing.details_btn', 'CHI TIẾT')}</span>
               </div>
             </div>
           </div>
