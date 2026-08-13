@@ -21,7 +21,8 @@ import {
   Mail,
   ShieldCheck,
   Zap,
-  Globe
+  Globe,
+  ArrowUp
 } from 'lucide-react';
 
 import { useAuthStore } from '../store/useAuthStore';
@@ -132,8 +133,26 @@ export default function LandingPage() {
   const [downloadModalTab, setDownloadModalTab] = useState<'options' | 'apple_pwa'>('options');
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
   const [showLangDropdown, setShowLangDropdown] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   const pitchRef = useRef<HTMLDivElement>(null);
   const langDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Show / hide scroll to top button based on scroll position
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 350) {
+        setShowScrollTop(true);
+      } else {
+        setShowScrollTop(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Close language dropdown on outside click
   useEffect(() => {
@@ -1232,6 +1251,25 @@ export default function LandingPage() {
           </div>
         )}
       </BottomSheet>
+
+      {/* FLOATING SCROLL TO TOP BUTTON */}
+      <AnimatePresence>
+        {showScrollTop && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={scrollToTop}
+            className="fixed bottom-6 right-6 z-50 p-3 bg-[#323d29] dark:bg-emerald-600 text-white border-2 border-border-main rounded-full shadow-[4px_4px_0px_0px_#18181b] hover:brightness-110 cursor-pointer flex items-center justify-center transition-all"
+            aria-label="Cuộn lên đầu trang"
+            title="Cuộn lên đầu trang"
+          >
+            <ArrowUp className="w-5 h-5 stroke-[2.5]" />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
