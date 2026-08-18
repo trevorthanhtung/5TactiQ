@@ -617,40 +617,112 @@ export default function More() {
       <BottomSheet
         isOpen={isThemeOpen}
         onClose={() => setIsThemeOpen(false)}
-        title={
-          <span className="flex items-center gap-2">
-            <Monitor size={24} className="text-primary" /> {t('more.theme_title')}
-          </span>
-        }
+        title={t('more.theme_title', 'CHẾ ĐỘ HIỂN THỊ')}
       >
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3.5 p-1">
           {(
             [
-              { value: 'light', label: t('more.theme_light'), icon: <Sun size={24} className="text-amber-500" /> },
-              { value: 'dark', label: t('more.theme_dark'), icon: <Moon size={24} className="text-indigo-400" /> },
-              { value: 'system', label: t('more.theme_system'), icon: <Monitor size={24} className="text-text-muted" /> }
+              {
+                value: 'light',
+                label: t('more.theme_light', 'Sáng'),
+                desc: t('more.theme_light_desc', 'Giao diện màu sáng cổ điển, tương phản cao, rõ ràng ngoài trời'),
+                previewBg: 'bg-[#F4F1EA] border-[#37443C]/20',
+                previewHeader: 'bg-[#37443C]',
+                previewAccent: 'bg-[#D97706]',
+                previewCard: 'bg-white border-[#37443C]/10',
+              },
+              {
+                value: 'dark',
+                label: t('more.theme_dark', 'Tối'),
+                desc: t('more.theme_dark_desc', 'Giao diện nền tối hiện đại, dịu mắt ban đêm và tiết kiệm pin'),
+                previewBg: 'bg-[#121714] border-[#2A3630]',
+                previewHeader: 'bg-[#1C2420]',
+                previewAccent: 'bg-[#10B981]',
+                previewCard: 'bg-[#1B2420] border-[#2A3630]',
+              },
+              {
+                value: 'system',
+                label: t('more.theme_system', 'Theo hệ thống'),
+                desc: t('more.theme_system_desc', 'Tự động chuyển đổi sáng / tối theo cài đặt thiết bị của bạn'),
+                previewBg: 'bg-gradient-to-r from-[#F4F1EA] to-[#121714] border-border-main',
+                previewHeader: 'bg-gradient-to-r from-[#37443C] to-[#1C2420]',
+                previewAccent: 'bg-gradient-to-r from-[#D97706] to-[#10B981]',
+                previewCard: 'bg-surface border-border-main',
+              },
             ] as const
-          ).map((tOpt) => (
-            <button
-              key={tOpt.value}
-              onClick={() => {
-                setTheme(tOpt.value);
-                setIsThemeOpen(false);
-                addToast({ 
-                  type: 'success', 
-                  message: `${t('more.theme_changed')} ${tOpt.label}`,
-                  duration: 3000
-                });
-              }}
-              className={`flex items-center gap-3 p-4 border-2 transition-all active:scale-95 ${theme === tOpt.value ? 'border-primary bg-primary/5 text-primary shadow-[4px_4px_0px_0px_var(--color-primary)]' : 'border-border-main text-text-muted hover:border-primary/50'}`}
-            >
-              <div className="flex-1 flex items-center gap-3">
-                {tOpt.icon}
-                <span className="font-display uppercase tracking-wider font-bold text-lg">{tOpt.label}</span>
-              </div>
-              {theme === tOpt.value && <Check size={24} className="text-primary shrink-0" />}
-            </button>
-          ))}
+          ).map((tOpt) => {
+            const isSelected = theme === tOpt.value;
+            return (
+              <button
+                key={tOpt.value}
+                onClick={() => {
+                  setTheme(tOpt.value);
+                  setIsThemeOpen(false);
+                  addToast({ 
+                    type: 'success', 
+                    message: `${t('more.theme_changed')} ${tOpt.label}`,
+                    duration: 3000
+                  });
+                }}
+                className={`relative flex items-center gap-3.5 sm:gap-4 p-3 sm:p-4 border-2 transition-all cursor-pointer text-left active:scale-[0.98] ${
+                  isSelected 
+                    ? 'border-primary bg-primary/5 shadow-[4px_4px_0px_0px_var(--color-primary)]' 
+                    : 'border-border-main bg-surface hover:border-primary/40 hover:bg-surface-2'
+                }`}
+              >
+                {/* Visual Mini Mockup Preview */}
+                {tOpt.value === 'system' ? (
+                  <div className="w-13 h-13 sm:w-15 sm:h-15 shrink-0 border-2 border-border-main overflow-hidden flex shadow-inner">
+                    {/* Left Half: Light */}
+                    <div className="w-1/2 h-full bg-[#F4F1EA] border-r border-border-main flex flex-col">
+                      <div className="h-2.5 sm:h-3 w-full bg-[#37443C] flex items-center px-1 shrink-0">
+                        <div className="w-1 h-1 rounded-full bg-white/60" />
+                      </div>
+                      <div className="p-1 flex-1 flex flex-col justify-center gap-1">
+                        <div className="h-1.5 w-full rounded-xs bg-white border border-[#37443C]/10" />
+                        <div className="h-1.5 w-2/3 rounded-xs bg-white border border-[#37443C]/10" />
+                      </div>
+                    </div>
+                    {/* Right Half: Dark */}
+                    <div className="w-1/2 h-full bg-[#121714] flex flex-col">
+                      <div className="h-2.5 sm:h-3 w-full bg-[#1C2420] flex items-center justify-end px-1 shrink-0">
+                        <div className="w-1.5 h-1 rounded-xs bg-[#10B981]" />
+                      </div>
+                      <div className="p-1 flex-1 flex flex-col justify-center gap-1">
+                        <div className="h-1.5 w-full rounded-xs bg-[#1B2420] border border-[#2A3630]" />
+                        <div className="h-1.5 w-2/3 rounded-xs bg-[#1B2420] border border-[#2A3630]" />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className={`w-13 h-13 sm:w-15 sm:h-15 shrink-0 border-2 overflow-hidden flex flex-col shadow-inner ${tOpt.previewBg}`}>
+                    {/* Mockup Topbar */}
+                    <div className={`h-2.5 sm:h-3 w-full flex items-center justify-between px-1 shrink-0 ${tOpt.previewHeader}`}>
+                      <div className="w-1 h-1 rounded-full bg-white/50" />
+                      <div className={`w-2 h-1 rounded-xs ${tOpt.previewAccent}`} />
+                    </div>
+                    {/* Mockup Body Content */}
+                    <div className="p-1 flex-1 flex flex-col justify-center gap-1">
+                      <div className={`h-1.5 w-full rounded-xs ${tOpt.previewCard}`} />
+                      <div className={`h-1.5 w-2/3 rounded-xs ${tOpt.previewCard}`} />
+                    </div>
+                  </div>
+                )}
+
+                {/* Text Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="mb-0.5">
+                    <span className={`font-display uppercase tracking-wider font-bold text-base sm:text-lg leading-tight ${isSelected ? 'text-primary' : 'text-text-main'}`}>
+                      {tOpt.label}
+                    </span>
+                  </div>
+                  <p className="text-xs text-text-muted leading-tight">
+                    {tOpt.desc}
+                  </p>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </BottomSheet>
 

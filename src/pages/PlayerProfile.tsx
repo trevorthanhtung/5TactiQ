@@ -371,15 +371,6 @@ export default function PlayerProfile() {
                       {t('roster.per_match_label', 'HỢP ĐỒNG THEO TRẬN')}
                     </span>
                   </div>
-                  <span className={`px-2 py-0.5 text-[11px] font-display font-bold uppercase tracking-wider border ${
-                    perMatch.isCompleted 
-                      ? 'bg-slate-700 text-white border-slate-700' 
-                      : 'bg-amber-500 text-white border-amber-600'
-                  }`}>
-                    {perMatch.isCompleted 
-                      ? t('roster.per_match_completed', 'Đã hết số trận') 
-                      : t('roster.per_match_active', { attended: perMatch.attended, quota: perMatch.quota, defaultValue: `Đang hoạt động (${perMatch.attended}/${perMatch.quota} trận)` })}
-                  </span>
                 </div>
 
                 {/* Progress Bar */}
