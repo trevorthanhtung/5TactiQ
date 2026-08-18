@@ -5,6 +5,7 @@ import { X, Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../store/useAuthStore';
+import { isInstalledApp } from '../../utils/platform';
 
 export default function InstallPrompt() {
   const location = useLocation();
@@ -14,49 +15,41 @@ export default function InstallPrompt() {
   const [isVisible, setIsVisible] = useState(false);
   const [platform, setPlatform] = useState('unknown');
 
+  const isNativeOrInstalled = isInstalledApp();
   const isLandingPage = location.pathname === '/landing' || 
                         location.pathname === '/landing/' ||
                         window.location.hash.includes('landing') || 
                         (!session && !isGuest);
 
   useEffect(() => {
-    if (isLandingPage) return;
+    // Never show on native apps (Capacitor / Electron / PWA standalone) or landing page
+    if (isNativeOrInstalled || isLandingPage) return;
 
-    import('@capacitor/core').then(({ Capacitor }) => {
-      // Hide if already running as an installed app (Capacitor, Electron, or PWA Standalone)
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || ('standalone' in navigator && (navigator as any).standalone === true);
-      const isNative = Capacitor.isNativePlatform() || navigator.userAgent.toLowerCase().includes('electron') || isStandalone;
+    // Detect Platform for Web users
+    const ua = navigator.userAgent || '';
+    if (/iPhone|iPad|iPod/i.test(ua)) {
+      setPlatform('ios');
+    } else if (/Mac/i.test(ua)) {
+      setPlatform('mac');
+    } else if (/Android/i.test(ua)) {
+      setPlatform('android');
+    } else if (/Win/i.test(ua)) {
+      setPlatform('windows');
+    } else if (/Linux/i.test(ua)) {
+      setPlatform('linux');
+    } else {
+      setPlatform('pwa');
+    }
 
-      if (isNative) {
-        setIsVisible(false);
-        return;
-      }
+    // Delay showing the prompt on web
+    const timer = setTimeout(() => {
+      setIsVisible(true);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [isNativeOrInstalled, isLandingPage]);
 
-      // Detect Platform
-      const ua = navigator.userAgent;
-      if (/iPhone|iPad|iPod/i.test(ua)) {
-        setPlatform('ios');
-      } else if (/Mac/i.test(ua)) {
-        setPlatform('mac');
-      } else if (/Android/i.test(ua)) {
-        setPlatform('android');
-      } else if (/Win/i.test(ua)) {
-        setPlatform('windows');
-      } else if (/Linux/i.test(ua)) {
-        setPlatform('linux');
-      } else {
-        setPlatform('pwa');
-      }
-
-      // Delay showing the prompt
-      const timer = setTimeout(() => {
-        setIsVisible(true);
-      }, 3000);
-      return () => clearTimeout(timer);
-    });
-  }, [isLandingPage]);
-
-  if (isLandingPage || !isVisible) {
+  // Completely omit from DOM if native/installed
+  if (isNativeOrInstalled || isLandingPage || !isVisible) {
     return null;
   }
 
