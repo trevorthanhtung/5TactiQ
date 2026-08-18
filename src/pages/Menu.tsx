@@ -21,7 +21,7 @@ export default function Menu() {
   ];
 
   return (
-    <div className="p-4 flex flex-col min-h-full max-w-2xl mx-auto w-full">
+    <div className="p-4 flex flex-col max-w-2xl mx-auto w-full">
       <h1 className="text-4xl @sm:text-5xl font-display uppercase text-primary leading-none mb-6 pt-2">
         {t('menu.title', 'Menu mở rộng')}
       </h1>

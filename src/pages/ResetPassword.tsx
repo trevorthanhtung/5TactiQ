@@ -8,6 +8,7 @@ import { Key, Eye, EyeOff, Check, Sun, Moon, Globe, LogIn } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BottomSheet } from '../components/ui/BottomSheet';
+import { APP_VERSION } from '../config/version';
 
 export default function ResetPassword() {
   const { t, i18n } = useTranslation();
@@ -265,6 +266,15 @@ export default function ResetPassword() {
           </div>
             </>
           )}
+        </div>
+
+        {/* Version Footer */}
+        <div className="text-center w-full overflow-hidden flex flex-col items-center">
+          <div className="flex items-center gap-1.5 text-[10px] font-mono text-text-muted/60 tracking-wider">
+            <span>5TactiQ</span>
+            <span>•</span>
+            <span>v{APP_VERSION}</span>
+          </div>
         </div>
       </div>
 

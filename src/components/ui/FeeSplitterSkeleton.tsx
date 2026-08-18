@@ -3,7 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 
 export function FeeSplitterSkeleton() {
   return (
-    <div className="p-4 flex flex-col min-h-full max-w-6xl mx-auto w-full pb-32 lg:pb-12 animate-pulse">
+    <div className="p-4 flex flex-col max-w-6xl mx-auto w-full animate-pulse">
       {/* Header & Match Mode Switcher */}
       <div className="space-y-4 mb-5">
         <div className="flex items-center gap-2 pt-2 text-text-muted/40 font-bold">

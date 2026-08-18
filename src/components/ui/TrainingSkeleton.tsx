@@ -3,7 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 
 export function TrainingSkeleton() {
   return (
-    <div className="p-4 flex flex-col min-h-full max-w-5xl mx-auto w-full pb-8 animate-pulse">
+    <div className="p-4 flex flex-col max-w-5xl mx-auto w-full animate-pulse">
       {/* Header Skeleton */}
       <div className="flex items-center justify-between gap-2 sm:gap-3 mb-6 pt-2">
         <div className="flex items-center gap-2 sm:gap-3">

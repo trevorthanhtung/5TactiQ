@@ -213,7 +213,7 @@ export default function TierRanking() {
 
   if (isLoading) {
     return (
-      <div className="p-4 md:p-6 max-w-5xl mx-auto w-full pb-24 animate-pulse">
+      <div className="p-4 md:p-6 max-w-5xl mx-auto w-full animate-pulse">
         {/* Header Skeleton */}
         <div className="mb-5 pt-2">
           <div className="flex items-center gap-2 mb-3">
@@ -253,7 +253,7 @@ export default function TierRanking() {
   }
 
   return (
-    <div className="p-4 md:p-6 flex flex-col min-h-full max-w-5xl mx-auto w-full pb-24">
+    <div className="p-4 md:p-6 flex flex-col max-w-5xl mx-auto w-full">
       {/* Header */}
       <header className="mb-5 pt-2">
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm font-bold text-text-muted hover:text-secondary transition-colors mb-3 uppercase tracking-wider">

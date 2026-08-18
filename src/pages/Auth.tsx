@@ -9,6 +9,7 @@ import { Mail, Key, LogIn, UserPlus, ShieldAlert, ArrowRight, Laptop, ShieldChec
 import { useTranslation } from 'react-i18next';
 import { BottomSheet } from '../components/ui/BottomSheet';
 import { AuthSkeleton } from '../components/ui/AuthSkeleton';
+import { APP_VERSION } from '../config/version';
 
 const languages = [
   { code: 'vi', name: 'Tiếng Việt', label: 'VN' },
@@ -618,8 +619,8 @@ const Auth: React.FC = () => {
           </button>
         </div>
 
-        {/* Terms Footer */}
-        <div className="text-center pt-2 border-t border-border-main/40 w-full overflow-hidden">
+        {/* Terms & Version Footer */}
+        <div className="text-center pt-2 border-t border-border-main/40 w-full overflow-hidden flex flex-col items-center gap-1.5">
           <p className="text-[9.5px] sm:text-[11px] text-text-muted/70 font-sans tracking-tight leading-relaxed">
             {t('auth.terms_agree', 'Bằng việc tiếp tục, bạn đồng ý với')}{' '}
             <button onClick={() => setShowTermsModal(true)} className="font-bold underline text-text-main hover:text-primary transition-colors cursor-pointer">
@@ -635,6 +636,11 @@ const Auth: React.FC = () => {
             </button>
             {'.'}
           </p>
+          <div className="flex items-center gap-1.5 text-[10px] font-mono text-text-muted/60 tracking-wider">
+            <span>5TactiQ</span>
+            <span>•</span>
+            <span>v{APP_VERSION}</span>
+          </div>
         </div>
       </div>
 

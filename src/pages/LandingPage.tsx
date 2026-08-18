@@ -22,11 +22,13 @@ import {
   ShieldCheck,
   Zap,
   Globe,
-  ArrowUp
+  ArrowUp,
+  Sparkles,
 } from 'lucide-react';
 
 import { useAuthStore } from '../store/useAuthStore';
 import { useThemeStore } from '../store/useThemeStore';
+import { APP_VERSION } from '../config/version';
 import { isInstalledApp } from '../utils/platform';
 import { useInstallPrompt } from '../hooks/useInstallPrompt';
 import { useTranslation } from 'react-i18next';
@@ -1051,8 +1053,9 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start justify-between gap-8 pb-8 border-b-2 border-border-main/60">
           {/* Col 1: Brand & Bio */}
           <div className="space-y-3 max-w-md">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="font-display text-xl font-bold text-primary uppercase tracking-widest">5TACTIQ</span>
+              <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-primary/10 text-primary border border-primary/20 rounded">v{APP_VERSION}</span>
               <span className="text-xs text-text-muted">{t('landing.footer_brand_sub', '— Ứng dụng quản lý đội bóng thông minh')}</span>
             </div>
             <p className="text-xs text-text-muted leading-relaxed font-medium">

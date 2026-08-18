@@ -8,7 +8,7 @@ export default function Operations() {
   const [activeTab, setActiveTab] = useState<'finance' | 'jersey' | 'field'>('finance');
 
   return (
-    <div className="p-4 flex flex-col min-h-full max-w-5xl mx-auto w-full">
+    <div className="p-4 flex flex-col max-w-5xl mx-auto w-full">
       <Link to="/menu" className="flex items-center gap-2 font-bold text-text-muted hover:text-primary mb-6 transition-colors">
         <ArrowLeft size={20} /> {t('operations.back_menu', 'Về Menu')}
       </Link>

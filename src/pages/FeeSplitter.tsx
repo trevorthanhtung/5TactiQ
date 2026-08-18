@@ -461,7 +461,7 @@ export default function FeeSplitter() {
   }
 
   return (
-    <div className="p-4 flex flex-col min-h-full max-w-6xl mx-auto w-full pb-32 lg:pb-12">
+    <div className="p-4 flex flex-col max-w-6xl mx-auto w-full">
       {/* Header & Match Mode Switcher */}
 
       <div className="space-y-4 mb-5">
