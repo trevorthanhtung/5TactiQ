@@ -733,6 +733,39 @@ export default function Matchday() {
     const upcomingMatches = filteredMatches.filter(m => m.status === 'upcoming');
     const finishedMatches_list = filteredMatches.filter(m => m.status === 'finished');
 
+    let seasonWins = 0;
+    let seasonDraws = 0;
+    let seasonLosses = 0;
+    let seasonGoalsFor = 0;
+    let seasonGoalsAgainst = 0;
+
+    filteredMatches.forEach(m => {
+      if (m.status === 'finished' && m.matchType !== 'internal') {
+        const us = m.scoreUs ?? 0;
+        const opp = m.scoreOpponent ?? 0;
+        seasonGoalsFor += us;
+        seasonGoalsAgainst += opp;
+        if (us > opp) seasonWins++;
+        else if (us < opp) seasonLosses++;
+        else seasonDraws++;
+      }
+    });
+
+    const totalFinished = seasonWins + seasonDraws + seasonLosses;
+    const winRate = totalFinished > 0 ? Math.round((seasonWins / totalFinished) * 100) : 0;
+    const goalDiff = seasonGoalsFor - seasonGoalsAgainst;
+
+    const seasonStats = {
+      wins: seasonWins,
+      draws: seasonDraws,
+      losses: seasonLosses,
+      goalsFor: seasonGoalsFor,
+      goalsAgainst: seasonGoalsAgainst,
+      totalFinished,
+      winRate,
+      goalDiff
+    };
+
     const MatchCard = ({ match }: { match: typeof matches[0] }) => {
       const getScore = () => {
         if (match.status === 'upcoming') return null;
@@ -742,24 +775,33 @@ export default function Matchday() {
         return { left: match.scoreUs ?? 0, right: match.scoreOpponent ?? 0, leftLabel: settings.teamName || '5TactiQ', rightLabel: match.opponent || t('matchday.opponent_placeholder') };
       };
 
-      const score = getScore();
+      let resultBadge = null;
+      if (match.status === 'finished' && match.matchType !== 'internal' && typeof match.scoreUs === 'number' && typeof match.scoreOpponent === 'number') {
+        if (match.scoreUs > match.scoreOpponent) {
+          resultBadge = <span className="px-2 py-0.5 text-[10px] font-display uppercase font-bold bg-emerald-500 text-white">THẮNG</span>;
+        } else if (match.scoreUs < match.scoreOpponent) {
+          resultBadge = <span className="px-2 py-0.5 text-[10px] font-display uppercase font-bold bg-rose-600 text-white">THUA</span>;
+        } else {
+          resultBadge = <span className="px-2 py-0.5 text-[10px] font-display uppercase font-bold bg-amber-500 text-white">HÒA</span>;
+        }
+      }
 
       return (
         <div
-          className={`hallmark-card p-0 overflow-hidden cursor-pointer group hover:shadow-lg transition-all flex flex-col h-full ${match.status === 'live' ? 'ring-2 ring-rose-400 ring-offset-2' : ''}`}
+          className={`hallmark-card p-0 overflow-hidden cursor-pointer group hover:border-primary transition-all flex flex-col h-full bg-surface border-2 border-border-main shadow-sm ${match.status === 'live' ? 'ring-2 ring-rose-400 ring-offset-2' : ''}`}
           onClick={() => selectMatch(match.id)}
         >
           {/* Card Top Accent */}
           <div className={`h-1.5 ${match.status === 'live' ? 'bg-rose-500' : match.status === 'upcoming' ? 'bg-primary' : 'bg-slate-400'}`} />
 
-          <div className="p-4 flex flex-col flex-1 justify-between">
+          <div className="p-4 sm:p-5 flex flex-col flex-1 justify-between gap-3">
             {/* Status + Type row */}
-            <div className="flex justify-between items-center mb-3">
+            <div className="flex justify-between items-center">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[10px] font-display uppercase tracking-widest font-bold text-slate-400">
+                <span className="text-[10px] font-display uppercase tracking-widest font-bold text-text-muted">
                   {match.matchType === 'internal' ? t('matchday.type_internal') : match.matchType === 'friendly' ? t('matchday.type_friendly') : t('matchday.type_tournament')}
                 </span>
-                {match.matchType === 'internal' && (
+                {match.matchType === 'internal' && match.status === 'finished' && (
                   <span className={`px-1.5 py-0.5 text-[9px] font-display font-bold uppercase tracking-wider ${
                     match.trackStats 
                       ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/30' 
@@ -769,31 +811,35 @@ export default function Matchday() {
                   </span>
                 )}
               </div>
-              {match.status === 'live' && (
-                <span className="px-2 py-0.5 text-[10px] font-display uppercase font-bold bg-rose-600 text-white animate-pulse">
-                  {t('matchday.live_badge')}
-                </span>
-              )}
-              {match.status === 'upcoming' && (
-                <span className="px-2 py-0.5 text-[10px] font-display uppercase font-bold bg-primary/10 text-primary border border-primary/30">
-                  {t('matchday.upcoming_badge')}
-                </span>
-              )}
-              {match.status === 'finished' && (
-                <span className="px-2 py-0.5 text-[10px] font-display uppercase font-bold bg-surface text-text-muted border border-border-main">
-                  {t('matchday.finished_badge')}
-                </span>
-              )}
+              
+              <div className="flex items-center gap-1.5">
+                {resultBadge}
+                {match.status === 'live' && (
+                  <span className="px-2 py-0.5 text-[10px] font-display uppercase font-bold bg-rose-600 text-white animate-pulse">
+                    {t('matchday.live_badge')}
+                  </span>
+                )}
+                {match.status === 'upcoming' && (
+                  <span className="px-2 py-0.5 text-[10px] font-display uppercase font-bold bg-primary/10 text-primary border border-primary/30">
+                    {t('matchday.upcoming_badge')}
+                  </span>
+                )}
+                {match.status === 'finished' && (
+                  <span className="px-2 py-0.5 text-[10px] font-display uppercase font-bold bg-surface-2 text-text-muted border border-border-main">
+                    {t('matchday.finished_badge')}
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Match Title */}
-            <h3 className="font-display text-xl uppercase text-primary leading-tight mb-3 group-hover:text-secondary transition-colors">
+            <h3 className="font-display text-xl sm:text-2xl uppercase text-primary leading-tight group-hover:text-secondary transition-colors font-bold">
               {match.matchType === 'internal' ? t('matchday.internal_match') : `VS ${match.opponent || t('matchday.opponent_placeholder')}`}
             </h3>
 
             {/* Score (if live or finished) */}
             {match.status !== 'upcoming' && (
-              <div className="bg-surface-2 border-y border-border-main px-2.5 py-2.5 mb-3 min-h-[90px] flex items-center justify-center">
+              <div className="bg-surface-2 border border-border-main px-3 py-3 my-1 min-h-[85px] flex items-center justify-center">
                 {match.matchType === 'internal' ? (
                   <div className={`grid gap-2 w-full ${
                     (match.teamCount || 2) === 2 ? 'grid-cols-2' : 
@@ -804,7 +850,7 @@ export default function Matchday() {
                       const scoreField = `scoreTeam${team}` as keyof typeof match;
                       return (
                         <div key={team} className="bg-surface border border-border-main p-1.5 flex flex-col items-center justify-center text-center">
-                          <span className="text-[9px] uppercase font-bold text-text-muted truncate max-w-full">
+                          <span className="text-[9px] uppercase font-bold text-text-muted truncate max-w-full font-display">
                             {t(`matchday.team_${team.toLowerCase()}`)}
                           </span>
                           <span className={`text-lg sm:text-xl font-display font-bold ${team === 'A' ? 'text-primary' : 'text-text-main'}`}>
@@ -815,15 +861,15 @@ export default function Matchday() {
                     })}
                   </div>
                 ) : (
-                  <div className="flex items-center justify-center gap-6 sm:gap-8">
-                    <div className="text-center">
-                      <div className="text-[10px] uppercase font-bold text-text-muted mb-0.5">{settings.teamName || '5TactiQ'}</div>
-                      <div className="text-3xl font-display font-bold text-primary">{match.scoreUs ?? 0}</div>
+                  <div className="flex items-center justify-center gap-6 sm:gap-8 w-full">
+                    <div className="text-center flex-1">
+                      <div className="text-[10px] uppercase font-bold text-text-muted mb-0.5 font-display truncate">{settings.teamName || '5TactiQ'}</div>
+                      <div className="text-3xl sm:text-4xl font-display font-bold text-primary">{match.scoreUs ?? 0}</div>
                     </div>
                     <span className="text-2xl font-display text-text-muted font-bold opacity-40">-</span>
-                    <div className="text-center">
-                      <div className="text-[9px] uppercase font-bold text-text-muted mb-0.5">{match.opponent || t('matchday.opponent_placeholder')}</div>
-                      <div className="text-3xl font-display font-bold text-text-main">{match.scoreOpponent ?? 0}</div>
+                    <div className="text-center flex-1">
+                      <div className="text-[10px] uppercase font-bold text-text-muted mb-0.5 font-display truncate">{match.opponent || t('matchday.opponent_placeholder')}</div>
+                      <div className="text-3xl sm:text-4xl font-display font-bold text-text-main">{match.scoreOpponent ?? 0}</div>
                     </div>
                   </div>
                 )}
@@ -831,7 +877,7 @@ export default function Matchday() {
             )}
 
             {/* Info */}
-            <div className="space-y-1.5 text-xs text-text-muted font-medium mt-auto pt-2">
+            <div className="space-y-1 text-xs text-text-muted font-medium mt-auto pt-2 border-t border-border-main/50">
               <div className="flex items-center gap-1.5">
                 <CalendarClock size={13} className="text-secondary shrink-0" />
                 <span>{formatDateDDMMYYYY(match.date)} • {match.time}</span>
@@ -847,24 +893,24 @@ export default function Matchday() {
     };
 
     return (
-      <div className="p-4 md:p-6 flex flex-col min-h-full max-w-5xl mx-auto w-full pb-8">
-        {/* Header - matching Roster page style */}
-        <div className="flex flex-col @lg:flex-row @lg:justify-between @lg:items-end gap-4 mb-6 pt-2">
+      <div className="p-3.5 sm:p-6 lg:p-8 flex flex-col min-h-full max-w-7xl 2xl:max-w-[1520px] mx-auto w-full pb-32 lg:pb-12 animate-fade-in-up">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-3 sm:gap-4 mb-6 pb-2 border-b-2 border-border-main">
           <div>
-            <h1 className="text-4xl @sm:text-5xl font-display uppercase text-primary leading-none mb-2">{t('matchday.title')}</h1>
+            <h1 className="text-3xl sm:text-5xl font-display uppercase text-primary leading-none mb-1">{t('matchday.title')}</h1>
             {(filterMode === 'current_season' && hasSeasonConfig) && (
-              <p className="text-xs font-bold text-text-muted uppercase tracking-widest">
+              <p className="text-[11px] sm:text-xs font-bold text-text-muted uppercase tracking-widest font-display">
                 {t('stats.season', { year: seasonStart!.getFullYear() === seasonEnd!.getFullYear() ? seasonStart!.getFullYear() : `${seasonStart!.getFullYear()}/${seasonEnd!.getFullYear()}` })}
               </p>
             )}
           </div>
-          <div className="flex flex-col @md:flex-row items-stretch @md:items-center gap-3 shrink-0">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:flex md:items-center gap-2 sm:gap-3 shrink-0">
             {hasSeasonConfig && (
               <CustomSelect 
                 value={filterMode} 
                 onChange={(val) => setFilterMode(val as 'all_time' | 'current_season')}
-                className="relative w-full @md:w-auto shrink-0"
-                buttonClassName="bg-surface border-2 border-border-main text-xs font-bold uppercase tracking-widest text-text-main px-3 outline-none focus:border-primary cursor-pointer w-full @md:w-auto h-[44px] flex items-center justify-between transition-colors hover:border-primary/50"
+                className="relative w-full md:w-auto shrink-0"
+                buttonClassName="bg-surface border-2 border-border-main text-xs font-bold uppercase tracking-widest text-text-main px-3 outline-none focus:border-primary cursor-pointer w-full md:w-auto h-[38px] sm:h-[40px] flex items-center justify-between transition-colors hover:border-primary/50"
                 options={[
                   { value: 'current_season', label: t('stats.filter_season', 'MÙA GIẢI HIỆN TẠI') },
                   { value: 'all_time', label: t('stats.filter_all', 'TẤT CẢ THỜI GIAN') }
@@ -873,66 +919,141 @@ export default function Matchday() {
             )}
             <button
               onClick={() => setShowCreateModal(true)}
-              className="hallmark-btn flex items-center justify-center gap-2 bg-secondary text-white shrink-0 h-[44px] px-6"
+              className="hallmark-btn flex items-center justify-center bg-secondary text-white shrink-0 h-[38px] sm:h-[40px] px-4 sm:px-6 font-display text-xs uppercase tracking-wider font-bold"
             >
-              <Plus size={20} /> 
-              <span className="uppercase tracking-widest text-sm">{t('matchday.create_new')}</span>
+              <span>+ {t('matchday.create_new', 'TẠO TRẬN MỚI')}</span>
             </button>
           </div>
         </div>
 
-        <div className="hallmark-divider"></div>
+        {/* 📐 2-Column Responsive Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          
+          {/* 👈 LEFT COLUMN: Match Lists (8 cols on lg) */}
+          <div className="lg:col-span-8 flex flex-col gap-6">
+            
+            {/* Search Filter */}
+            <div className="relative w-full">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                <Search size={16} className="text-text-muted" />
+              </div>
+              <input
+                type="text"
+                placeholder={t('matchday.search_placeholder', 'Tìm kiếm đối thủ...')}
+                value={matchSearchQuery}
+                onChange={(e) => setMatchSearchQuery(e.target.value)}
+                className="w-full bg-surface border-2 border-border-main text-text-main py-2.5 pl-10 pr-3 outline-none focus:border-primary transition-colors text-sm placeholder:text-text-muted/60 font-medium"
+              />
+            </div>
 
-        {/* Search Bar */}
-        <div className="mb-6 relative max-w-md">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search size={18} className="text-text-muted" />
+            {/* LIVE MATCHES */}
+            {liveMatches.length > 0 && (
+              <div className="flex flex-col gap-3">
+                <h2 className="font-display text-xs sm:text-sm uppercase tracking-widest text-rose-600 flex items-center gap-2 font-bold">
+                  <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+                  {t('matchday.live', { count: liveMatches.length })}
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {liveMatches.map(m => <MatchCard key={m.id} match={m} />)}
+                </div>
+              </div>
+            )}
+
+            {/* UPCOMING MATCHES */}
+            {upcomingMatches.length > 0 && (
+              <div className="flex flex-col gap-3">
+                <h2 className="font-display text-xs sm:text-sm uppercase tracking-widest text-primary font-bold">
+                  {t('matchday.upcoming', { count: upcomingMatches.length })}
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {upcomingMatches.map(m => <MatchCard key={m.id} match={m} />)}
+                </div>
+              </div>
+            )}
+
+            {/* FINISHED MATCHES */}
+            {finishedMatches_list.length > 0 && (
+              <div className="flex flex-col gap-3">
+                <h2 className="font-display text-xs sm:text-sm uppercase tracking-widest text-text-muted font-bold">
+                  {t('matchday.finished', { count: finishedMatches_list.length })}
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {finishedMatches_list.map(m => <MatchCard key={m.id} match={m} />)}
+                </div>
+              </div>
+            )}
+
+            {/* Empty Search Result */}
+            {liveMatches.length === 0 && upcomingMatches.length === 0 && finishedMatches_list.length === 0 && (
+              <div className="p-8 text-center bg-surface border-2 border-border-main text-text-muted text-sm font-medium">
+                {t('matchday.no_matches_found', 'Không tìm thấy trận đấu nào phù hợp')}
+              </div>
+            )}
+
           </div>
-          <input
-            type="text"
-            placeholder={t('matchday.search_placeholder', 'Tìm đối thủ...')}
-            value={matchSearchQuery}
-            onChange={(e) => setMatchSearchQuery(e.target.value)}
-            className="w-full bg-surface border-2 border-border-main text-text-main py-2.5 pl-10 pr-3 outline-none focus:border-primary transition-colors text-sm placeholder:text-text-muted/60 placeholder:uppercase tracking-wider"
-          />
+
+          {/* 👉 RIGHT COLUMN: Quick Season Digest & Actions (4 cols on lg) */}
+          <div className="lg:col-span-4 flex flex-col gap-4 sm:gap-6">
+            
+            {/* Season Record Panel */}
+            <div className="hallmark-card bg-surface border-2 border-border-main p-4 sm:p-5 shadow-sm flex flex-col gap-4">
+              <div className="flex justify-between items-center pb-2 border-b border-border-main">
+                <h3 className="font-display text-sm sm:text-base uppercase tracking-widest text-primary font-bold">
+                  THỐNG KÊ MÙA GIẢI
+                </h3>
+                <span className="text-[10px] font-display uppercase tracking-wider text-text-muted font-bold">
+                  {seasonStats.totalFinished} TRẬN
+                </span>
+              </div>
+
+              {/* W-D-L Cluster */}
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="bg-surface-2 p-2 border border-border-main">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 font-display">THẮNG</div>
+                  <div className="text-xl sm:text-2xl font-display font-bold text-emerald-600">{seasonStats.wins}</div>
+                </div>
+                <div className="bg-surface-2 p-2 border border-border-main">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-amber-500 font-display">HÒA</div>
+                  <div className="text-xl sm:text-2xl font-display font-bold text-amber-500">{seasonStats.draws}</div>
+                </div>
+                <div className="bg-surface-2 p-2 border border-border-main">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-rose-600 font-display">THUA</div>
+                  <div className="text-xl sm:text-2xl font-display font-bold text-rose-600">{seasonStats.losses}</div>
+                </div>
+              </div>
+
+              {/* Goals & Goal Diff */}
+              <div className="space-y-2 text-xs pt-1">
+                <div className="flex justify-between items-center py-1.5 border-b border-border-main/50 font-display uppercase font-bold">
+                  <span className="text-text-muted">TỔNG BÀN THẮNG:</span>
+                  <span className="text-primary text-sm">{seasonStats.goalsFor} bàn</span>
+                </div>
+                <div className="flex justify-between items-center py-1.5 border-b border-border-main/50 font-display uppercase font-bold">
+                  <span className="text-text-muted">TỔNG BÀN THUA:</span>
+                  <span className="text-rose-500 text-sm">{seasonStats.goalsAgainst} bàn</span>
+                </div>
+                <div className="flex justify-between items-center py-1.5 font-display uppercase font-bold">
+                  <span className="text-text-muted">HIỆU SỐ (GD):</span>
+                  <span className={`text-sm ${seasonStats.goalDiff > 0 ? 'text-emerald-600' : seasonStats.goalDiff < 0 ? 'text-rose-600' : 'text-text-main'}`}>
+                    {seasonStats.goalDiff > 0 ? `+${seasonStats.goalDiff}` : seasonStats.goalDiff}
+                  </span>
+                </div>
+              </div>
+
+              {/* Quick Navigation Links */}
+              <div className="pt-3 border-t border-border-main/70 flex flex-col gap-2">
+                <Link
+                  to="/stats"
+                  className="hallmark-btn bg-surface hover:bg-surface-2 text-text-main border-2 border-border-main py-2.5 text-center font-display text-xs uppercase tracking-wider font-bold transition-all"
+                >
+                  XEM BẢNG XẾP HẠNG CHI TIẾT →
+                </Link>
+              </div>
+            </div>
+
+          </div>
+
         </div>
-
-        {/* Live Matches */}
-        {liveMatches.length > 0 && (
-          <div className="mb-8">
-            <h2 className="font-display text-sm uppercase tracking-widest text-rose-600 mb-4 flex items-center gap-2 font-bold">
-              <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
-              {t('matchday.live', { count: liveMatches.length })}
-            </h2>
-            <div className="grid grid-cols-1 @md:grid-cols-2 @xl:grid-cols-3 gap-4">
-              {liveMatches.map(m => <MatchCard key={m.id} match={m} />)}
-            </div>
-          </div>
-        )}
-
-        {/* Upcoming Matches */}
-        {upcomingMatches.length > 0 && (
-          <div className="mb-8">
-            <h2 className="font-display text-sm uppercase tracking-widest text-primary mb-4 font-bold">
-              {t('matchday.upcoming', { count: upcomingMatches.length })}
-            </h2>
-            <div className="grid grid-cols-1 @md:grid-cols-2 @xl:grid-cols-3 gap-4">
-              {upcomingMatches.map(m => <MatchCard key={m.id} match={m} />)}
-            </div>
-          </div>
-        )}
-
-        {/* Finished Matches */}
-        {finishedMatches_list.length > 0 && (
-          <div className="mb-8">
-            <h2 className="font-display text-sm uppercase tracking-widest text-slate-400 mb-4 font-bold">
-              {t('matchday.finished', { count: finishedMatches_list.length })}
-            </h2>
-            <div className="grid grid-cols-1 @md:grid-cols-2 @xl:grid-cols-3 gap-4">
-              {finishedMatches_list.map(m => <MatchCard key={m.id} match={m} />)}
-            </div>
-          </div>
-        )}
 
         {/* CREATE MATCH MODAL */}
         <BottomSheet
@@ -1073,11 +1194,29 @@ export default function Matchday() {
     );
   }
 
+  const matchScorers = (currentMatch?.stats || [])
+    .filter(s => (s.goals || 0) > 0)
+    .map(s => {
+      const p = players.find(player => player.id === s.playerId);
+      return { name: p?.name || 'Cầu thủ', goals: s.goals || 0 };
+    })
+    .sort((a, b) => b.goals - a.goals);
+
+  const matchAssisters = (currentMatch?.stats || [])
+    .filter(s => (s.assists || 0) > 0)
+    .map(s => {
+      const p = players.find(player => player.id === s.playerId);
+      return { name: p?.name || 'Cầu thủ', assists: s.assists || 0 };
+    })
+    .sort((a, b) => b.assists - a.assists);
+
+  const totalAttendanceCount = presentCount + absentCount + pendingCount;
+
   return (
-    <div className="p-4 md:p-6 flex flex-col min-h-full max-w-5xl mx-auto w-full gap-6">
+    <div className="p-3.5 sm:p-6 lg:p-8 flex flex-col min-h-full max-w-7xl 2xl:max-w-[1520px] mx-auto w-full gap-5 sm:gap-6 pb-32 lg:pb-12 animate-fade-in-up">
 
       {/* 1. Header Toolbar Card */}
-      <div className="bg-surface border-2 border-border-main p-3 md:p-4 shadow-sm flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3 md:gap-4 shrink-0">
+      <div className="bg-surface border-2 border-border-main p-3 sm:p-4 shadow-sm flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3 sm:gap-4 shrink-0">
         {/* Left: Select Match */}
         <div className="flex items-center gap-2 w-full lg:w-auto">
           {/* Back to Match List */}
@@ -1235,8 +1374,8 @@ export default function Matchday() {
       </div>
 
       {/* 2. Match Hero Overview Banner */}
-      <div className="bg-surface p-5 sm:p-6 border-2 border-primary shadow-lg flex flex-col items-center text-center relative shrink-0">
-        <div className="text-xs font-display uppercase tracking-widest text-secondary mb-1 font-bold flex items-center justify-center gap-2 flex-wrap">
+      <div className="bg-surface p-5 sm:p-7 border-2 border-primary shadow-lg flex flex-col items-center text-center relative shrink-0">
+        <div className="text-xs font-display uppercase tracking-widest text-secondary mb-1.5 font-bold flex items-center justify-center gap-2 flex-wrap">
           <span>
             {currentMatch.matchType === 'internal' 
               ? `${t('matchday.internal_match_caps')} • ${currentMatch.teamCount || 2} ${t('matchday.team_count_unit').toUpperCase()}`
@@ -1244,7 +1383,7 @@ export default function Matchday() {
               ? t('matchday.friendly_match_caps') 
               : t('matchday.tournament_match_caps')}
           </span>
-          {currentMatch.matchType === 'internal' && (
+          {currentMatch.matchType === 'internal' && currentMatch.status === 'finished' && (
             <span className={`inline-flex items-center px-2 py-0.5 text-[10px] font-display font-bold uppercase tracking-wider ${
               currentMatch.trackStats 
                 ? 'bg-emerald-500/15 text-emerald-600 border border-emerald-500/30' 
@@ -1255,7 +1394,7 @@ export default function Matchday() {
           )}
         </div>
 
-        <h1 className="text-3xl md:text-5xl font-display uppercase text-primary leading-none my-1">
+        <h1 className="text-3xl md:text-5xl font-display uppercase text-primary leading-none my-1 font-bold">
           {currentMatch.matchType === 'internal' 
             ? t('matchday.internal_match_caps') 
             : (currentMatch.opponent ? `VS ${currentMatch.opponent}` : t('matchday.friendly_match_caps'))}
@@ -1263,18 +1402,18 @@ export default function Matchday() {
 
         {/* Live / Finished Scoreboard */}
         {(currentMatch.status === 'live' || currentMatch.status === 'finished') && (
-          <div className="w-full max-w-xl my-4">
+          <div className="w-full max-w-2xl my-4">
             {currentMatch.matchType === 'internal' ? (
               <div className={`grid gap-2.5 sm:gap-3.5 w-full ${
-                (currentMatch.teamCount || 2) === 2 ? 'grid-cols-2 max-w-sm mx-auto' : 
+                (currentMatch.teamCount || 2) === 2 ? 'grid-cols-2 max-w-md mx-auto' : 
                 (currentMatch.teamCount || 2) === 3 ? 'grid-cols-3 max-w-lg mx-auto' : 
-                'grid-cols-2 sm:grid-cols-4 max-w-xl mx-auto'
+                'grid-cols-2 sm:grid-cols-4 max-w-2xl mx-auto'
               }`}>
                 {(['A', 'B', 'C', 'D'] as const).slice(0, currentMatch.teamCount || 2).map((team) => {
                   const scoreField = `scoreTeam${team}` as keyof typeof currentMatch;
                   return (
                     <div key={team} className="bg-surface-2 border-2 border-border-main p-3 sm:p-4 flex flex-col items-center justify-center shadow-sm relative group hover:border-primary/50 transition-colors">
-                      <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-text-muted mb-1 truncate max-w-full">
+                      <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-text-muted mb-1 truncate max-w-full font-display">
                         {t(`matchday.team_${team.toLowerCase()}`)}
                       </span>
                       <span className={`text-3xl sm:text-5xl font-display font-bold ${team === 'A' ? 'text-primary' : 'text-text-main'}`}>
@@ -1285,31 +1424,35 @@ export default function Matchday() {
                 })}
               </div>
             ) : (
-              <div className="flex items-center justify-center gap-6 bg-surface-2 px-8 py-3.5 border-2 border-border-main shadow-sm max-w-md mx-auto">
-                <div className="text-center">
-                  <div className="text-[10px] uppercase font-bold text-secondary">{(settings.teamName || '5TactiQ').toUpperCase()}</div>
-                  <div className="text-4xl font-display text-primary font-bold">{currentMatch.scoreUs ?? 0}</div>
+              <div className="flex items-center justify-center gap-8 sm:gap-14 bg-surface-2 px-8 sm:px-14 py-4 border-2 border-border-main shadow-sm w-full mx-auto">
+                <div className="text-center flex-1">
+                  <div className="text-xs uppercase font-bold text-secondary font-display truncate">{(settings.teamName || '5TactiQ').toUpperCase()}</div>
+                  <div className="text-4xl sm:text-5xl font-display text-primary font-bold">{currentMatch.scoreUs ?? 0}</div>
                 </div>
                 <div className="text-3xl font-display text-text-muted font-bold opacity-40">-</div>
-                <div className="text-center">
-                  <div className="text-[10px] uppercase font-bold text-text-muted">{currentMatch.opponent || t('matchday.opponent_placeholder')}</div>
-                  <div className="text-4xl font-display text-text-main font-bold">{currentMatch.scoreOpponent ?? 0}</div>
+                <div className="text-center flex-1">
+                  <div className="text-xs uppercase font-bold text-text-muted font-display truncate">{currentMatch.opponent || t('matchday.opponent_placeholder')}</div>
+                  <div className="text-4xl sm:text-5xl font-display text-text-main font-bold">{currentMatch.scoreOpponent ?? 0}</div>
                 </div>
               </div>
             )}
+
           </div>
         )}
 
-        <div className="flex flex-wrap justify-center items-center gap-4 text-xs md:text-sm text-text-muted font-bold uppercase tracking-wider mt-2">
-          <span className="flex items-center gap-1"><MapPin size={15} className="text-secondary" /> {currentMatch.location}</span>
-          <span className="flex items-center gap-1"><CalendarClock size={15} className="text-secondary" /> {formatDateDDMMYYYY(currentMatch.date)} - {currentMatch.time}</span>
+        <div className="flex flex-wrap justify-center items-center gap-4 text-xs md:text-sm text-text-muted font-bold uppercase tracking-wider mt-2 font-display">
+          {currentMatch.location && (
+            <span className="flex items-center gap-1"><MapPin size={15} className="text-secondary" /> {currentMatch.location}</span>
+          )}
+          {(currentMatch.date || currentMatch.time) && (
+            <span className="flex items-center gap-1"><CalendarClock size={15} className="text-secondary" /> {formatDateDDMMYYYY(currentMatch.date)} - {currentMatch.time}</span>
+          )}
           {(() => {
             const fee = currentMatch.pitchFee || getVenueRateForTime(currentMatch.location, currentMatch.time)?.price;
-            const isNight = currentMatch.feeTimeSlot ? currentMatch.feeTimeSlot === 'night' : getVenueRateForTime(currentMatch.location, currentMatch.time)?.isNight;
             if (fee) {
               return (
-                <span className="flex items-center gap-1 text-primary">
-                  <Coins size={14} className="text-secondary" /> {formatCurrencyAmount(fee, activeCurrency)} ({isNight ? t('venues.night_slot', 'Tối') : t('venues.day_slot', 'Sáng')})
+                <span className="flex items-center gap-1 text-primary font-display font-bold">
+                  <Coins size={14} className="text-secondary" /> {formatCurrencyAmount(fee, activeCurrency)}
                 </span>
               );
             }
@@ -1319,7 +1462,7 @@ export default function Matchday() {
 
       </div>
 
-      {/* 3. Weather Alert / Status (Chỉ hiển thị cho trận sắp tới hoặc đang diễn ra, ẩn khi trận đã kết thúc) */}
+      {/* 3. Weather Alert / Status */}
       {currentMatch.status !== 'finished' && (
         liveWeather ? (
           <div className={`border-2 p-3.5 flex items-center gap-3 shrink-0 ${liveWeather.condition === 'rain' || liveWeather.condition === 'thunderstorm'
@@ -1372,19 +1515,52 @@ export default function Matchday() {
       {/* 5. Tab Content: Attendance */}
       {activeTab === 'attendance' && (
         <div className="space-y-4 pb-8">
-          {/* Summary Pills */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="bg-surface p-3 border-2 border-border-main text-center shadow-sm">
-              <div className="text-2xl font-display text-primary font-bold">{presentCount}</div>
-              <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted">{t('matchday.present')}</div>
+          {/* Attendance Proportional Bar & Stats Cluster */}
+          <div className="bg-surface p-3.5 sm:p-4 border-2 border-border-main shadow-sm flex flex-col gap-2.5">
+            <div className="flex justify-between items-center text-xs font-display font-bold uppercase tracking-wider text-text-muted">
+              <span>TỔNG QUAN ĐIỂM DANH</span>
+              <span>{presentCount}/{totalAttendanceCount} CÓ MẶT ({totalAttendanceCount > 0 ? Math.round((presentCount / totalAttendanceCount) * 100) : 0}%)</span>
             </div>
-            <div className="bg-surface p-3 border-2 border-border-main text-center shadow-sm">
-              <div className="text-2xl font-display text-secondary font-bold">{absentCount}</div>
-              <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted">{t('matchday.absent')}</div>
+
+            {/* Horizontal Proportional Progress Bar */}
+            <div className="w-full h-3 bg-surface-2 border border-border-main flex overflow-hidden">
+              {presentCount > 0 && (
+                <div 
+                  className="h-full bg-primary transition-all duration-500" 
+                  style={{ width: `${(presentCount / Math.max(1, totalAttendanceCount)) * 100}%` }} 
+                  title={`Có mặt: ${presentCount}`}
+                />
+              )}
+              {absentCount > 0 && (
+                <div 
+                  className="h-full bg-secondary transition-all duration-500" 
+                  style={{ width: `${(absentCount / Math.max(1, totalAttendanceCount)) * 100}%` }} 
+                  title={`Vắng: ${absentCount}`}
+                />
+              )}
+              {pendingCount > 0 && (
+                <div 
+                  className="h-full bg-slate-400/40 transition-all duration-500" 
+                  style={{ width: `${(pendingCount / Math.max(1, totalAttendanceCount)) * 100}%` }} 
+                  title={`Chưa rõ: ${pendingCount}`}
+                />
+              )}
             </div>
-            <div className="bg-surface p-3 border-2 border-border-main text-center shadow-sm">
-              <div className="text-2xl font-display text-text-muted font-bold">{pendingCount}</div>
-              <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted">{t('matchday.pending')}</div>
+
+            {/* 3 Metric Pills */}
+            <div className="grid grid-cols-3 gap-2.5 pt-1">
+              <div className="bg-surface-2 p-2 sm:p-2.5 border border-border-main text-center">
+                <div className="text-xl sm:text-2xl font-display text-primary font-bold">{presentCount}</div>
+                <div className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 font-display">{t('matchday.present', 'CÓ MẶT')}</div>
+              </div>
+              <div className="bg-surface-2 p-2 sm:p-2.5 border border-border-main text-center">
+                <div className="text-xl sm:text-2xl font-display text-secondary font-bold">{absentCount}</div>
+                <div className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400 font-display">{t('matchday.absent', 'VẮNG')}</div>
+              </div>
+              <div className="bg-surface-2 p-2 sm:p-2.5 border border-border-main text-center">
+                <div className="text-xl sm:text-2xl font-display text-text-muted font-bold">{pendingCount}</div>
+                <div className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-text-muted font-display">{t('matchday.pending', 'CHƯA RÕ')}</div>
+              </div>
             </div>
           </div>
 
@@ -1398,7 +1574,7 @@ export default function Matchday() {
                   placeholder={t('matchday.search_player') || 'Tìm tên cầu thủ...'}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-surface border border-border-main pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors"
+                  className="w-full bg-surface border border-border-main pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors font-medium"
                 />
               </div>
 
@@ -1439,7 +1615,7 @@ export default function Matchday() {
             )}
           </div>
 
-          {/* Player List */}
+          {/* Player List (2 Columns on MD+) */}
           {(() => {
             const sorted = [...players]
               .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -1470,16 +1646,16 @@ export default function Matchday() {
               const perMatch = p.isPerMatch ? getPlayerPerMatchStatus(p, matches) : null;
 
               return (
-                <div key={p.id} className={`flex justify-between items-center p-3 md:p-4 hover:bg-surface-2 transition-colors ${
+                <div key={p.id} className={`bg-surface border-2 border-border-main p-3 sm:p-3.5 flex items-center justify-between gap-3 shadow-sm hover:border-primary/50 transition-colors ${
                   isHiddenPlayer ? 'bg-surface-2/40 opacity-80' : ''
                 }`}>
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="w-8 h-8 shrink-0 flex items-center justify-center bg-surface text-text-muted font-display text-sm font-bold border border-border-main">
+                  <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+                    <span className="w-8 h-8 shrink-0 flex items-center justify-center bg-surface-2 text-text-muted font-display text-sm font-bold border border-border-main">
                       {p.jersey_number || '?'}
                     </span>
-                    <div className="flex flex-col min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-bold text-text-main text-base uppercase truncate">{p.name}</span>
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-bold text-text-main text-sm sm:text-base uppercase truncate">{p.name}</span>
                         {isHiddenPlayer && (
                           <span className="text-[10px] font-bold font-display uppercase tracking-wider bg-slate-700 text-white px-1.5 py-0.2 rounded-none">
                             {t('roster.hidden_badge', 'ẨN')}
@@ -1498,25 +1674,25 @@ export default function Matchday() {
                     </div>
                   </div>
 
-                  <div className={`flex items-center gap-1 bg-surface p-1 border border-border-main shrink-0 ${currentMatch.status === 'finished' ? 'opacity-60 grayscale cursor-not-allowed' : ''}`}>
+                  <div className={`flex items-center gap-1 bg-surface-2 p-1 border border-border-main shrink-0 ${currentMatch.status === 'finished' ? 'opacity-60 grayscale cursor-not-allowed' : ''}`}>
                     <button
                       disabled={currentMatch.status === 'finished'}
                       onClick={() => handleAttendance(p.id, 'present')}
-                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors ${status === 'present' ? 'bg-primary text-white shadow-sm' : 'text-text-muted hover:text-text-main'} ${currentMatch.status === 'finished' ? 'pointer-events-none' : ''}`}
+                      className={`px-3 py-1.5 text-xs font-display font-bold uppercase tracking-wider transition-colors ${status === 'present' ? 'bg-primary text-white shadow-sm' : 'text-text-muted hover:text-text-main'} ${currentMatch.status === 'finished' ? 'pointer-events-none' : ''}`}
                     >
-                      {t('matchday.yes')}
+                      {t('matchday.yes', 'CÓ')}
                     </button>
                     <button
                       disabled={currentMatch.status === 'finished'}
                       onClick={() => handleAttendance(p.id, 'absent')}
-                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors ${status === 'absent' ? 'bg-secondary text-white shadow-sm' : 'text-text-muted hover:text-text-main'} ${currentMatch.status === 'finished' ? 'pointer-events-none' : ''}`}
+                      className={`px-3 py-1.5 text-xs font-display font-bold uppercase tracking-wider transition-colors ${status === 'absent' ? 'bg-secondary text-white shadow-sm' : 'text-text-muted hover:text-text-main'} ${currentMatch.status === 'finished' ? 'pointer-events-none' : ''}`}
                     >
-                      {t('matchday.no')}
+                      {t('matchday.no', 'VẮNG')}
                     </button>
                     <button
                       disabled={currentMatch.status === 'finished'}
                       onClick={() => handleAttendance(p.id, 'pending')}
-                      className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors ${status === 'pending' ? 'bg-slate-700 text-white shadow-sm' : 'text-text-muted hover:text-text-main'} ${currentMatch.status === 'finished' ? 'pointer-events-none' : ''}`}
+                      className={`px-3 py-1.5 text-xs font-display font-bold uppercase tracking-wider transition-colors ${status === 'pending' ? 'bg-slate-700 text-white shadow-sm' : 'text-text-muted hover:text-text-main'} ${currentMatch.status === 'finished' ? 'pointer-events-none' : ''}`}
                     >
                       ?
                     </button>
@@ -1527,18 +1703,18 @@ export default function Matchday() {
 
             return (
               <div className="space-y-4">
-                <div className="bg-surface border-2 border-border-main shadow-sm divide-y divide-border-main mt-4">
-                  {activeList.length === 0 ? (
-                    <div className="p-6 text-center text-text-muted font-bold text-sm uppercase tracking-wider">
-                      {t('roster.no_filtered_players', 'Không có cầu thủ')}
-                    </div>
-                  ) : (
-                    activeList.map(p => renderPlayerRow(p, false))
-                  )}
-                </div>
+                {activeList.length === 0 ? (
+                  <div className="p-6 text-center text-text-muted font-bold text-sm uppercase tracking-wider bg-surface border-2 border-border-main">
+                    {t('roster.no_filtered_players', 'Không có cầu thủ')}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3">
+                    {activeList.map(p => renderPlayerRow(p, false))}
+                  </div>
+                )}
 
                 {hiddenList.length > 0 && (
-                  <div className="border-2 border-border-main bg-surface shadow-sm">
+                  <div className="border-2 border-border-main bg-surface shadow-sm mt-4">
                     <button
                       type="button"
                       onClick={() => setShowHiddenInAttendance(prev => !prev)}
@@ -1554,7 +1730,7 @@ export default function Matchday() {
                     </button>
 
                     {showHiddenInAttendance && (
-                      <div className="divide-y divide-border-main border-t-2 border-border-main">
+                      <div className="p-3 grid grid-cols-1 md:grid-cols-2 gap-2.5 border-t-2 border-border-main">
                         {hiddenList.map(p => renderPlayerRow(p, true))}
                       </div>
                     )}

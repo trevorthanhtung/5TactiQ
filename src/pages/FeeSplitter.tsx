@@ -10,6 +10,7 @@ import { useToastStore } from '../store/useToastStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { BottomSheet } from '../components/ui/BottomSheet';
 import { MoneyInput } from '../components/MoneyInput';
+import { FeeSplitterSkeleton } from '../components/ui/FeeSplitterSkeleton';
 import { formatCurrencyAmount, getCurrencyConfig, LANGUAGE_DEFAULT_CURRENCY } from '../utils/currencyUtils';
 
 export type MatchMode = 'internal' | 'opponent';
@@ -26,12 +27,22 @@ export default function FeeSplitter() {
   const queryVenueId = searchParams.get('venueId');
 
   const { t, i18n } = useTranslation();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
+
   const { players } = usePlayerStore();
   const { matches } = useMatchStore();
   const { venues } = useVenueStore();
   const { addTransaction } = useFundStore();
   const addToast = useToastStore(state => state.addToast);
   const { settings } = useSettingsStore();
+
 
   const activeCurrency = settings.currency || LANGUAGE_DEFAULT_CURRENCY[i18n.language] || 'VND';
   const currencyConfig = getCurrencyConfig(activeCurrency);
@@ -99,9 +110,9 @@ export default function FeeSplitter() {
   // Check if actively linked to a match (user chose match attendance mode)
   const isLinkedToMatch = headcountMode === 'match' && !!selectedMatch;
 
-  // Derive outcome automatically from selectedMatch score if linked to match, otherwise manual
+  // Derive outcome automatically from selectedMatch score if linked to a finished match, otherwise manual
   const matchOutcome: MatchOutcome = useMemo(() => {
-    if (isLinkedToMatch && selectedMatch) {
+    if (isLinkedToMatch && selectedMatch && selectedMatch.status === 'finished') {
       const us = Number(selectedMatch.scoreUs ?? 0);
       const them = Number(selectedMatch.scoreOpponent ?? 0);
       if (us > them) return 'win';
@@ -445,16 +456,15 @@ export default function FeeSplitter() {
     });
   };
 
-
-
-
-
-
+  if (isLoading) {
+    return <FeeSplitterSkeleton />;
+  }
 
   return (
-    <div className="p-4 flex flex-col min-h-full max-w-2xl mx-auto w-full pb-12 space-y-5">
+    <div className="p-4 flex flex-col min-h-full max-w-6xl mx-auto w-full pb-32 lg:pb-12">
       {/* Header & Match Mode Switcher */}
-      <div className="space-y-4">
+
+      <div className="space-y-4 mb-5">
         <div className="flex items-center justify-between gap-2 pt-2">
           <button
             onClick={() => navigate(-1)}
@@ -471,7 +481,7 @@ export default function FeeSplitter() {
         </div>
 
         {/* Match Mode Switcher */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 max-w-md">
           <button
             type="button"
             onClick={() => setMatchMode('opponent')}
@@ -497,11 +507,19 @@ export default function FeeSplitter() {
         </div>
       </div>
 
-      {/* HÀNG 1: 1. BẢNG COI TIỀN */}
-      <div className="hallmark-card p-5 space-y-4">
-        <h3 className="font-display text-xl uppercase text-primary border-b border-border-main pb-2">
-          {t('fee_splitter.row1_title', '1. BẢNG COI TIỀN')}
-        </h3>
+      {/* 2-Column Responsive Layout */}
+      <div className="flex flex-col lg:flex-row gap-5 lg:gap-6 items-start">
+        {/* RIGHT COLUMN: Results & Quick Message (sticky on desktop) */}
+        <div className="w-full lg:w-[390px] xl:w-[420px] lg:shrink-0 lg:order-2 space-y-5">
+          <div className="lg:sticky lg:top-4 space-y-5">
+            {/* HÀNG 1: 1. BẢNG COI TIỀN */}
+            <div className="hallmark-card p-5 space-y-4">
+              <div>
+                <h3 className="font-display text-xl uppercase text-primary border-b border-border-main pb-2">
+                  {t('fee_splitter.row1_title', '1. BẢNG COI TIỀN')}
+                </h3>
+                <p className="text-[10px] text-text-muted mt-1 italic">{t('fee_splitter.auto_update_note', 'Tự động tính theo các bước bên cạnh')}</p>
+              </div>
 
         {/* Big Per-Person Card */}
         <div className="py-5 flex flex-col items-center justify-center text-center bg-surface-2 border-2 border-border-main my-2">
@@ -540,14 +558,36 @@ export default function FeeSplitter() {
         </div>
       </div>
 
+            {/* HÀNG 5: 5. TIN NHẮN NHANH */}
+            <div className="hallmark-card p-5 space-y-3 bg-slate-50 border-slate-200">
+              <h3 className="font-display text-xl uppercase text-primary border-b border-slate-200 pb-2">
+                {t('fee_splitter.row5_title', '5. TIN NHẮN NHANH')}
+              </h3>
+              <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
+                {t('fee_splitter.preview_msg_label', 'Xem trước văn bản tin nhắn:')}
+              </div>
+              <pre className="text-xs font-mono whitespace-pre-wrap bg-white p-3 border border-slate-200 text-slate-700 max-h-48 overflow-y-auto leading-relaxed">
+                {generateGroupMessage()}
+              </pre>
+              <button
+                type="button"
+                onClick={handleCopyZalo}
+                className="w-full p-3 bg-emerald-600 hover:bg-emerald-700 text-white font-display text-base uppercase tracking-wider flex items-center justify-center gap-2 transition-colors shadow cursor-pointer active:scale-95"
+              >
+                {copied ? <Check size={18} /> : <Copy size={18} />}
+                <span>{copied ? t('fee_splitter.copied_btn', 'ĐÃ SAO CHÉP!') : t('fee_splitter.copy_msg_btn', 'SAO CHÉP NỘI DUNG TIN NHẮN')}</span>
+              </button>
+            </div>
+          </div>
+        </div>
 
-
-
-      {/* HÀNG 2: 2. ĐIỂM DANH ĐẾM NGƯỜI */}
-      <div className="hallmark-card p-5 space-y-4">
-        <h3 className="font-display text-xl uppercase text-primary border-b border-border-main pb-2">
-          {t('fee_splitter.row2_title', '2. ĐIỂM DANH ĐẾM NGƯỜI')}
-        </h3>
+        {/* LEFT COLUMN: Input Form (Steps 2, 3, 4) */}
+        <div className="flex-1 min-w-0 w-full space-y-5 lg:order-1">
+          {/* HÀNG 2: 2. ĐIỂM DANH ĐẾM NGƯỜI */}
+          <div className="hallmark-card p-5 space-y-4">
+            <h3 className="font-display text-xl uppercase text-primary border-b border-border-main pb-2">
+              {t('fee_splitter.row2_title', '2. ĐIỂM DANH ĐẾM NGƯỜI')}
+            </h3>
 
         {/* Mode Switcher for Headcount */}
         <div className="flex border border-border-main overflow-hidden text-xs font-bold">
@@ -905,7 +945,7 @@ export default function FeeSplitter() {
             </button>
           </div>
 
-          {hasExtraFee && (
+          {hasExtraFee ? (
             <div className="space-y-2 pt-1">
               <div className="relative">
                 <MoneyInput
@@ -917,6 +957,10 @@ export default function FeeSplitter() {
                 />
               </div>
             </div>
+          ) : (
+            <p className="text-xs text-text-muted italic pt-1">
+              {t('fee_splitter.no_extra_desc', 'Không bật: Không tính thêm phụ phí nước & dịch vụ khác.')}
+            </p>
           )}
         </div>
       </div>
@@ -1078,31 +1122,8 @@ export default function FeeSplitter() {
           </div>
         </div>
       )}
-
-      {/* HÀNG 5: 5. TIN NHẮN NHANH */}
-      <div className="hallmark-card p-5 space-y-3 bg-slate-50 border-slate-200">
-        <h3 className="font-display text-xl uppercase text-primary border-b border-slate-200 pb-2">
-          {t('fee_splitter.row5_title', '5. TIN NHẮN NHANH')}
-        </h3>
-        <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
-          {t('fee_splitter.preview_msg_label', 'Xem trước văn bản tin nhắn:')}
         </div>
-        <pre className="text-xs font-mono whitespace-pre-wrap bg-white p-3 border border-slate-200 text-slate-700 max-h-48 overflow-y-auto leading-relaxed">
-          {generateGroupMessage()}
-        </pre>
-        <button
-          type="button"
-          onClick={handleCopyZalo}
-          className="w-full p-3 bg-emerald-600 hover:bg-emerald-700 text-white font-display text-base uppercase tracking-wider flex items-center justify-center gap-2 transition-colors shadow cursor-pointer"
-        >
-          {copied ? <Check size={18} /> : <Copy size={18} />}
-          <span>{copied ? t('fee_splitter.copied_btn', 'ĐÃ SAO CHÉP!') : t('fee_splitter.copy_msg_btn', 'SAO CHÉP NỘI DUNG TIN NHẮN')}</span>
-        </button>
       </div>
     </div>
   );
-
-
-
-
 }

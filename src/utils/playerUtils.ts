@@ -7,7 +7,7 @@ export function getPlayerAttendedMatches(playerId: string, matches: MatchInfo[])
   if (!matches || matches.length === 0) return 0;
   let count = 0;
   for (const m of matches) {
-    if (m.attendance && m.attendance[playerId] === 'present') {
+    if (m.status === 'finished' && m.attendance && m.attendance[playerId] === 'present') {
       count += 1;
     }
   }

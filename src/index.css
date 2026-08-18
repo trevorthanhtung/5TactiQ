@@ -70,7 +70,7 @@ select:-webkit-autofill {
   --color-text-muted: var(--color-text-muted-base);
   --color-border-main: var(--color-border);
   
-  --font-display: 'Oswald', sans-serif;
+  --font-display: 'Barlow Condensed', 'Oswald', sans-serif;
   --font-sans: 'Inter', sans-serif;
 }
 

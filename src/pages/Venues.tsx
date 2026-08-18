@@ -122,7 +122,7 @@ export default function Venues() {
   }
 
   return (
-    <div className="p-4 flex flex-col min-h-full max-w-5xl mx-auto w-full pb-8">
+    <div className="p-4 flex flex-col min-h-full max-w-6xl mx-auto w-full pb-32 lg:pb-8">
       {/* Header */}
       <div className="flex justify-between items-center mb-6 pt-2">
         <div className="flex items-center gap-2 @sm:gap-3">
@@ -175,7 +175,7 @@ export default function Venues() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {venues
             .filter(v => 
               v.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -186,73 +186,95 @@ export default function Venues() {
             <div
               key={venue.id}
               onClick={() => handleOpenModal(venue)}
-              className="bg-surface border-2 border-border-main p-4 hover:border-primary/50 transition-colors group relative shadow-sm cursor-pointer hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_var(--color-primary)] flex flex-col h-full"
+              className="bg-surface border-2 border-border-main p-4 hover:border-primary/50 transition-all group relative shadow-sm cursor-pointer hover:-translate-y-0.5 hover:shadow-[3px_3px_0px_0px_var(--color-primary)] flex flex-col justify-between h-full"
             >
-              <div className="mb-2">
-                <h3 className="font-display font-bold text-primary uppercase text-xl leading-tight group-hover:text-secondary transition-colors">{venue.name}</h3>
-              </div>
+              <div>
+                <div className="mb-2">
+                  <h3 className="font-display font-bold text-primary uppercase text-lg leading-tight group-hover:text-secondary transition-colors">{venue.name}</h3>
+                </div>
 
-              <div className="flex-1 flex flex-col text-sm text-text-muted space-y-2.5">
-                {venue.address && (
-                  <a 
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue.address)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="flex items-start gap-2 hover:text-secondary group/link transition-colors"
-                  >
-                    <MapPin size={16} className="text-slate-400 shrink-0 mt-0.5 group-hover/link:text-secondary transition-colors" />
-                    <span className="underline-offset-2 group-hover/link:underline">{venue.address}</span>
-                  </a>
-                )}
-
-                {/* Day / Night Pricing Badges */}
-                {(venue.priceDay !== null && venue.priceDay !== undefined && venue.priceDay > 0 || venue.priceNight !== null && venue.priceNight !== undefined && venue.priceNight > 0) && (
-                  <div className="grid grid-cols-2 gap-2 my-1 pt-1.5 border-t border-border-main">
-                    {venue.priceDay ? (
-                      <div className="p-2.5 bg-surface-2 border-2 border-border-main flex flex-col justify-between">
-                        <span className="text-[10px] uppercase font-bold font-display tracking-widest text-text-muted">
-                          {t('venues.day_slot', 'Sáng')}
-                        </span>
-                        <span className="font-display font-bold text-primary text-base mt-0.5 tracking-tight">
-                          {formatCurrencyAmount(venue.priceDay, activeCurrency)}
-                        </span>
-                      </div>
-                    ) : null}
-
-                    {venue.priceNight ? (
-                      <div className="p-2.5 bg-surface-2 border-2 border-border-main flex flex-col justify-between">
-                        <span className="text-[10px] uppercase font-bold font-display tracking-widest text-text-muted">
-                          {t('venues.night_slot', 'Tối')}
-                        </span>
-                        <span className="font-display font-bold text-primary text-base mt-0.5 tracking-tight">
-                          {formatCurrencyAmount(venue.priceNight, activeCurrency)}
-                        </span>
-                      </div>
-                    ) : null}
-                  </div>
-                )}
-
-                {venue.note && (
-                  <div className="flex items-start gap-2 p-2.5 bg-surface-2 border border-border-main/60 text-xs text-text-muted">
-                    <FileText size={15} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                    <p className="whitespace-pre-line leading-relaxed font-sans">{venue.note}</p>
-                  </div>
-                )}
-
-                {/* Footer Actions */}
-                {venue.phone && (
-                  <div className="mt-auto pt-2 flex flex-wrap items-center justify-between gap-2 border-t border-border-main/40">
-                    <a
-                      href={`tel:${venue.phone}`}
+                <div className="flex flex-col text-sm text-text-muted space-y-2.5">
+                  {venue.address && (
+                    <a 
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue.address)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-600 text-white text-xs font-bold uppercase tracking-wider hover:bg-emerald-700 hover:-translate-y-0.5 transition-all shadow-[2px_2px_0px_0px_rgba(4,120,87,1)] border-2 border-emerald-700"
+                      className="flex items-start gap-2 hover:text-secondary group/link transition-colors"
                     >
-                      <Phone size={13} /> {t('venues.call_book', 'GỌI: ')} {venue.phone}
+                      <MapPin size={16} className="text-slate-400 shrink-0 mt-0.5 group-hover/link:text-secondary transition-colors" />
+                      <span className="underline-offset-2 group-hover/link:underline line-clamp-2">{venue.address}</span>
                     </a>
-                  </div>
-                )}
+                  )}
+
+                  {/* Day / Night Pricing Badges */}
+                  {(venue.priceDay || venue.priceNight) ? (
+                    <div className="grid grid-cols-2 gap-2 my-1 pt-1.5 border-t border-border-main">
+                      {venue.priceDay ? (
+                        <div className="p-2 bg-surface-2 border-2 border-border-main flex flex-col justify-between">
+                          <span className="text-[10px] uppercase font-bold font-display tracking-widest text-text-muted">
+                            {t('venues.day_slot', 'Sáng')}
+                          </span>
+                          <span className="font-display font-bold text-primary text-sm mt-0.5 tracking-tight">
+                            {formatCurrencyAmount(venue.priceDay, activeCurrency)}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="p-2 bg-surface-2/50 border border-dashed border-border-main/50 flex flex-col justify-between opacity-50">
+                          <span className="text-[10px] uppercase font-bold font-display tracking-widest text-text-muted">
+                            {t('venues.day_slot', 'Sáng')}
+                          </span>
+                          <span className="text-xs text-text-muted italic mt-0.5">—</span>
+                        </div>
+                      )}
+
+                      {venue.priceNight ? (
+                        <div className="p-2 bg-surface-2 border-2 border-border-main flex flex-col justify-between">
+                          <span className="text-[10px] uppercase font-bold font-display tracking-widest text-text-muted">
+                            {t('venues.night_slot', 'Tối')}
+                          </span>
+                          <span className="font-display font-bold text-primary text-sm mt-0.5 tracking-tight">
+                            {formatCurrencyAmount(venue.priceNight, activeCurrency)}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="p-2 bg-surface-2/50 border border-dashed border-border-main/50 flex flex-col justify-between opacity-50">
+                          <span className="text-[10px] uppercase font-bold font-display tracking-widest text-text-muted">
+                            {t('venues.night_slot', 'Tối')}
+                          </span>
+                          <span className="text-xs text-text-muted italic mt-0.5">—</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="my-1 pt-1.5 border-t border-border-main">
+                      <div className="py-2 px-2.5 bg-surface-2/60 border border-dashed border-border-main text-center text-xs text-text-muted/70 italic">
+                        {t('venues.no_price_note', 'Chưa lưu giá sân')}
+                      </div>
+                    </div>
+                  )}
+
+                  {venue.note && (
+                    <div className="flex items-start gap-2 p-2 bg-surface-2 border border-border-main/60 text-xs text-text-muted">
+                      <FileText size={14} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                      <p className="whitespace-pre-line leading-relaxed font-sans line-clamp-2">{venue.note}</p>
+                    </div>
+                  )}
+                </div>
               </div>
+
+              {/* Footer Actions */}
+              {venue.phone && (
+                <div className="mt-3 pt-2.5 flex items-center border-t border-border-main/40">
+                  <a
+                    href={`tel:${venue.phone}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-600 text-white text-xs font-bold uppercase tracking-wider hover:bg-emerald-700 hover:-translate-y-0.5 transition-all shadow-[2px_2px_0px_0px_rgba(4,120,87,1)] border-2 border-emerald-700 active:scale-95"
+                  >
+                    <Phone size={13} /> {t('venues.call_book', 'GỌI: ')} {venue.phone}
+                  </a>
+                </div>
+              )}
             </div>
           ))}
         </div>

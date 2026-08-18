@@ -2,7 +2,7 @@ import React from 'react';
 
 export function TacticsSkeleton() {
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] @md:h-screen bg-surface overflow-hidden animate-pulse">
+    <div className="flex flex-col h-[calc(100vh-64px)] md:h-screen bg-surface overflow-hidden animate-pulse">
       {/* Top Header Skeleton */}
       <div className="h-14 bg-surface border-b-2 border-border-main flex items-center justify-between px-4 shrink-0">
         <div className="flex items-center gap-3">
@@ -23,7 +23,8 @@ export function TacticsSkeleton() {
         </div>
 
         {/* Center Canvas & Bottom Panel Skeleton */}
-        <div className="flex-1 flex flex-col relative overflow-hidden bg-surface p-2 @md:p-4 gap-4">
+        <div className="flex-1 flex flex-col relative overflow-hidden bg-surface p-2 md:p-4 gap-4">
+
           
           {/* Pitch Area Skeleton */}
           <div className="flex-1 bg-[#1b7a3e]/30 rounded-xl border-4 border-[#1b7a3e]/50 flex items-center justify-center relative overflow-hidden">

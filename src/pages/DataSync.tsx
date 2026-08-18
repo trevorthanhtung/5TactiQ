@@ -54,7 +54,7 @@ export default function DataSync() {
     if (Capacitor.isNativePlatform()) {
       try {
         const fileName = `5tactiq_backup_${new Date().getTime()}.5tactiq`;
-        
+
         try {
           await FileSaver.saveAs({ data: jsonStr, filename: fileName });
           useToastStore.getState().addToast({
@@ -64,7 +64,7 @@ export default function DataSync() {
           return;
         } catch (saveErr: any) {
           console.warn('Lưu file bị hủy hoặc lỗi, chuyển sang Share:', saveErr);
-          
+
           // Fallback to app's sandboxed Documents folder + Share Sheet
           const result = await Filesystem.writeFile({
             path: fileName,
@@ -222,7 +222,7 @@ export default function DataSync() {
 
             {peerId && (
               <>
-                <div 
+                <div
                   onClick={() => {
                     navigator.clipboard.writeText(peerId);
                     useToastStore.getState().addToast({
@@ -238,12 +238,12 @@ export default function DataSync() {
                     <span className="text-white text-sm font-sans font-bold uppercase tracking-widest">{t('sync.host_copy_hint', 'Bấm để copy')}</span>
                   </div>
                 </div>
-                
+
                 <div className="w-full max-w-xs border-2 border-dashed border-primary/30 p-6 bg-surface flex flex-col items-center justify-center mb-6">
                   <QRCodeCanvas value={peerId} size={200} includeMargin={true} />
                   <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted mt-4 text-center">{t('sync.host_scan_camera', 'Quét bằng Camera')}</p>
                 </div>
-                
+
                 <div className="h-6 flex items-center justify-center">
                   {peerStatus === 'ready' && <span className="text-sm font-bold text-text-muted animate-pulse">{t('sync.host_status_waiting', 'Đang chờ kết nối...')}</span>}
                   {peerStatus === 'connected' && <span className="text-sm font-bold text-secondary animate-pulse">{t('sync.host_status_sending', 'Đang truyền dữ liệu...')}</span>}
@@ -282,7 +282,7 @@ export default function DataSync() {
                 <span className="text-[10px] font-bold uppercase tracking-widest text-text-muted">{t('sync.client_or', 'Hoặc')}</span>
                 <div className="h-[2px] flex-1 bg-surface"></div>
               </div>
-              
+
               <button
                 onClick={() => setIsQRScannerOpen(true)}
                 className="w-full border-2 border-dashed border-secondary/40 p-4 bg-surface flex flex-col items-center justify-center hover:bg-secondary/5 hover:border-secondary transition-all group active:scale-95 lg:hidden"
@@ -349,7 +349,7 @@ export default function DataSync() {
       >
         <div className="flex flex-col">
           <p className="text-text-muted text-sm mb-4">{t('sync.import_desc', 'Vui lòng chọn các mục bạn muốn nhập vào máy này.')}</p>
-          
+
           <div className="flex bg-surface-2 p-1 border-2 border-border-main mb-2">
             <button
               onClick={() => setImportMode('overwrite')}
@@ -365,15 +365,15 @@ export default function DataSync() {
             </button>
           </div>
           {importMode === 'overwrite' ? (
-             <p className="text-rose-500 text-[11px] mb-4 font-medium italic">{t('sync.mode_overwrite_desc', '* Dữ liệu cũ của các mục được chọn sẽ bị XÓA SẠCH và thay thế.')}</p>
+            <p className="text-rose-500 text-[11px] mb-4 font-medium italic">{t('sync.mode_overwrite_desc', '* Dữ liệu cũ của các mục được chọn sẽ bị XÓA SẠCH và thay thế.')}</p>
           ) : (
-             <p className="text-emerald-600 text-[11px] mb-4 font-medium italic">{t('sync.mode_merge_desc', '* Dữ liệu cũ sẽ được GIỮ LẠI và gộp thêm dữ liệu mới.')}</p>
+            <p className="text-emerald-600 text-[11px] mb-4 font-medium italic">{t('sync.mode_merge_desc', '* Dữ liệu cũ sẽ được GIỮ LẠI và gộp thêm dữ liệu mới.')}</p>
           )}
-          
+
           <div className="space-y-3 mb-6 max-h-[50vh] overflow-y-auto pr-1">
             {pendingImportData && Object.keys(pendingImportData).filter(k => STORAGE_KEYS_META[k]).map(key => (
-              <div 
-                key={key} 
+              <div
+                key={key}
                 onClick={() => {
                   if (selectedImportKeys.includes(key)) {
                     setSelectedImportKeys(prev => prev.filter(k => k !== key));
@@ -412,8 +412,8 @@ export default function DataSync() {
           </div>
         </div>
       </BottomSheet>
-      
-      <QRScanner 
+
+      <QRScanner
         isOpen={isQRScannerOpen}
         onClose={() => setIsQRScannerOpen(false)}
         onScan={(text) => {

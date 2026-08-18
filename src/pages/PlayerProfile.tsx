@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useMatchStore } from '../store/useMatchStore';
+import { useSettingsStore } from '../store/useSettingsStore';
 import { useToastStore } from '../store/useToastStore';
-import { User, ArrowLeft, Trash2, Award, X, Edit2, Activity, Phone, Hash, FileText, Calendar, EyeOff, Eye, PlusCircle, Check } from 'lucide-react';
+import { 
+  ArrowLeft, Edit2, Activity, Phone, Hash, FileText, 
+  Calendar, Check, ShieldCheck, Zap, Trophy, TrendingUp, EyeOff
+} from 'lucide-react';
 import { useHardwareBack } from '../hooks/useHardwareBack';
 import { PlayerProfileSkeleton } from '../components/ui/PlayerProfileSkeleton';
 import { BottomSheet } from '../components/ui/BottomSheet';
@@ -17,6 +21,7 @@ export default function PlayerProfile() {
   const navigate = useNavigate();
   const { players, deletePlayer, setCaptain, updatePlayer } = usePlayerStore();
   const { matches } = useMatchStore();
+  const { settings } = useSettingsStore();
   const { addToast } = useToastStore();
   const [isLoading, setIsLoading] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -72,8 +77,9 @@ export default function PlayerProfile() {
     return <div className="p-4 text-center mt-10">{t('roster.not_found')}</div>;
   }
 
-  // Calculate player goals and assists across all valid matches (non-internal or internal with trackStats enabled)
+  // Calculate player goals and assists across all valid finished matches
   const totalGoals = matches.reduce((sum, m) => {
+    if (m.status !== 'finished') return sum;
     const shouldTrackStats = m.matchType !== 'internal' || !!m.trackStats;
     if (shouldTrackStats && m.stats) {
       const s = m.stats.find(stat => stat.playerId === player.id);
@@ -83,6 +89,7 @@ export default function PlayerProfile() {
   }, 0);
 
   const totalAssists = matches.reduce((sum, m) => {
+    if (m.status !== 'finished') return sum;
     const shouldTrackStats = m.matchType !== 'internal' || !!m.trackStats;
     if (shouldTrackStats && m.stats) {
       const s = m.stats.find(stat => stat.playerId === player.id);
@@ -90,6 +97,16 @@ export default function PlayerProfile() {
     }
     return sum;
   }, 0);
+
+  // Filter all finished matches this player participated in
+  const playerMatches = matches.filter(m => {
+    if (m.status !== 'finished') return false;
+    const isAttended = m.attendance?.[player.id] === 'present';
+    const stat = m.stats?.find(s => s.playerId === player.id);
+    const hasStats = stat && ((stat.goals || 0) > 0 || (stat.assists || 0) > 0);
+    const hasTeam = !!m.teams?.[player.id];
+    return isAttended || hasStats || hasTeam;
+  });
 
   const handleDelete = async () => {
     const idToDelete = player.id;
@@ -178,292 +195,443 @@ export default function PlayerProfile() {
   };
 
   return (
-    <div className="p-4 md:p-6 flex flex-col min-h-full max-w-2xl mx-auto w-full pb-8">
-      <button 
-        onClick={() => navigate(-1)} 
-        className="flex items-center gap-2 font-bold text-text-muted hover:text-primary mb-6 transition-colors"
-      >
-        <ArrowLeft size={20} /> {t('roster.back_to_list')}
-      </button>
+    <div className="p-3.5 sm:p-6 lg:p-8 flex flex-col min-h-full max-w-7xl 2xl:max-w-[1520px] mx-auto w-full pb-20 lg:pb-12 animate-fade-in-up">
+      
+      {/* 🧭 Back Navigation */}
+      <div className="mb-6">
+        <Link 
+          to="/roster" 
+          className="inline-flex items-center gap-2 font-display text-xs sm:text-sm uppercase tracking-wider font-bold text-text-muted hover:text-primary transition-colors"
+        >
+          <ArrowLeft size={16} /> 
+          <span>{t('roster.title', 'ĐỘI HÌNH')}</span>
+        </Link>
+      </div>
 
-      <div className="hallmark-card bg-surface overflow-hidden relative mb-6 p-6 sm:p-7 border-2 border-border-main shadow-md">
-        {/* Large Background Watermark Number */}
-        <div className="absolute right-[-10px] bottom-[-25px] text-[150px] sm:text-[180px] font-display text-primary/10 leading-none select-none pointer-events-none z-0">
-          {player.jersey_number || 'X'}
-        </div>
-
-        <div className="relative z-10 flex flex-col gap-5">
-          {/* Top Section: Name & Badges */}
-          <div>
-            <div className="flex items-center justify-between gap-4 flex-wrap mb-3">
-              <h1 className="text-3xl sm:text-4xl font-display uppercase tracking-wide text-text-main font-bold">
-                {player.name}
-              </h1>
-              
-              {/* Jersey Pill Badge */}
-              <div className="flex items-center gap-1.5 bg-surface-2 px-3 py-1 border border-border-main text-xs font-bold uppercase tracking-widest text-text-muted">
-                <Hash size={14} className="text-secondary" />
-                <span>{t('roster.jersey_number')}:</span>
-                <span className="text-text-main font-display text-base font-bold ml-0.5">
-                  {player.jersey_number !== null && player.jersey_number !== undefined ? `#${player.jersey_number}` : t('roster.no_jersey')}
-                </span>
-              </div>
+      {/* 📐 2-Column Responsive Bento Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        {/* 👈 LEFT COLUMN: Player Card & Actions (5 cols on lg, 4 cols on 2xl) */}
+        <div className="lg:col-span-5 2xl:col-span-4 flex flex-col gap-4 sm:gap-6">
+          
+          {/* 🎴 Athletic Player Identity Card */}
+          <div className="hallmark-card bg-surface overflow-hidden relative p-5 sm:p-6 border-2 border-border-main shadow-sm">
+            {/* Background Watermark Number */}
+            <div className="absolute right-[-10px] bottom-[-25px] text-[140px] sm:text-[170px] font-display font-bold text-primary/[0.07] leading-none select-none pointer-events-none z-0">
+              {player.jersey_number !== null && player.jersey_number !== undefined ? player.jersey_number : '—'}
             </div>
 
-            {/* Badges Row */}
-            <div className="flex gap-2 flex-wrap items-center">
-              {isPlayerHidden(player, matches) && (
-                <span className="bg-slate-700 text-white font-display font-bold uppercase tracking-widest px-3 py-1 text-xs shadow-sm">
-                  {t('roster.hidden_badge', 'ẨN')}
-                </span>
+            <div className="relative z-10 flex flex-col gap-4">
+              <div>
+                <div className="flex items-center justify-between gap-3 flex-wrap mb-2">
+                  <h1 className="text-2xl sm:text-3xl font-display uppercase tracking-wide text-text-main font-bold leading-none">
+                    {player.name}
+                  </h1>
+                  
+                  {/* Jersey Pill */}
+                  <div className="flex items-center gap-1 bg-surface-2 px-2.5 py-1 border border-border-main text-xs font-bold uppercase tracking-wider text-text-muted">
+                    <Hash size={13} className="text-secondary" />
+                    <span>{t('roster.jersey_number')}:</span>
+                    <span className="text-text-main font-display text-sm font-bold">
+                      {player.jersey_number !== null && player.jersey_number !== undefined ? `#${player.jersey_number}` : t('roster.no_jersey')}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Badges Row */}
+                <div className="flex gap-1.5 flex-wrap items-center pt-1">
+                  {isPlayerHidden(player, matches) && (
+                    <span className="bg-slate-700 text-white font-display font-bold uppercase tracking-widest px-2.5 py-0.5 text-xs shadow-sm">
+                      {t('roster.hidden_badge', 'ẨN')}
+                    </span>
+                  )}
+                  {player.isCaptain && (
+                    <span className="bg-amber-500 text-white font-display font-bold uppercase tracking-widest px-2.5 py-0.5 text-xs shadow-sm" title="Đội trưởng">
+                      C • {t('roster.captain_label', 'ĐỘI TRƯỞNG')}
+                    </span>
+                  )}
+                  {player.isBorrowed && (
+                    <span className="bg-purple-600 text-white font-display font-bold uppercase tracking-widest px-2.5 py-0.5 text-xs shadow-sm">
+                      {t('roster.borrowed_badge', 'MƯỢN')}
+                    </span>
+                  )}
+                  {player.isYouth && (
+                    <span className="bg-emerald-500 text-white font-display font-bold uppercase tracking-widest px-2.5 py-0.5 text-xs shadow-sm">
+                      {t('roster.youth_badge', 'TRẺ LÊN')}
+                    </span>
+                  )}
+                  {player.isPerMatch && (
+                    <span className="bg-amber-600 text-white font-display font-bold uppercase tracking-widest px-2.5 py-0.5 text-xs shadow-sm">
+                      {t('roster.per_match_badge', 'THEO TRẬN')}
+                    </span>
+                  )}
+                  {player.positions.map(pos => (
+                    <span key={pos} className="font-display font-bold uppercase tracking-wider bg-accent/40 text-primary px-2 py-0.5 text-xs">
+                      {t(`position.${pos}`)}
+                    </span>
+                  ))}
+                  {player.positions.length === 0 && (
+                    <span className="text-xs text-text-muted italic">{t('roster.no_position')}</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Details: Phone & Note */}
+              {(player.phone || player.note) && (
+                <div className="flex flex-col gap-2 pt-3 border-t border-border-main/60">
+                  {player.phone && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="inline-flex items-center px-2 py-0.5 bg-surface-2 text-text-muted border border-border-main text-[11px] font-bold uppercase tracking-wider">
+                        {t('roster.phone_label', 'Số điện thoại')}
+                      </span>
+                      <a href={`tel:${player.phone}`} className="font-mono font-bold text-text-main hover:text-secondary hover:underline text-sm tracking-wide">
+                        {player.phone}
+                      </a>
+                    </div>
+                  )}
+
+                  {player.note && (
+                    <div className="p-2.5 bg-surface-2/60 border-l-4 border-secondary text-xs flex items-start gap-2">
+                      <FileText size={14} className="text-secondary shrink-0 mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <span className="font-bold text-[10px] uppercase tracking-wider block text-text-muted mb-0.5">
+                          {t('roster.note_label', 'Ghi chú')}
+                        </span>
+                        <p className="text-text-main font-medium text-xs leading-relaxed break-words">
+                          {player.note}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
-              {player.isCaptain && (
-                <span className="bg-amber-500 text-white font-display font-bold uppercase tracking-widest px-3 py-1 text-xs shadow-sm" title="Đội trưởng">
-                  C
-                </span>
-              )}
-              {player.isBorrowed && (
-                <span className="bg-purple-600 text-white font-display font-bold uppercase tracking-widest px-3 py-1 text-xs shadow-sm" title={t('roster.borrowed_tooltip', 'Cầu thủ mượn')}>
-                  {t('roster.borrowed_badge', 'MƯỢN')}
-                </span>
-              )}
-              {player.isYouth && (
-                <span className="bg-emerald-500 text-white font-display font-bold uppercase tracking-widest px-3 py-1 text-xs shadow-sm" title={t('roster.youth_tooltip', 'Cầu thủ đội trẻ lên')}>
-                  {t('roster.youth_badge', 'TRẺ LÊN')}
-                </span>
-              )}
-              {player.isPerMatch && (
-                <span className="bg-amber-600 text-white font-display font-bold uppercase tracking-widest px-3 py-1 text-xs shadow-sm" title={t('roster.per_match_tooltip', 'Cầu thủ đá theo số trận')}>
-                  {t('roster.per_match_badge', 'THEO TRẬN')}
-                </span>
-              )}
-              {player.healthStatus && player.healthStatus !== 'Khỏe mạnh' && (
-                <span className={`font-display font-bold uppercase tracking-widest text-white px-3 py-1 text-xs shadow-sm ${player.healthStatus.includes('Chấn thương') ? 'bg-red-500' : 'bg-sky-500'}`}>
+            </div>
+          </div>
+
+          {/* 🏥 Health & Injury Status Card (Inline Status) */}
+          <div className="hallmark-card bg-surface border-2 border-border-main p-4 sm:p-5 flex flex-col gap-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-display font-bold uppercase tracking-wider text-text-muted">
+                {t('fitness.status', 'Tình trạng thể lực')}
+              </span>
+              <button
+                type="button"
+                onClick={openHealthModal}
+                className="text-xs font-display font-bold uppercase tracking-wider text-secondary hover:underline"
+              >
+                {t('roster.edit_health', 'Cập nhật')}
+              </button>
+            </div>
+
+            {/* Visual Status Indicator Banner */}
+            <div className={`p-2.5 sm:p-3 border-2 flex items-center justify-between gap-3 ${
+              !player.healthStatus || player.healthStatus === 'Khỏe mạnh'
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
+                : player.healthStatus === 'Chấn thương nặng'
+                ? 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-400'
+                : player.healthStatus === 'Chấn thương nhẹ'
+                ? 'bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-400'
+                : 'bg-blue-500/10 border-blue-500/30 text-blue-700 dark:text-blue-400'
+            }`}>
+              <div className="flex items-center gap-2">
+                <div className={`w-2.5 h-2.5 rounded-full ${
+                  !player.healthStatus || player.healthStatus === 'Khỏe mạnh'
+                    ? 'bg-emerald-500'
+                    : player.healthStatus === 'Chấn thương nặng'
+                    ? 'bg-rose-500 animate-pulse'
+                    : player.healthStatus === 'Chấn thương nhẹ'
+                    ? 'bg-amber-500'
+                    : 'bg-blue-500'
+                }`} />
+                <span className="font-display font-bold text-xs sm:text-sm uppercase tracking-wider">
                   {player.healthStatus === 'Chấn thương nhẹ' ? t('health.light_injury', 'Chấn thương nhẹ') :
                    player.healthStatus === 'Chấn thương nặng' ? t('health.severe_injury', 'Chấn thương nặng') :
                    player.healthStatus === 'Đang hồi phục' ? t('health.recovering', 'Đang hồi phục') :
-                   player.healthStatus}
+                   t('health.healthy', 'Khỏe mạnh (Sẵn sàng thi đấu)')}
                 </span>
-              )}
-              {player.positions.map(pos => (
-                <span key={pos} className="font-display font-bold uppercase tracking-widest bg-secondary text-white px-3 py-1 text-xs shadow-sm">
-                  {t(`position.${pos}`)}
-                </span>
-              ))}
+              </div>
             </div>
+
+            {player.healthNote && (
+              <div className="text-xs text-text-muted italic bg-surface-2 p-2 border border-border-main">
+                <span className="font-bold not-italic">{t('fitness.note', 'Ghi chú')}:</span> {player.healthNote}
+              </div>
+            )}
           </div>
 
-          {/* Details Section: Phone & Note */}
-          {(player.phone || player.note) && (
-            <div className="flex flex-col gap-2.5 pt-2 border-t border-border-main/60">
-              {player.phone && (
-                <div className="flex items-center gap-2.5 text-sm">
-                  <span className="inline-flex items-center px-2.5 py-1 bg-surface-2 text-text-muted border border-border-main text-xs font-bold uppercase tracking-wider">
-                    <span>{t('roster.phone_label', 'Số điện thoại')}</span>
-                  </span>
-                  <a href={`tel:${player.phone}`} className="font-mono font-bold text-text-main hover:text-secondary hover:underline text-base tracking-wide">
-                    {player.phone}
-                  </a>
-                </div>
-              )}
-
-              {player.note && (
-                <div className="p-3 bg-surface-2/60 border-l-4 border-secondary text-sm flex items-start gap-2.5 mt-1">
-                  <FileText size={16} className="text-secondary shrink-0 mt-0.5" />
-                  <div className="flex-1 min-w-0">
-                    <span className="font-bold text-[11px] uppercase tracking-wider block text-text-muted mb-0.5">
-                      {t('roster.note_label', 'Ghi chú')}
+          {/* 📅 Match-based Contract Banner & Renewal (if applicable) */}
+          {player.isPerMatch && (() => {
+            const perMatch = getPlayerPerMatchStatus(player, matches);
+            return (
+              <div className="bg-surface border-2 border-border-main p-4 sm:p-5 shadow-sm">
+                <div className="flex items-center justify-between gap-3 flex-wrap mb-2.5">
+                  <div className="flex items-center gap-2">
+                    <Calendar size={16} className="text-amber-600" />
+                    <span className="font-display text-xs sm:text-sm font-bold uppercase tracking-wider text-text-main">
+                      {t('roster.per_match_label', 'HỢP ĐỒNG THEO TRẬN')}
                     </span>
-                    <p className="text-text-main font-medium text-sm leading-relaxed break-words">
-                      {player.note}
-                    </p>
+                  </div>
+                  <span className={`px-2 py-0.5 text-[11px] font-display font-bold uppercase tracking-wider border ${
+                    perMatch.isCompleted 
+                      ? 'bg-slate-700 text-white border-slate-700' 
+                      : 'bg-amber-500 text-white border-amber-600'
+                  }`}>
+                    {perMatch.isCompleted 
+                      ? t('roster.per_match_completed', 'Đã hết số trận') 
+                      : t('roster.per_match_active', { attended: perMatch.attended, quota: perMatch.quota, defaultValue: `Đang hoạt động (${perMatch.attended}/${perMatch.quota} trận)` })}
+                  </span>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="mt-2">
+                  <div className="flex justify-between text-xs font-bold uppercase tracking-wider text-text-muted mb-1">
+                    <span>{t('roster.per_match_attended_label', 'Số trận đã đá')}:</span>
+                    <span className="text-text-main font-mono text-xs">{perMatch.attended} / {perMatch.quota} {t('roster.match_unit', 'Trận')}</span>
+                  </div>
+                  <div className="w-full h-2.5 bg-surface-2 border border-border-main overflow-hidden">
+                    <div 
+                      className={`h-full transition-all duration-500 ${perMatch.isCompleted ? 'bg-slate-600' : 'bg-amber-500'}`}
+                      style={{ width: `${Math.min(100, (perMatch.attended / perMatch.quota) * 100)}%` }}
+                    />
                   </div>
                 </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
 
-      {/* Match-based Contract Banner & Renewal Card */}
-      {player.isPerMatch && (() => {
-        const perMatch = getPlayerPerMatchStatus(player, matches);
-        return (
-          <div className="bg-surface border-2 border-border-main p-4 sm:p-5 mb-6 shadow-sm">
-            <div className="flex items-center justify-between gap-3 flex-wrap mb-2.5">
-              <div className="flex items-center gap-2">
-                <Calendar size={18} className="text-amber-600" />
-                <span className="font-display text-sm font-bold uppercase tracking-wider text-text-main">
-                  {t('roster.per_match_label', 'HỢP ĐỒNG ĐÁ THEO TRẬN')}
-                </span>
+                {/* Quick Renewal Buttons */}
+                <div className="mt-3 pt-2.5 border-t border-border-main/60 flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-bold uppercase tracking-wider text-text-muted mr-1">
+                    {t('roster.renew_label', 'Gia hạn')}:
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleQuickRenew(1)}
+                    className="px-2.5 py-1 text-xs font-display font-bold uppercase tracking-wider bg-amber-500/10 text-amber-700 border border-amber-500/40 hover:bg-amber-500 hover:text-white transition-colors active:scale-95"
+                  >
+                    +1 {t('roster.match_unit', 'Trận')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleQuickRenew(2)}
+                    className="px-2.5 py-1 text-xs font-display font-bold uppercase tracking-wider bg-amber-500/10 text-amber-700 border border-amber-500/40 hover:bg-amber-500 hover:text-white transition-colors active:scale-95"
+                  >
+                    +2 {t('roster.match_unit', 'Trận')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRenewAddCount('3');
+                      setShowRenewModal(true);
+                    }}
+                    className="px-2.5 py-1 text-xs font-display font-bold uppercase tracking-wider bg-surface-2 text-text-main border border-border-main hover:border-primary transition-colors active:scale-95 ml-auto"
+                  >
+                    {t('roster.renew_matches', 'Tùy chọn')}
+                  </button>
+                </div>
               </div>
-              <span className={`px-2.5 py-1 text-xs font-display font-bold uppercase tracking-wider border ${
-                perMatch.isCompleted 
-                  ? 'bg-slate-700 text-white border-slate-700' 
-                  : 'bg-amber-500 text-white border-amber-600'
-              }`}>
-                {perMatch.isCompleted ? t('roster.per_match_completed', 'Đã hết số trận (Đang ẩn)') : t('roster.per_match_active', 'Đang hoạt động')}
-              </span>
+            );
+          })()}
+
+          {/* 🏷️ Balanced 1-Line Role Toggles */}
+          <div className="bg-surface border-2 border-border-main p-4 flex flex-col gap-2.5 shadow-sm">
+            <div className="text-[11px] font-display uppercase tracking-widest font-bold text-text-muted">
+              {t('roster.status_role_title', 'VAI TRÒ & PHÂN LOẠI')}
             </div>
 
-            {/* Progress Bar */}
-            <div className="mt-3">
-              <div className="flex justify-between text-xs font-bold uppercase tracking-wider text-text-muted mb-1.5">
-                <span>{t('roster.per_match_attended_label', 'Số trận đã thi đấu')}:</span>
-                <span className="text-text-main font-mono text-sm">{perMatch.attended} / {perMatch.quota} {t('roster.match_unit', 'Trận')}</span>
-              </div>
-              <div className="w-full h-3 bg-surface-2 border border-border-main overflow-hidden">
-                <div 
-                  className={`h-full transition-all duration-500 ${perMatch.isCompleted ? 'bg-slate-600' : 'bg-amber-500'}`}
-                  style={{ width: `${Math.min(100, (perMatch.attended / perMatch.quota) * 100)}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Quick Renewal Buttons */}
-            <div className="mt-4 pt-3 border-t border-border-main/60 flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-bold uppercase tracking-wider text-text-muted mr-1">
-                {t('roster.renew_label', 'Gia hạn')}:
-              </span>
-              <button
-                type="button"
-                onClick={() => handleQuickRenew(1)}
-                className="px-3 py-1.5 text-xs font-display font-bold uppercase tracking-wider bg-amber-500/10 text-amber-700 border border-amber-500/40 hover:bg-amber-500 hover:text-white transition-colors active:scale-95"
-              >
-                +1 {t('roster.match_unit', 'Trận')}
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickRenew(2)}
-                className="px-3 py-1.5 text-xs font-display font-bold uppercase tracking-wider bg-amber-500/10 text-amber-700 border border-amber-500/40 hover:bg-amber-500 hover:text-white transition-colors active:scale-95"
-              >
-                +2 {t('roster.match_unit', 'Trận')}
-              </button>
-              <button
-                type="button"
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {/* Captain Toggle */}
+              <button 
                 onClick={() => {
-                  setRenewAddCount('3');
-                  setShowRenewModal(true);
+                  if (player.isCaptain) {
+                    setCaptain(null);
+                    addToast({ type: 'info', message: t('toast.captain_removed', { name: player.name }) });
+                  } else {
+                    setCaptain(player.id);
+                    addToast({ type: 'success', message: t('toast.captain_set', { name: player.name }) });
+                  }
                 }}
-                className="px-3 py-1.5 text-xs font-display font-bold uppercase tracking-wider bg-surface-2 text-text-main border border-border-main hover:border-primary transition-colors active:scale-95 ml-auto"
+                className={`p-2.5 border-2 font-display text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 active:scale-95 ${
+                  player.isCaptain 
+                    ? 'bg-amber-500 text-white border-amber-500 shadow-sm' 
+                    : 'bg-surface-2 text-text-muted border-border-main hover:text-amber-500 hover:border-amber-500/50'
+                }`}
               >
-                {t('roster.renew_matches', 'Gia hạn tùy chọn')}
+                <span>{player.isCaptain ? t('roster.remove_captain', 'BỎ ĐỘI TRƯỞNG') : t('roster.set_captain', 'ĐỘI TRƯỞNG')}</span>
+              </button>
+
+              {/* Borrowed Toggle (Single line title) */}
+              <button 
+                onClick={() => {
+                  updatePlayer(player.id, { isBorrowed: !player.isBorrowed });
+                  addToast({ 
+                    type: 'info', 
+                    message: player.isBorrowed ? t('toast.unmarked_borrowed', { name: player.name }) : t('toast.marked_borrowed', { name: player.name })
+                  });
+                }}
+                className={`p-2.5 border-2 font-display text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 active:scale-95 ${
+                  player.isBorrowed 
+                    ? 'bg-purple-600 text-white border-purple-600 shadow-sm' 
+                    : 'bg-surface-2 text-text-muted border-border-main hover:text-purple-400 hover:border-purple-500/50'
+                }`}
+              >
+                <span>{player.isBorrowed ? t('roster.unmark_borrowed', 'BỎ MƯỢN') : t('roster.mark_borrowed', 'MƯỢN TỪ ĐỘI KHÁC')}</span>
+              </button>
+
+              {/* Youth Toggle */}
+              <button 
+                onClick={() => {
+                  updatePlayer(player.id, { isYouth: !player.isYouth });
+                  addToast({ 
+                    type: 'info', 
+                    message: player.isYouth ? t('toast.unmarked_youth', { name: player.name }) : t('toast.marked_youth', { name: player.name })
+                  });
+                }}
+                className={`p-2.5 border-2 font-display text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 active:scale-95 ${
+                  player.isYouth 
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' 
+                    : 'bg-surface-2 text-text-muted border-border-main hover:text-emerald-400 hover:border-emerald-500/50'
+                }`}
+              >
+                <span>{player.isYouth ? t('roster.unmark_youth', 'BỎ CẦU THỦ TRẺ') : t('roster.mark_youth', 'CẦU THỦ TRẺ')}</span>
               </button>
             </div>
           </div>
-        );
-      })()}
 
-      <div className="grid grid-cols-2 gap-4 mb-8">
-        <div className="hallmark-card p-4 text-center">
-          <div className="text-xs font-bold uppercase tracking-widest text-text-muted mb-1">{t('roster.goals')}</div>
-          <div className="text-4xl font-display text-text-main font-bold">{totalGoals}</div>
-        </div>
-        <div className="hallmark-card p-4 text-center">
-          <div className="text-xs font-bold uppercase tracking-widest text-text-muted mb-1">{t('roster.assists')}</div>
-          <div className="text-4xl font-display text-text-main font-bold">{totalAssists}</div>
-        </div>
-      </div>
+          {/* ⚡ Action Buttons */}
+          <div className="flex flex-col gap-2 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {player.phone && (
+                <a 
+                  href={`tel:${player.phone}`}
+                  className="hallmark-btn flex justify-center items-center bg-sky-600 text-white border-2 border-sky-600 hover:bg-sky-700 py-3 transition-all shadow-sm active:scale-95 font-display text-sm uppercase tracking-wider"
+                >
+                  {t('roster.call_player', 'GỌI ĐIỆN')}
+                </a>
+              )}
+              
+              <button 
+                onClick={openEditModal}
+                className={`hallmark-btn flex justify-center items-center bg-primary text-white border-2 border-primary hover:bg-[#323d29] py-3 transition-all shadow-sm active:scale-95 font-display text-sm uppercase tracking-wider ${!player.phone ? 'sm:col-span-2' : ''}`}
+              >
+                {t('roster.edit_info', 'SỬA THÔNG TIN')}
+              </button>
+            </div>
 
-      <div className="flex flex-col gap-4">
-        {/* Top Action Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {player.phone && (
-            <a 
-              href={`tel:${player.phone}`}
-              className="hallmark-btn flex justify-center items-center gap-2 bg-sky-600 text-white border-2 border-sky-600 hover:bg-sky-700 py-3.5 transition-all shadow-sm active:scale-95"
+            <button 
+              onClick={() => setShowDeleteConfirm(true)}
+              className="w-full flex justify-center items-center gap-1.5 text-rose-500 hover:text-rose-400 py-2 transition-colors font-display text-xs font-bold uppercase tracking-wider active:scale-95 mt-1"
             >
-              {t('roster.call_player', 'GỌI ĐIỆN')}
-            </a>
-          )}
+              {t('roster.delete_player', 'XÓA KHỎI ĐỘI')}
+            </button>
+          </div>
+
+        </div>
+
+        {/* 👉 RIGHT COLUMN: Performance Stats & Match Log (7 cols on lg, 8 cols on 2xl) */}
+        <div className="lg:col-span-7 2xl:col-span-8 flex flex-col gap-4 sm:gap-6">
           
-          <button 
-            onClick={openEditModal}
-            className={`hallmark-btn flex justify-center items-center gap-2 bg-primary text-white border-2 border-primary hover:bg-[#323d29] py-3.5 transition-all shadow-sm active:scale-95 ${!player.phone ? 'sm:col-span-2' : ''}`}
-          >
-            {t('roster.edit_info')}
-          </button>
-        </div>
+          {/* 📊 Performance KPI Grid (4 Cards) */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1">{t('roster.goals', 'Bàn thắng')}</div>
+              <div className="text-3xl sm:text-4xl font-display text-primary font-bold">{totalGoals}</div>
+            </div>
 
-        {/* Roles & Status Toggles Card */}
-        <div className="bg-surface border-2 border-border-main p-4 flex flex-col gap-2.5 shadow-sm">
-          <div className="text-[11px] font-display uppercase tracking-widest font-bold text-text-muted mb-0.5">
-            {t('roster.status_role_title', 'VAI TRÒ & PHÂN LOẠI')}
+            <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1">{t('roster.assists', 'Kiến tạo')}</div>
+              <div className="text-3xl sm:text-4xl font-display text-secondary font-bold">{totalAssists}</div>
+            </div>
+
+            <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1">{t('roster.matches_played', 'Số trận đã đá')}</div>
+              <div className="text-3xl sm:text-4xl font-display text-text-main font-bold">{playerMatches.length}</div>
+            </div>
+
+            <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1">{t('roster.contribution_rate', 'Đóng góp / Trận')}</div>
+              <div className="text-3xl sm:text-4xl font-display text-text-main font-bold">
+                {playerMatches.length > 0 ? ((totalGoals + totalAssists) / playerMatches.length).toFixed(1) : '0.0'}
+              </div>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            {/* Captain Toggle */}
-            <button 
-              onClick={() => {
-                if (player.isCaptain) {
-                  setCaptain(null);
-                  addToast({ type: 'info', message: t('toast.captain_removed', { name: player.name }) });
-                } else {
-                  setCaptain(player.id);
-                  addToast({ type: 'success', message: t('toast.captain_set', { name: player.name }) });
-                }
-              }}
-              className={`p-3 border-2 font-display text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 active:scale-95 ${
-                player.isCaptain 
-                  ? 'bg-amber-500 text-white border-amber-500 shadow-sm' 
-                  : 'bg-surface-2 text-text-muted border-border-main hover:text-amber-500 hover:border-amber-500/50'
-              }`}
-            >
-              <span>{player.isCaptain ? t('roster.remove_captain') : t('roster.set_captain')}</span>
-            </button>
+          {/* ⚽ Recent Match Appearances & Contributions Log */}
+          <div className="hallmark-card bg-surface border-2 border-border-main p-4 sm:p-6 flex flex-col gap-4">
+            <div className="flex justify-between items-center pb-2 border-b border-border-main">
+              <h2 className="font-display text-lg sm:text-xl uppercase tracking-widest text-primary font-bold flex items-center gap-2">
+                {t('roster.match_history_title', 'LỊCH SỬ THI ĐẤU & ĐÓNG GÓP')}
+              </h2>
+              <span className="text-xs font-display uppercase tracking-wider text-text-muted font-bold">
+                {playerMatches.length} {t('roster.match_unit', 'Trận')}
+              </span>
+            </div>
 
-            {/* Borrowed Toggle */}
-            <button 
-              onClick={() => {
-                updatePlayer(player.id, { isBorrowed: !player.isBorrowed });
-                addToast({ 
-                  type: 'info', 
-                  message: player.isBorrowed ? t('toast.unmarked_borrowed', { name: player.name }) : t('toast.marked_borrowed', { name: player.name })
-                });
-              }}
-              className={`p-3 border-2 font-display text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 active:scale-95 ${
-                player.isBorrowed 
-                  ? 'bg-purple-600 text-white border-purple-600 shadow-sm' 
-                  : 'bg-surface-2 text-text-muted border-border-main hover:text-purple-400 hover:border-purple-500/50'
-              }`}
-            >
-              <span>{player.isBorrowed ? t('roster.unmark_borrowed') : t('roster.mark_borrowed')}</span>
-            </button>
+            {playerMatches.length === 0 ? (
+              <div className="p-8 text-center bg-surface-2 border-2 border-border-main/50">
+                <p className="text-text-muted font-medium text-sm">
+                  {t('roster.no_matches_yet', 'Chưa có lịch sử thi đấu nào cho cầu thủ này.')}
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2.5">
+                {playerMatches.slice(0, 8).map(m => {
+                  const stat = m.stats?.find(s => s.playerId === player.id);
+                  const matchGoals = stat?.goals || 0;
+                  const matchAssists = stat?.assists || 0;
 
-            {/* Youth Toggle */}
-            <button 
-              onClick={() => {
-                updatePlayer(player.id, { isYouth: !player.isYouth });
-                addToast({ 
-                  type: 'info', 
-                  message: player.isYouth ? t('toast.unmarked_youth', { name: player.name }) : t('toast.marked_youth', { name: player.name })
-                });
-              }}
-              className={`p-3 border-2 font-display text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 active:scale-95 ${
-                player.isYouth 
-                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' 
-                  : 'bg-surface-2 text-text-muted border-border-main hover:text-emerald-400 hover:border-emerald-500/50'
-              }`}
-            >
-              <span>{player.isYouth ? t('roster.unmark_youth', 'BỎ CẦU THỦ TRẺ') : t('roster.mark_youth', 'CẦU THỦ TRẺ')}</span>
-            </button>
+                  let resultBadge = null;
+                  if (m.status === 'finished' && typeof m.scoreUs === 'number' && typeof m.scoreOpponent === 'number') {
+                    if (m.scoreUs > m.scoreOpponent) {
+                      resultBadge = <span className="px-2 py-0.5 bg-emerald-500 text-white font-display text-xs font-bold">THẮNG {m.scoreUs}-{m.scoreOpponent}</span>;
+                    } else if (m.scoreUs < m.scoreOpponent) {
+                      resultBadge = <span className="px-2 py-0.5 bg-rose-600 text-white font-display text-xs font-bold">THUA {m.scoreUs}-{m.scoreOpponent}</span>;
+                    } else {
+                      resultBadge = <span className="px-2 py-0.5 bg-amber-500 text-white font-display text-xs font-bold">HÒA {m.scoreUs}-{m.scoreOpponent}</span>;
+                    }
+                  }
+
+                  return (
+                    <div 
+                      key={m.id}
+                      className="p-3 sm:p-3.5 bg-surface-2 border-2 border-border-main hover:border-primary/50 transition-colors flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-display font-bold text-sm sm:text-base text-text-main uppercase tracking-wide">
+                            vs {m.opponent || 'Trận đấu nội bộ'}
+                          </span>
+                          {resultBadge}
+                        </div>
+                        <div className="text-[11px] text-text-muted font-medium mt-0.5">
+                          {m.date ? new Date(m.date).toLocaleDateString('vi-VN') : ''} • {m.location || 'Sân bóng'}
+                        </div>
+                      </div>
+
+                      {/* In-match individual player contributions */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        {matchGoals > 0 && (
+                          <span className="px-2 py-1 bg-primary text-white font-display text-xs font-bold uppercase">
+                            {matchGoals} {t('roster.goal_unit', 'Bàn')}
+                          </span>
+                        )}
+                        {matchAssists > 0 && (
+                          <span className="px-2 py-1 bg-secondary text-white font-display text-xs font-bold uppercase">
+                            {matchAssists} {t('roster.assist_unit', 'Kiến tạo')}
+                          </span>
+                        )}
+                        {matchGoals === 0 && matchAssists === 0 && (
+                          <span className="text-[11px] text-text-muted font-display uppercase tracking-wider font-bold">
+                            {t('roster.attended_badge', 'ĐÃ RA SÂN')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
+
         </div>
 
-        {/* Health & Delete Actions */}
-        <button 
-          onClick={openHealthModal}
-          className="w-full hallmark-btn-outline flex justify-center items-center gap-2 bg-surface-2 text-text-main border-2 border-border-main hover:border-primary/50 py-3.5 transition-all active:scale-95 font-display text-xs font-bold uppercase tracking-wider"
-        >
-          {t('roster.edit_health', 'TÌNH TRẠNG CHẤN THƯƠNG')}
-        </button>
-        
-        <button 
-          onClick={() => setShowDeleteConfirm(true)}
-          className="w-full flex justify-center items-center gap-2 text-rose-500 hover:text-rose-400 py-2.5 transition-colors font-display text-xs font-bold uppercase tracking-wider active:scale-95 mt-1"
-        >
-          {t('roster.delete_player')}
-        </button>
       </div>
 
       {/* Delete Confirmation Modal */}
@@ -696,9 +864,8 @@ export default function PlayerProfile() {
                   checked={editIsManuallyHidden}
                   onChange={(e) => setEditIsManuallyHidden(e.target.checked)}
                 />
-                <span className="font-bold text-text-main font-display flex items-center gap-1.5">
-                  <EyeOff size={15} className="text-text-muted" />
-                  {t('roster.hide_player', 'CHUYỂN VÀO MỤC ẨN THỦ CÔNG')}
+                <span className="font-bold text-text-main font-display">
+                  {t('roster.hide_player', 'CHUYỂN VÀO MỤC ẨN')}
                 </span>
               </label>
             </div>

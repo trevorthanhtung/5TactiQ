@@ -155,7 +155,7 @@ export default function HeadToHead() {
   }
 
   return (
-    <div className="p-4 flex flex-col min-h-full max-w-5xl mx-auto w-full pb-8">
+    <div className="p-4 flex flex-col min-h-full max-w-6xl mx-auto w-full pb-32 lg:pb-8">
       {/* Header */}
       <div className="flex items-center gap-2 @sm:gap-3 mb-6 pt-2">
         <button
@@ -189,26 +189,22 @@ export default function HeadToHead() {
       ) : (
         <>
           {/* Summary Cards */}
-          <div className="grid grid-cols-2 @md:grid-cols-4 gap-3 mb-6">
-            <div className="bg-surface p-3 border-2 border-border-main text-center">
-              <Users className="mx-auto text-primary mb-1" size={20} />
-              <div className="text-2xl font-display font-bold text-primary">{stats.totalOpponents}</div>
-              <div className="text-[10px] uppercase font-bold tracking-wider text-text-muted">{t('h2h.opponents', 'Đối thủ')}</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            <div className="bg-surface p-3.5 border-2 border-border-main text-center shadow-xs">
+              <div className="text-2xl md:text-3xl font-display font-bold text-primary">{stats.totalOpponents}</div>
+              <div className="text-[10px] uppercase font-bold tracking-wider text-text-muted mt-0.5">{t('h2h.opponents', 'Đối thủ')}</div>
             </div>
-            <div className="bg-surface p-3 border-2 border-border-main text-center">
-              <Trophy className="mx-auto text-secondary mb-1" size={20} />
-              <div className="text-2xl font-display font-bold text-secondary">{stats.totalMatches}</div>
-              <div className="text-[10px] uppercase font-bold tracking-wider text-text-muted">{t('h2h.matches_played', 'Trận đã đấu')}</div>
+            <div className="bg-surface p-3.5 border-2 border-border-main text-center shadow-xs">
+              <div className="text-2xl md:text-3xl font-display font-bold text-secondary">{stats.totalMatches}</div>
+              <div className="text-[10px] uppercase font-bold tracking-wider text-text-muted mt-0.5">{t('h2h.matches_played', 'Trận đã đấu')}</div>
             </div>
-            <div className="bg-surface p-3 border-2 border-emerald-600/30 text-center bg-emerald-50">
-              <CheckCircle2 className="mx-auto text-emerald-600 mb-1" size={20} />
-              <div className="text-2xl font-display font-bold text-emerald-600">{stats.totalWins}</div>
-              <div className="text-[10px] uppercase font-bold tracking-wider text-text-muted">{t('h2h.wins', 'Trận thắng')}</div>
+            <div className="bg-surface p-3.5 border-2 border-emerald-600/30 text-center bg-emerald-50/60 dark:bg-emerald-950/20 shadow-xs">
+              <div className="text-2xl md:text-3xl font-display font-bold text-emerald-600">{stats.totalWins}</div>
+              <div className="text-[10px] uppercase font-bold tracking-wider text-text-muted mt-0.5">{t('h2h.wins', 'Trận thắng')}</div>
             </div>
-            <div className="bg-surface p-3 border-2 border-rose-600/30 text-center bg-rose-50">
-              <XCircle className="mx-auto text-rose-600 mb-1" size={20} />
-              <div className="text-2xl font-display font-bold text-rose-600">{stats.totalLosses}</div>
-              <div className="text-[10px] uppercase font-bold tracking-wider text-text-muted">{t('h2h.losses', 'Trận thua')}</div>
+            <div className="bg-surface p-3.5 border-2 border-rose-600/30 text-center bg-rose-50/60 dark:bg-rose-950/20 shadow-xs">
+              <div className="text-2xl md:text-3xl font-display font-bold text-rose-600">{stats.totalLosses}</div>
+              <div className="text-[10px] uppercase font-bold tracking-wider text-text-muted mt-0.5">{t('h2h.losses', 'Trận thua')}</div>
             </div>
           </div>
 
@@ -218,7 +214,7 @@ export default function HeadToHead() {
           <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
             <button
               onClick={() => setMatchTypeFilter('all')}
-              className={`px-3.5 py-1.5 text-xs font-display font-bold uppercase tracking-wider border-2 transition-all ${
+              className={`px-3.5 py-1.5 text-xs font-display font-bold uppercase tracking-wider border-2 transition-all cursor-pointer ${
                 matchTypeFilter === 'all'
                   ? 'bg-primary text-white border-primary shadow-sm'
                   : 'bg-surface text-text-muted border-border-main hover:border-primary/50'
@@ -228,7 +224,7 @@ export default function HeadToHead() {
             </button>
             <button
               onClick={() => setMatchTypeFilter('external')}
-              className={`px-3.5 py-1.5 text-xs font-display font-bold uppercase tracking-wider border-2 transition-all ${
+              className={`px-3.5 py-1.5 text-xs font-display font-bold uppercase tracking-wider border-2 transition-all cursor-pointer ${
                 matchTypeFilter === 'external'
                   ? 'bg-primary text-white border-primary shadow-sm'
                   : 'bg-surface text-text-muted border-border-main hover:border-primary/50'
@@ -238,7 +234,7 @@ export default function HeadToHead() {
             </button>
             <button
               onClick={() => setMatchTypeFilter('internal')}
-              className={`px-3.5 py-1.5 text-xs font-display font-bold uppercase tracking-wider border-2 transition-all ${
+              className={`px-3.5 py-1.5 text-xs font-display font-bold uppercase tracking-wider border-2 transition-all cursor-pointer ${
                 matchTypeFilter === 'internal'
                   ? 'bg-primary text-white border-primary shadow-sm'
                   : 'bg-surface text-text-muted border-border-main hover:border-primary/50'
@@ -282,28 +278,25 @@ export default function HeadToHead() {
             {stats.opponentsList
               .filter((opp: any) => opp.opponentName.toLowerCase().includes(searchQuery.toLowerCase()))
               .map((opp: any) => {
-              const isExpanded = expandedOpponent === opp.normalizedName;
+              const isExpanded = expandedOpponent === opp.normalizedName || (expandedOpponent === null && stats.opponentsList.length === 1);
               const lastMatch = opp.matches[0];
               const diffSign = opp.goalDifference > 0 ? '+' : '';
 
               return (
-                <div key={opp.normalizedName} className="hallmark-card overflow-hidden transition-all">
+                <div key={opp.normalizedName} className="hallmark-card overflow-hidden transition-all border-2 border-border-main">
                   {/* Card Header (Click to expand) */}
                   <div
-                    className="p-3 md:p-4 flex items-center justify-between cursor-pointer hover:bg-surface-2 transition-colors"
-                    onClick={() => setExpandedOpponent(isExpanded ? null : opp.normalizedName)}
+                    className="p-3.5 md:p-4 flex items-center justify-between cursor-pointer hover:bg-surface-2 transition-colors"
+                    onClick={() => setExpandedOpponent(isExpanded ? '__none__' : opp.normalizedName)}
                   >
                     <div className="flex items-center gap-3 md:gap-4">
-                      {/* Avatar removed as per request */}
-
-                      {/* Info */}
                       <div>
                         <h3 className="font-display text-lg md:text-xl uppercase text-primary leading-tight">{opp.opponentName}</h3>
-                        <p className="text-xs md:text-sm text-text-muted font-medium">
+                        <p className="text-xs md:text-sm text-text-muted font-medium mt-0.5">
                           {opp.matchesPlayed} <span className="capitalize">{t('h2h.matches_unit', 'trận')}</span>
                           {!opp.isInternalGroup && (
                             <>
-                              {' | '}{t('h2h.goal_diff', 'Hiệu số')}: <span className={opp.goalDifference > 0 ? 'text-emerald-600' : opp.goalDifference < 0 ? 'text-rose-600' : 'text-text-muted'}>{diffSign}{opp.goalDifference}</span>
+                              {' | '}{t('h2h.goal_diff', 'Hiệu số')}: <span className={`font-bold ${opp.goalDifference > 0 ? 'text-emerald-600' : opp.goalDifference < 0 ? 'text-rose-600' : 'text-text-muted'}`}>{diffSign}{opp.goalDifference}</span>
                             </>
                           )}
                         </p>
@@ -314,34 +307,36 @@ export default function HeadToHead() {
                       {/* Form (Last Match Result) */}
                       {lastMatch && !opp.isInternalGroup && getResultBadge(lastMatch.scoreUs ?? 0, lastMatch.scoreOpponent ?? 0)}
 
-                      {isExpanded ? <ChevronUp className="text-text-muted" /> : <ChevronDown className="text-text-muted" />}
+                      {isExpanded ? <ChevronUp className="text-text-muted" size={18} /> : <ChevronDown className="text-text-muted" size={18} />}
                     </div>
                   </div>
 
                   {/* Expanded Match List */}
                   {isExpanded && (
-                    <div className="bg-background border-t-2 border-primary/10 p-3 md:p-4 space-y-2">
+                    <div className="bg-surface-2/40 border-t-2 border-border-main p-3 md:p-4 space-y-2">
                       {opp.matches.map((match: any) => (
-                        <div key={match.id} className="bg-surface border border-border-main p-3 flex flex-col gap-3 hover:shadow-md transition-shadow">
+                        <div key={match.id} className="bg-surface border-2 border-border-main p-3 flex flex-col gap-3 shadow-xs">
                           {/* Date & Location */}
                           <div className="space-y-1 w-full">
                             <div className="flex items-center gap-2">
                               <span className="text-[10px] font-display uppercase tracking-widest font-bold px-1.5 py-0.5 bg-surface text-text-muted border border-border-main">
                                 {match.matchType === 'friendly' ? t('h2h.friendly', 'Đối đầu') : t('h2h.internal', 'Nội bộ')}
                               </span>
-                              <div className="flex items-center gap-1 text-xs text-text-muted font-bold">
-                                <CalendarClock size={12} className="text-secondary" />
+                              <div className="flex items-center gap-1 text-xs text-text-muted font-bold font-mono">
+                                <CalendarClock size={13} className="text-secondary" />
                                 {formatDate(match.date)}
                               </div>
                             </div>
-                            <div className="flex items-center gap-1 text-xs text-text-muted">
-                              <MapPin size={12} className="text-secondary" />
-                              <span className="truncate max-w-[200px]">{match.location || t('h2h.away', 'Sân khách')}</span>
-                            </div>
+                            {match.location && (
+                              <div className="flex items-center gap-1 text-xs text-text-muted">
+                                <MapPin size={13} className="text-secondary shrink-0" />
+                                <span className="truncate max-w-[280px]">{match.location}</span>
+                              </div>
+                            )}
                           </div>
 
                           {/* Score */}
-                          <div className="w-full flex items-center justify-around bg-surface-2 px-2 md:px-4 py-3 border-t border-border-main">
+                          <div className="w-full flex items-center justify-around bg-surface-2 px-2 md:px-4 py-2.5 border-t border-border-main">
                             {match.matchType === 'internal' ? (
                               <div className="flex w-full items-center justify-around gap-1 md:gap-2">
                                 <div className="text-center shrink-0">
@@ -374,12 +369,12 @@ export default function HeadToHead() {
                               </div>
                             ) : (
                               <>
-                                <div className="text-center w-16 md:w-24 shrink-0">
+                                <div className="text-center w-20 md:w-28 shrink-0">
                                   <div className="text-[10px] md:text-xs uppercase font-bold text-text-muted mb-0.5 truncate">{(settings.teamName || '5TactiQ').toUpperCase()}</div>
                                   <div className={`text-2xl md:text-3xl font-display font-bold ${(match.scoreUs ?? 0) > (match.scoreOpponent ?? 0) ? 'text-emerald-500' : 'text-text-main'}`}>{match.scoreUs ?? 0}</div>
                                 </div>
                                 <span className="text-text-muted font-bold text-xl md:text-2xl shrink-0">-</span>
-                                <div className="text-center w-16 md:w-24 shrink-0">
+                                <div className="text-center w-20 md:w-28 shrink-0">
                                   <div className="text-[10px] md:text-xs uppercase font-bold text-text-muted mb-0.5 truncate">{opp.opponentName}</div>
                                   <div className={`text-2xl md:text-3xl font-display font-bold ${(match.scoreOpponent ?? 0) > (match.scoreUs ?? 0) ? 'text-emerald-500' : 'text-text-main'}`}>{match.scoreOpponent ?? 0}</div>
                                 </div>

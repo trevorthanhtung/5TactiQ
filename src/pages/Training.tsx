@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTrainingStore } from '../store/useTrainingStore';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { ArrowLeft, Plus, CalendarClock, MapPin, Users } from 'lucide-react';
@@ -7,14 +7,25 @@ import { CustomDatePicker } from '../components/CustomDatePicker';
 import { CustomTimePicker } from '../components/CustomTimePicker';
 import { useHardwareBack } from '../hooks/useHardwareBack';
 import { BottomSheet } from '../components/ui/BottomSheet';
+import { TrainingSkeleton } from '../components/ui/TrainingSkeleton';
 import { useTranslation } from 'react-i18next';
 
 export default function Training() {
   const { t } = useTranslation();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
+
   const { sessions, addSession } = useTrainingStore();
   const { players } = usePlayerStore();
   const navigate = useNavigate();
   const [showCreateModal, setShowCreateModal] = useState(false);
+
 
   useHardwareBack(showCreateModal, () => setShowCreateModal(false));
 
@@ -92,6 +103,10 @@ export default function Training() {
       </div>
     );
   };
+
+  if (isLoading) {
+    return <TrainingSkeleton />;
+  }
 
   return (
     <div className="p-4 flex flex-col min-h-full max-w-5xl mx-auto w-full pb-8">

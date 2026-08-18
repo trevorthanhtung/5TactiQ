@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useFundStore } from '../store/useFundStore';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { ArrowLeft, Plus, Wallet, TrendingUp, TrendingDown, X, User } from 'lucide-react';
@@ -7,12 +7,22 @@ import type { FundTransaction } from '../types';
 import { BottomSheet } from '../components/ui/BottomSheet';
 import { CustomDatePicker } from '../components/CustomDatePicker';
 import { MoneyInput } from '../components/MoneyInput';
+import { FundSkeleton } from '../components/ui/FundSkeleton';
 import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { formatCurrencyAmount, getCurrencyConfig, LANGUAGE_DEFAULT_CURRENCY } from '../utils/currencyUtils';
 
 export default function Fund() {
   const { t, i18n } = useTranslation();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
+
   const { transactions, addTransaction } = useFundStore();
   const { players } = usePlayerStore();
   const { settings } = useSettingsStore();
@@ -21,6 +31,7 @@ export default function Fund() {
   const activeCurrency = settings.currency || LANGUAGE_DEFAULT_CURRENCY[i18n.language] || 'VND';
   const currencyConfig = getCurrencyConfig(activeCurrency);
   const [showAddModal, setShowAddModal] = useState(false);
+
 
   const [newTx, setNewTx] = useState<{
     date: string;
@@ -96,6 +107,10 @@ export default function Fund() {
     const p = players.find(x => x.id === id);
     return p ? p.name : t('fund.player_deleted', 'Cầu thủ đã xóa');
   };
+
+  if (isLoading) {
+    return <FundSkeleton />;
+  }
 
   return (
     <div className="p-4 flex flex-col min-h-full max-w-5xl mx-auto w-full pb-8">
