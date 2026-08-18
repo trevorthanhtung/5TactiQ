@@ -1149,7 +1149,7 @@ export default function LandingPage() {
 
             {/* Windows EXE */}
             <a
-              href="https://github.com/trevorthanhtung/5TactiQ/releases/latest/download/5TactiQ-Setup.exe"
+              href="https://github.com/trevorthanhtung/5TactiQ/releases/latest/download/5TactiQ-Portable.exe"
               target="_blank"
               rel="noopener noreferrer"
               className="hallmark-card bg-surface-2 hover:bg-surface border-2 border-border-main p-4 flex flex-col items-center justify-between text-center transition-all shadow-sm hover:shadow-md cursor-pointer group space-y-3"

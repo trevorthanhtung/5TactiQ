@@ -82,22 +82,11 @@
     ],
     "win": {
       "target": "portable",
-      "artifactName": "5TactiQ-Setup.exe",
+      "artifactName": "5TactiQ-Portable.exe",
       "icon": "public/logo.png"
     },
     "portable": {
-      "artifactName": "5TactiQ-Setup.exe"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": "always",
-      "createStartMenuShortcut": true,
-      "warningsAsErrors": false,
-      "license": "public/license.txt",
-      "uninstallDisplayName": "5TactiQ",
-      "shortcutName": "5TactiQ",
-      "include": "build/installer.nsh"
+      "artifactName": "5TactiQ-Portable.exe"
     },
     "linux": {
       "target": "AppImage",

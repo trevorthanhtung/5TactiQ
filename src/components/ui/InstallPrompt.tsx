@@ -116,7 +116,7 @@ export default function InstallPrompt() {
             {t('install_prompt.desc_windows', 'Tải phần mềm (.exe) dành riêng cho Windows. Tận hưởng hiệu năng tối đa!')}
           </p>
           <button 
-            onClick={() => handleDownload('https://github.com/trevorthanhtung/5TactiQ/releases/latest/download/5TactiQ-Setup.exe')}
+            onClick={() => handleDownload('https://github.com/trevorthanhtung/5TactiQ/releases/latest/download/5TactiQ-Portable.exe')}
             className="w-full hallmark-btn bg-primary text-white py-2 text-xs flex items-center justify-center gap-1"
           >
             <Download size={14} /> {t('install_prompt.download_windows', 'TẢI BẢN WINDOWS (.EXE)')}
