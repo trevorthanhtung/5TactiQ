@@ -3,12 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useMatchStore } from '../store/useMatchStore';
 import { useToastStore } from '../store/useToastStore';
-import { User, ArrowLeft, Trash2, Award, X, Edit2, Activity, Phone, Hash, FileText } from 'lucide-react';
+import { User, ArrowLeft, Trash2, Award, X, Edit2, Activity, Phone, Hash, FileText, Calendar, EyeOff, Eye, PlusCircle, Check } from 'lucide-react';
 import { useHardwareBack } from '../hooks/useHardwareBack';
 import { PlayerProfileSkeleton } from '../components/ui/PlayerProfileSkeleton';
 import { BottomSheet } from '../components/ui/BottomSheet';
 import type { Position, HealthStatus } from '../types';
 import { useTranslation, Trans } from 'react-i18next';
+import { isPlayerHidden, getPlayerPerMatchStatus } from '../utils/playerUtils';
 
 export default function PlayerProfile() {
   const { t } = useTranslation();
@@ -20,11 +21,19 @@ export default function PlayerProfile() {
   const [isLoading, setIsLoading] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showRenewModal, setShowRenewModal] = useState(false);
+  const [renewAddCount, setRenewAddCount] = useState('1');
+
   const [editName, setEditName] = useState('');
   const [editNumber, setEditNumber] = useState('');
   const [editPositions, setEditPositions] = useState<string[]>([]);
   const [editPhone, setEditPhone] = useState('');
   const [editNote, setEditNote] = useState('');
+  const [editIsBorrowed, setEditIsBorrowed] = useState(false);
+  const [editIsYouth, setEditIsYouth] = useState(false);
+  const [editIsPerMatch, setEditIsPerMatch] = useState(false);
+  const [editMatchQuota, setEditMatchQuota] = useState('1');
+  const [editIsManuallyHidden, setEditIsManuallyHidden] = useState(false);
   
   const [showHealthModal, setShowHealthModal] = useState(false);
   const [healthStatus, setHealthStatus] = useState<HealthStatus>('Khỏe mạnh');
@@ -33,6 +42,7 @@ export default function PlayerProfile() {
   useHardwareBack(showEditModal, () => setShowEditModal(false));
   useHardwareBack(showHealthModal, () => setShowHealthModal(false));
   useHardwareBack(showDeleteConfirm, () => setShowDeleteConfirm(false));
+  useHardwareBack(showRenewModal, () => setShowRenewModal(false));
   
   useEffect(() => {
     setIsLoading(true);
@@ -62,9 +72,10 @@ export default function PlayerProfile() {
     return <div className="p-4 text-center mt-10">{t('roster.not_found')}</div>;
   }
 
-  // Calculate player goals and assists across all non-internal matches
+  // Calculate player goals and assists across all valid matches (non-internal or internal with trackStats enabled)
   const totalGoals = matches.reduce((sum, m) => {
-    if (m.matchType !== 'internal' && m.stats) {
+    const shouldTrackStats = m.matchType !== 'internal' || !!m.trackStats;
+    if (shouldTrackStats && m.stats) {
       const s = m.stats.find(stat => stat.playerId === player.id);
       if (s) return sum + (s.goals || 0);
     }
@@ -72,7 +83,8 @@ export default function PlayerProfile() {
   }, 0);
 
   const totalAssists = matches.reduce((sum, m) => {
-    if (m.matchType !== 'internal' && m.stats) {
+    const shouldTrackStats = m.matchType !== 'internal' || !!m.trackStats;
+    if (shouldTrackStats && m.stats) {
       const s = m.stats.find(stat => stat.playerId === player.id);
       if (s) return sum + (s.assists || 0);
     }
@@ -94,6 +106,11 @@ export default function PlayerProfile() {
     setEditPositions(player.positions || []);
     setEditPhone(player.phone || '');
     setEditNote(player.note || '');
+    setEditIsBorrowed(!!player.isBorrowed);
+    setEditIsYouth(!!player.isYouth);
+    setEditIsPerMatch(!!player.isPerMatch);
+    setEditMatchQuota(String(player.matchQuota || 1));
+    setEditIsManuallyHidden(!!player.isManuallyHidden);
     setShowEditModal(true);
   };
 
@@ -128,9 +145,30 @@ export default function PlayerProfile() {
       positions: editPositions as Position[],
       phone: editPhone,
       note: editNote,
+      isBorrowed: editIsBorrowed,
+      isYouth: editIsYouth,
+      isPerMatch: editIsPerMatch,
+      matchQuota: editIsPerMatch ? Math.max(1, parseInt(editMatchQuota) || 1) : undefined,
+      isManuallyHidden: editIsManuallyHidden,
     });
     setShowEditModal(false);
     addToast({ type: 'success', message: t('toast.player_updated', { name: editName }) });
+  };
+
+  const handleQuickRenew = async (additionalMatches: number) => {
+    if (!player) return;
+    const currentQuota = player.matchQuota || 1;
+    const newQuota = currentQuota + additionalMatches;
+    await updatePlayer(player.id, {
+      isPerMatch: true,
+      matchQuota: newQuota,
+      isManuallyHidden: false
+    });
+    addToast({
+      type: 'success',
+      message: t('roster.renew_success', 'Đã gia hạn thêm {{count}} trận cho {{name}}', { count: additionalMatches, name: player.name })
+    });
+    setShowRenewModal(false);
   };
 
   const toggleEditPosition = (pos: string) => {
@@ -174,6 +212,11 @@ export default function PlayerProfile() {
 
             {/* Badges Row */}
             <div className="flex gap-2 flex-wrap items-center">
+              {isPlayerHidden(player, matches) && (
+                <span className="bg-slate-700 text-white font-display font-bold uppercase tracking-widest px-3 py-1 text-xs shadow-sm">
+                  {t('roster.hidden_badge', 'ẨN')}
+                </span>
+              )}
               {player.isCaptain && (
                 <span className="bg-amber-500 text-white font-display font-bold uppercase tracking-widest px-3 py-1 text-xs shadow-sm" title="Đội trưởng">
                   C
@@ -187,6 +230,11 @@ export default function PlayerProfile() {
               {player.isYouth && (
                 <span className="bg-emerald-500 text-white font-display font-bold uppercase tracking-widest px-3 py-1 text-xs shadow-sm" title={t('roster.youth_tooltip', 'Cầu thủ đội trẻ lên')}>
                   {t('roster.youth_badge', 'TRẺ LÊN')}
+                </span>
+              )}
+              {player.isPerMatch && (
+                <span className="bg-amber-600 text-white font-display font-bold uppercase tracking-widest px-3 py-1 text-xs shadow-sm" title={t('roster.per_match_tooltip', 'Cầu thủ đá theo số trận')}>
+                  {t('roster.per_match_badge', 'THEO TRẬN')}
                 </span>
               )}
               {player.healthStatus && player.healthStatus !== 'Khỏe mạnh' && (
@@ -236,6 +284,75 @@ export default function PlayerProfile() {
           )}
         </div>
       </div>
+
+      {/* Match-based Contract Banner & Renewal Card */}
+      {player.isPerMatch && (() => {
+        const perMatch = getPlayerPerMatchStatus(player, matches);
+        return (
+          <div className="bg-surface border-2 border-border-main p-4 sm:p-5 mb-6 shadow-sm">
+            <div className="flex items-center justify-between gap-3 flex-wrap mb-2.5">
+              <div className="flex items-center gap-2">
+                <Calendar size={18} className="text-amber-600" />
+                <span className="font-display text-sm font-bold uppercase tracking-wider text-text-main">
+                  {t('roster.per_match_label', 'HỢP ĐỒNG ĐÁ THEO TRẬN')}
+                </span>
+              </div>
+              <span className={`px-2.5 py-1 text-xs font-display font-bold uppercase tracking-wider border ${
+                perMatch.isCompleted 
+                  ? 'bg-slate-700 text-white border-slate-700' 
+                  : 'bg-amber-500 text-white border-amber-600'
+              }`}>
+                {perMatch.isCompleted ? t('roster.per_match_completed', 'Đã hết số trận (Đang ẩn)') : t('roster.per_match_active', 'Đang hoạt động')}
+              </span>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="mt-3">
+              <div className="flex justify-between text-xs font-bold uppercase tracking-wider text-text-muted mb-1.5">
+                <span>{t('roster.per_match_attended_label', 'Số trận đã thi đấu')}:</span>
+                <span className="text-text-main font-mono text-sm">{perMatch.attended} / {perMatch.quota} {t('roster.match_unit', 'Trận')}</span>
+              </div>
+              <div className="w-full h-3 bg-surface-2 border border-border-main overflow-hidden">
+                <div 
+                  className={`h-full transition-all duration-500 ${perMatch.isCompleted ? 'bg-slate-600' : 'bg-amber-500'}`}
+                  style={{ width: `${Math.min(100, (perMatch.attended / perMatch.quota) * 100)}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Quick Renewal Buttons */}
+            <div className="mt-4 pt-3 border-t border-border-main/60 flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-bold uppercase tracking-wider text-text-muted mr-1">
+                {t('roster.renew_label', 'Gia hạn')}:
+              </span>
+              <button
+                type="button"
+                onClick={() => handleQuickRenew(1)}
+                className="px-3 py-1.5 text-xs font-display font-bold uppercase tracking-wider bg-amber-500/10 text-amber-700 border border-amber-500/40 hover:bg-amber-500 hover:text-white transition-colors active:scale-95"
+              >
+                +1 {t('roster.match_unit', 'Trận')}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickRenew(2)}
+                className="px-3 py-1.5 text-xs font-display font-bold uppercase tracking-wider bg-amber-500/10 text-amber-700 border border-amber-500/40 hover:bg-amber-500 hover:text-white transition-colors active:scale-95"
+              >
+                +2 {t('roster.match_unit', 'Trận')}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setRenewAddCount('3');
+                  setShowRenewModal(true);
+                }}
+                className="px-3 py-1.5 text-xs font-display font-bold uppercase tracking-wider bg-surface-2 text-text-main border border-border-main hover:border-primary transition-colors active:scale-95 ml-auto"
+              >
+                {t('roster.renew_matches', 'Gia hạn tùy chọn')}
+              </button>
+            </div>
+          </div>
+        );
+      })()}
 
       <div className="grid grid-cols-2 gap-4 mb-8">
         <div className="hallmark-card p-4 text-center">
@@ -459,12 +576,225 @@ export default function PlayerProfile() {
               ))}
             </div>
           </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-2">{t('roster.status_label')}</label>
+            <div className="space-y-3">
+              <label className="flex items-center gap-3 cursor-pointer select-none group">
+                <div className={`w-5 h-5 border-2 flex items-center justify-center transition-colors ${
+                  editIsBorrowed ? 'bg-primary border-primary text-white' : 'bg-surface border-border-main group-hover:border-primary/50'
+                }`}>
+                  {editIsBorrowed && <Check size={14} strokeWidth={3} />}
+                </div>
+                <input
+                  type="checkbox"
+                  className="sr-only"
+                  checked={editIsBorrowed}
+                  onChange={(e) => setEditIsBorrowed(e.target.checked)}
+                />
+                <span className="font-bold text-text-main font-display">{t('roster.borrowed_label')}</span>
+              </label>
+
+              <label className="flex items-center gap-3 cursor-pointer select-none group">
+                <div className={`w-5 h-5 border-2 flex items-center justify-center transition-colors ${
+                  editIsYouth ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-surface border-border-main group-hover:border-emerald-500/50'
+                }`}>
+                  {editIsYouth && <Check size={14} strokeWidth={3} />}
+                </div>
+                <input
+                  type="checkbox"
+                  className="sr-only"
+                  checked={editIsYouth}
+                  onChange={(e) => setEditIsYouth(e.target.checked)}
+                />
+                <span className="font-bold text-text-main font-display">{t('roster.youth_label', 'Cầu thủ đội trẻ lên')}</span>
+              </label>
+
+              <label className="flex items-center gap-3 cursor-pointer select-none group">
+                <div className={`w-5 h-5 border-2 flex items-center justify-center transition-colors ${
+                  editIsPerMatch ? 'bg-amber-600 border-amber-600 text-white' : 'bg-surface border-border-main group-hover:border-amber-600/50'
+                }`}>
+                  {editIsPerMatch && <Check size={14} strokeWidth={3} />}
+                </div>
+                <input
+                  type="checkbox"
+                  className="sr-only"
+                  checked={editIsPerMatch}
+                  onChange={(e) => setEditIsPerMatch(e.target.checked)}
+                />
+                <span className="font-bold text-text-main font-display">{t('roster.per_match_label', 'ĐÁ THEO SỐ TRẬN')}</span>
+              </label>
+
+              {editIsPerMatch && (
+                <div className="mt-2 p-3.5 bg-surface-2 border-2 border-border-main flex flex-col gap-2.5">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-xs font-bold uppercase tracking-widest text-text-muted">
+                      {t('roster.match_quota_label', 'SỐ TRẬN ĐĂNG KÝ')}
+                    </span>
+                    
+                    {/* Stepper Input */}
+                    <div className="flex items-center border-2 border-border-main bg-surface shadow-sm overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => setEditMatchQuota(q => String(Math.max(1, (parseInt(q) || 1) - 1)))}
+                        className="w-8 h-8 flex items-center justify-center font-bold text-base hover:bg-surface-2 active:bg-border-main transition-colors text-text-muted hover:text-text-main"
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        min="1"
+                        max="99"
+                        inputMode="numeric"
+                        className="w-12 h-8 text-center bg-transparent font-display font-bold text-base text-primary outline-none"
+                        value={editMatchQuota}
+                        onChange={e => setEditMatchQuota(e.target.value.replace(/[^0-9]/g, ''))}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setEditMatchQuota(q => String((parseInt(q) || 1) + 1))}
+                        className="w-8 h-8 flex items-center justify-center font-bold text-base hover:bg-surface-2 active:bg-border-main transition-colors text-text-muted hover:text-text-main"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Quick Presets */}
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {[1, 2, 3, 5].map(num => (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => setEditMatchQuota(String(num))}
+                        className={`py-1 text-xs font-display font-bold uppercase tracking-wider border-2 transition-all active:scale-95 ${
+                          Number(editMatchQuota) === num
+                            ? 'bg-secondary text-white border-secondary shadow-sm'
+                            : 'bg-surface text-text-muted border-border-main hover:border-secondary/50'
+                        }`}
+                      >
+                        {num} {t('roster.match_unit', 'Trận')}
+                      </button>
+                    ))}
+                  </div>
+
+                  <p className="text-[11px] text-text-muted leading-tight mt-0.5">
+                    {t('roster.per_match_desc', 'Cầu thủ sẽ tự động chuyển sang Mục Ẩn sau khi thi đấu đủ số trận.')}
+                  </p>
+                </div>
+              )}
+
+              <label className="flex items-center gap-3 cursor-pointer select-none group pt-2 border-t border-border-main/60">
+                <div className={`w-5 h-5 border-2 flex items-center justify-center transition-colors ${
+                  editIsManuallyHidden ? 'bg-slate-700 border-slate-700 text-white' : 'bg-surface border-border-main group-hover:border-slate-500'
+                }`}>
+                  {editIsManuallyHidden && <Check size={14} strokeWidth={3} />}
+                </div>
+                <input
+                  type="checkbox"
+                  className="sr-only"
+                  checked={editIsManuallyHidden}
+                  onChange={(e) => setEditIsManuallyHidden(e.target.checked)}
+                />
+                <span className="font-bold text-text-main font-display flex items-center gap-1.5">
+                  <EyeOff size={15} className="text-text-muted" />
+                  {t('roster.hide_player', 'CHUYỂN VÀO MỤC ẨN THỦ CÔNG')}
+                </span>
+              </label>
+            </div>
+          </div>
+
           <div className="pt-2 flex gap-3">
             <button type="button" onClick={() => setShowEditModal(false)} className="flex-1 bg-transparent text-text-muted font-display uppercase tracking-wider py-3 border-2 border-slate-300 hover:bg-surface transition-colors active:scale-95">
               {t('roster.cancel')}
             </button>
             <button type="submit" className="flex-1 bg-secondary text-white font-display uppercase tracking-wider py-3 border-2 border-secondary hover:bg-[#d05c21] transition-colors active:scale-95">
               {t('roster.save')}
+            </button>
+          </div>
+        </form>
+      </BottomSheet>
+
+      {/* Renew Matches Custom Modal */}
+      <BottomSheet
+        isOpen={showRenewModal}
+        onClose={() => setShowRenewModal(false)}
+        title={
+          <span className="flex items-center gap-2">
+            <Calendar size={20} className="text-amber-500" /> {t('roster.renew_matches_title', 'GIA HẠN THÊM SỐ TRẬN THI ĐẤU')}
+          </span>
+        }
+      >
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          const count = Math.max(1, parseInt(renewAddCount) || 1);
+          handleQuickRenew(count);
+        }} className="space-y-5">
+          <div>
+            <p className="text-sm text-text-muted mb-4 leading-relaxed">
+              {t('roster.renew_modal_desc', 'Cộng thêm số trận vào hạn mức thi đấu hiện tại của {{name}}. Cầu thủ sẽ tự động được chuyển ra khỏi mục ẩn nếu số trận mới lớn hơn số trận đã đá.', { name: player.name })}
+            </p>
+            
+            <div className="p-3.5 bg-surface-2 border-2 border-border-main flex flex-col gap-2.5">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs font-bold uppercase tracking-widest text-text-muted">
+                  {t('roster.renew_add_matches', 'Số trận cộng thêm')}
+                </span>
+
+                {/* Stepper Input */}
+                <div className="flex items-center border-2 border-border-main bg-surface shadow-sm overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setRenewAddCount(q => String(Math.max(1, (parseInt(q) || 1) - 1)))}
+                    className="w-8 h-8 flex items-center justify-center font-bold text-base hover:bg-surface-2 active:bg-border-main transition-colors text-text-muted hover:text-text-main"
+                  >
+                    -
+                  </button>
+                  <input
+                    type="number"
+                    min="1"
+                    max="50"
+                    inputMode="numeric"
+                    className="w-12 h-8 text-center bg-transparent font-display font-bold text-base text-primary outline-none"
+                    value={renewAddCount}
+                    onChange={e => setRenewAddCount(e.target.value.replace(/[^0-9]/g, ''))}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setRenewAddCount(q => String((parseInt(q) || 1) + 1))}
+                    className="w-8 h-8 flex items-center justify-center font-bold text-base hover:bg-surface-2 active:bg-border-main transition-colors text-text-muted hover:text-text-main"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              {/* Quick Presets */}
+              <div className="grid grid-cols-4 gap-1.5">
+                {[1, 2, 3, 5].map(num => (
+                  <button
+                    key={num}
+                    type="button"
+                    onClick={() => setRenewAddCount(String(num))}
+                    className={`py-1 text-xs font-display font-bold uppercase tracking-wider border-2 transition-all active:scale-95 ${
+                      Number(renewAddCount) === num
+                        ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
+                        : 'bg-surface text-text-muted border-border-main hover:border-amber-500/50'
+                    }`}
+                  >
+                    +{num} {t('roster.match_unit', 'Trận')}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-2 flex gap-3">
+            <button type="button" onClick={() => setShowRenewModal(false)} className="flex-1 bg-transparent text-text-muted font-display uppercase tracking-wider py-3 border-2 border-border-main hover:bg-surface transition-colors active:scale-95">
+              {t('roster.cancel', 'HỦY')}
+            </button>
+            <button type="submit" className="flex-1 bg-amber-600 text-white font-display uppercase tracking-wider py-3 border-2 border-amber-600 hover:bg-amber-700 transition-colors active:scale-95">
+              {t('roster.confirm_renew', 'XÁC NHẬN GIA HẠN')}
             </button>
           </div>
         </form>

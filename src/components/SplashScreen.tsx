@@ -9,22 +9,37 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
   const [isVisible, setIsVisible] = useState(true);
   const [isFading, setIsFading] = useState(false);
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const hasPlayedRef = React.useRef(false);
+  const audioCtxRef = React.useRef<AudioContext | null>(null);
 
   useEffect(() => {
-    let played = false;
+    let handleUnlock: (() => void) | null = null;
+
+    const removeUnlockListeners = () => {
+      if (handleUnlock) {
+        window.removeEventListener('pointerdown', handleUnlock);
+        window.removeEventListener('touchstart', handleUnlock);
+        window.removeEventListener('click', handleUnlock);
+        handleUnlock = null;
+      }
+    };
 
     const playSound = async (isUserAction = false) => {
-      if (played || prefersReducedMotion) return;
+      if (hasPlayedRef.current || prefersReducedMotion) return;
+
       try {
         const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
         if (!AudioCtx) return;
 
-        const ctx = new AudioCtx();
-        
-        // Tránh spam console warning nếu trình duyệt chặn autoplay
+        // Tái sử dụng hoặc tạo AudioContext mới
+        let ctx = audioCtxRef.current;
+        if (!ctx || ctx.state === 'closed') {
+          ctx = new AudioCtx();
+          audioCtxRef.current = ctx;
+        }
+
+        // Nếu context bị suspended và là user interaction -> cố gắng resume
         if (ctx.state === 'suspended') {
-          // Chỉ cố gắng resume() nếu đây là do người dùng tương tác
-          // Gọi resume() lúc trang tự load sẽ bị Chrome phạt cảnh báo vàng khè
           if (isUserAction) {
             try {
               await ctx.resume();
@@ -32,15 +47,19 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
               // Ignore
             }
           } else {
-            // Đang tự động load mà bị chặn -> im lặng rút lui
+            // Tự động phát nhưng bị trình duyệt chặn -> chờ người dùng chạm
             return;
           }
         }
-        
-        // Nếu vẫn không được phép chạy (bị trình duyệt chặn hoàn toàn), thoát sớm
+
+        // Nếu context chưa running thì không phát và không khóa
         if (ctx.state !== 'running') {
           return;
         }
+
+        // ĐÃ ĐƯỢC PHÉP CHẠY: Khóa NGAY LẬP TỨC để không bao giờ chạy lần 2
+        hasPlayedRef.current = true;
+        removeUnlockListeners();
 
         const now = ctx.currentTime;
 
@@ -93,6 +112,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
         // 3. LUXURY AMBIENT PAD CHORD (Hợp âm Dm9 sang trọng kiểu PlayStation)
         const chordNotes = [146.83, 220.00, 349.23, 523.25, 659.25];
         chordNotes.forEach((freq, idx) => {
+          if (!ctx) return;
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           const padFilter = ctx.createBiquadFilter();
@@ -131,8 +151,6 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
         snapGain.connect(masterGain);
         snapOsc.start(now + 0.4);
         snapOsc.stop(now + 0.65);
-
-        played = true;
       } catch (e) {
         console.warn('Audio play error', e);
       }
@@ -141,17 +159,16 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
     // Thử phát ngay lập tức khi vừa load trang
     playSound(false);
 
-    // Sự kiện mở khóa tự động nếu trình duyệt hoãn lại nhè nhẹ
-    const handleUnlock = () => {
+    // Sự kiện mở khóa tự động nếu autoplay bị chặn
+    handleUnlock = () => {
       playSound(true);
-      window.removeEventListener('pointerdown', handleUnlock);
-      window.removeEventListener('touchstart', handleUnlock);
-      window.removeEventListener('click', handleUnlock);
     };
 
-    window.addEventListener('pointerdown', handleUnlock);
-    window.addEventListener('touchstart', handleUnlock);
-    window.addEventListener('click', handleUnlock);
+    if (!hasPlayedRef.current) {
+      window.addEventListener('pointerdown', handleUnlock, { once: true });
+      window.addEventListener('touchstart', handleUnlock, { once: true });
+      window.addEventListener('click', handleUnlock, { once: true });
+    }
 
     // Bắt đầu fade out sau 2.1s (khi animation gần xong)
     const fadeTimer = setTimeout(() => {
@@ -165,11 +182,12 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
     }, 2500);
 
     return () => {
-      window.removeEventListener('pointerdown', handleUnlock);
-      window.removeEventListener('touchstart', handleUnlock);
-      window.removeEventListener('click', handleUnlock);
+      removeUnlockListeners();
       clearTimeout(fadeTimer);
       clearTimeout(unmountTimer);
+      if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
+        audioCtxRef.current.close().catch(() => {});
+      }
     };
   }, [onComplete, prefersReducedMotion]);
 
@@ -182,7 +200,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
         className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background transition-opacity duration-500 ${isFading ? 'opacity-0' : 'opacity-100'}`}
       >
         <img 
-          src="./splash.png" 
+          src="/splash.png" 
           alt="5TactiQ Splash" 
           className="w-48 md:w-64 h-auto object-contain"
         />
@@ -616,7 +634,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
               className={`slice ${i % 3 === 0 ? 'glitch' : ''}`} 
               style={{ '--i': i } as React.CSSProperties}
             >
-              <img src="./splash.png" alt="Logo Slice" />
+              <img src="/splash.png" alt="Logo Slice" />
             </div>
           ))}
         </div>

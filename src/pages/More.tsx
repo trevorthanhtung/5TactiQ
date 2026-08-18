@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { HeartPulse, History, Settings, ChevronRight, MapPin, RefreshCw, ShieldCheck, Info, Coffee, MessageSquare, Package, Eraser, AlertTriangle, Smartphone, BellRing, Globe, Check, Moon, Sun, Monitor, Crown, LogOut, User as UserIcon, LogIn, Save, Cloud, CloudOff, Wifi, WifiOff, CheckCircle2, AlertCircle, Calculator } from 'lucide-react';
+import { HeartPulse, History, Settings, ChevronRight, MapPin, RefreshCw, ShieldCheck, Info, Coffee, MessageSquare, Package, Eraser, AlertTriangle, Smartphone, BellRing, Globe, Check, Moon, Sun, Monitor, Crown, LogOut, User as UserIcon, LogIn, Save, Cloud, CloudOff, Wifi, WifiOff, CheckCircle2, AlertCircle, Calculator, Loader2, Coins } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { useAppBadge } from '../hooks/useAppBadge';
@@ -16,12 +16,14 @@ import { useAppUpdateStore } from '../store/useAppUpdateStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { useCloudSync } from '../hooks/useCloudSync';
 import { APP_VERSION } from '../config/version';
+import { CURRENCIES, type CurrencyCode, LANGUAGE_DEFAULT_CURRENCY, getCurrencyConfig, formatCurrencyAmount } from '../utils/currencyUtils';
 
 export default function More() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
+  const [isCurrencyOpen, setIsCurrencyOpen] = useState(false);
   const [isThemeOpen, setIsThemeOpen] = useState(false);
   const [alertInfo, setAlertInfo] = useState<{title: string, message: string, image?: string, isAppInfo?: boolean, isDonate?: boolean, paypalUrl?: string} | null>(null);
   const [confirmInfo, setConfirmInfo] = useState<{title: string, message: string, onConfirm: () => void, requireInput?: string} | null>(null);
@@ -30,6 +32,7 @@ export default function More() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [editFullName, setEditFullName] = useState('');
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const [isClearingCache, setIsClearingCache] = useState(false);
   
   const { isOnline, syncStatus, lastSyncedAt, syncNow } = useCloudSync();
   
@@ -152,6 +155,9 @@ export default function More() {
     { code: 'ar', name: 'العربية', label: 'SA' }
   ];
 
+  const currentCurrency = settings.currency || LANGUAGE_DEFAULT_CURRENCY[i18n.language] || 'VND';
+  const currentCurrencyConfig = getCurrencyConfig(currentCurrency);
+
   const systemItems = [
     { icon: <Settings className="text-text-muted" size={24} />, title: t('more.settings_title'), action: () => setIsSettingsOpen(true), desc: t('more.settings_desc') },
     { icon: <RefreshCw className="text-blue-600" size={24} />, title: t('more.sync_title'), path: '/sync', desc: t('more.sync_desc') },
@@ -162,16 +168,24 @@ export default function More() {
       action: () => setIsLanguageOpen(true)
     },
     {
+      icon: <Coins size={24} className="text-amber-500" />,
+      title: t('more.currency_title', 'Đơn vị tiền tệ'),
+      desc: t('more.currency_desc', 'Thay đổi đơn vị tiền tệ'),
+      action: () => setIsCurrencyOpen(true)
+    },
+    {
       icon: theme === 'dark' ? <Moon size={24} className="text-indigo-400" /> : <Sun size={24} className="text-amber-500" />,
       title: t('more.theme_title'),
       desc: t('more.theme_desc'),
       action: () => setIsThemeOpen(true)
     },
     { 
-      icon: <Eraser size={24} className="text-pink-500" />, 
+      icon: isClearingCache ? <Loader2 size={24} className="text-pink-500 animate-spin" /> : <Eraser size={24} className="text-pink-500" />, 
       title: t('more.cache_title'), 
-      desc: t('more.cache_desc'),
+      desc: isClearingCache ? t('more.cache_clearing') : t('more.cache_desc'),
       action: async () => {
+        if (isClearingCache) return;
+        setIsClearingCache(true);
         try {
           if ('caches' in window) {
             const cacheNames = await caches.keys();
@@ -179,15 +193,17 @@ export default function More() {
           }
           addToast({ 
             type: 'success', 
-            message: t('toast.cache_cleared', 'Đã dọn dẹp bộ nhớ đệm cache'),
+            message: t('toast.cache_cleared'),
             duration: 3000
           });
         } catch (error) {
           addToast({ 
             type: 'error', 
-            message: t('toast.cache_clear_error', 'Có lỗi xảy ra khi dọn dẹp bộ nhớ đệm.'),
+            message: t('toast.cache_clear_error'),
             duration: 3000
           });
+        } finally {
+          setTimeout(() => setIsClearingCache(false), 800);
         }
       } 
     },
@@ -199,7 +215,7 @@ export default function More() {
     { icon: <Coffee size={20} className="text-amber-500" />, title: t('more.donate_title'), action: () => setAlertInfo({ 
       title: t('more.donate_title'), 
       message: t('more.donate_msg'),
-      image: './qr.png',
+      image: '/qr.png',
       isDonate: true,
       paypalUrl: 'https://paypal.me/trevorthanhtung'
     }) },
@@ -229,9 +245,7 @@ export default function More() {
               console.error("Failed to clear Capacitor preferences", e);
             }
             setTimeout(() => {
-              // Avoid window.location.replace('/') in Electron (file:// protocol) as it redirects to system root C:/
-              window.location.hash = '/';
-              window.location.reload();
+              window.location.href = '/';
             }, 100);
           }
         });
@@ -426,7 +440,7 @@ export default function More() {
         <div className="flex flex-col">
           {alertInfo?.isAppInfo ? (
             <div className="flex flex-col items-center text-center mb-6 mt-2">
-              <img src="./logo.png" alt="5TactiQ Logo" className="w-28 h-28 object-contain mb-4 drop-shadow-md" />
+              <img src="/logo.png" alt="5TactiQ Logo" className="w-28 h-28 object-contain mb-4 drop-shadow-md" />
               <h4 className="text-2xl font-display font-bold text-primary mb-2">5TactiQ</h4>
               <div className="bg-primary text-[#f6f4ed] px-4 py-1.5 rounded-sm text-xs font-bold tracking-widest mb-4">{t('more.version_title')} {APP_VERSION}</div>
               <p className="text-text-muted text-sm leading-relaxed mb-4">{t('more.app_info_desc')}</p>
@@ -528,6 +542,9 @@ export default function More() {
               key={lang.code}
               onClick={() => {
                 i18n.changeLanguage(lang.code);
+                // Sync default currency with selected country language if not customized
+                const matchedCurrency = LANGUAGE_DEFAULT_CURRENCY[lang.code] || 'VND';
+                updateSettings({ currency: matchedCurrency });
                 setIsLanguageOpen(false);
                 addToast({ 
                   type: 'success', 
@@ -544,6 +561,55 @@ export default function More() {
               {i18n.language === lang.code && <Check size={20} className="text-primary stroke-[3]" />}
             </button>
           ))}
+        </div>
+      </BottomSheet>
+
+      {/* Currency Modal */}
+      <BottomSheet
+        isOpen={isCurrencyOpen}
+        onClose={() => setIsCurrencyOpen(false)}
+        title={t('more.currency_modal_title', 'CHỌN ĐƠN VỊ TIỀN TỆ')}
+      >
+        <div className="flex flex-col gap-3 p-1">
+          {(Object.keys(CURRENCIES) as CurrencyCode[]).map((currCode) => {
+            const curr = CURRENCIES[currCode];
+            const isSelected = currentCurrency === currCode;
+
+            return (
+              <button
+                key={curr.code}
+                onClick={() => {
+                  updateSettings({ currency: curr.code });
+                  setIsCurrencyOpen(false);
+                  addToast({ 
+                    type: 'success', 
+                    message: `${t('more.currency_changed', 'Đã đổi đơn vị tiền tệ sang')} ${curr.name}`,
+                    duration: 3000
+                  });
+                }}
+                className={`flex items-center justify-between p-4 border-2 transition-all cursor-pointer active:scale-95 ${
+                  isSelected 
+                    ? 'border-amber-600 bg-amber-500/5 text-text-main shadow-[4px_4px_0px_0px_var(--color-secondary)]' 
+                    : 'border-border-main text-text-muted hover:border-amber-500/50'
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="text-xs font-mono font-bold px-2 py-1 border border-border-main bg-surface-2 shrink-0">
+                    {curr.countryCode}
+                  </span>
+                  <div className="flex flex-col text-left min-w-0">
+                    <span className="font-display font-bold uppercase tracking-wider text-base text-text-main">
+                      {curr.name}
+                    </span>
+                    <span className="text-xs text-text-muted truncate">
+                      {curr.nativeName}
+                    </span>
+                  </div>
+                </div>
+                {isSelected && <Check size={20} className="text-amber-600 stroke-[3] shrink-0 ml-2" />}
+              </button>
+            );
+          })}
         </div>
       </BottomSheet>
 

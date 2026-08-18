@@ -120,9 +120,7 @@ export default function DataSync() {
     if (!pendingImportData) return;
     const success = await importSelectedData(pendingImportData, selectedImportKeys, importMode);
     if (success) {
-      // Avoid window.location.replace('/') in Electron (file:// protocol) as it redirects to system root C:/
-      window.location.hash = '/';
-      window.location.reload();
+      window.location.href = '/';
     } else {
       setAlertInfo({ title: t('sync.err_title', 'LỖI'), message: t('sync.err_restore_fail', 'Không thể phục hồi dữ liệu.') });
       setPendingImportData(null);

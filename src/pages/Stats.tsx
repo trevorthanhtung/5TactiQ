@@ -66,8 +66,9 @@ export default function Stats() {
       });
     }
 
-    // Goals & Assists from match stats
-    if (m.matchType !== 'internal' && m.stats) {
+    // Goals & Assists from match stats (non-internal matches or internal matches with trackStats enabled)
+    const shouldTrackStats = m.matchType !== 'internal' || !!m.trackStats;
+    if (shouldTrackStats && m.stats) {
       m.stats.forEach(s => {
         if (playerStatsAgg[s.playerId]) {
           playerStatsAgg[s.playerId].goals += s.goals || 0;

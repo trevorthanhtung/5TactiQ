@@ -1,18 +1,21 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { usePlayerStore } from '../store/usePlayerStore';
+import { useMatchStore } from '../store/useMatchStore';
 import { useToastStore } from '../store/useToastStore';
-import { Plus, X, BarChart2, Check, Cross, Activity, Search } from 'lucide-react';
+import { Plus, X, BarChart2, Check, Cross, Activity, Search, EyeOff, Calendar } from 'lucide-react';
 import { useHardwareBack } from '../hooks/useHardwareBack';
 import { RosterSkeleton } from '../components/ui/RosterSkeleton';
 import { BottomSheet } from '../components/ui/BottomSheet';
 import type { Position } from '../types';
 import { useTranslation } from 'react-i18next';
 import { compareVietnameseNames } from '../utils/sortUtils';
+import { isPlayerHidden, getPlayerPerMatchStatus } from '../utils/playerUtils';
 
 export default function Roster() {
   const { t } = useTranslation();
   const { players, fetchPlayers, addPlayer } = usePlayerStore();
+  const { matches } = useMatchStore();
   const { addToast } = useToastStore();
   const [isLoading, setIsLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -21,11 +24,13 @@ export default function Roster() {
   const [newPhone, setNewPhone] = useState('');
   const [newNote, setNewNote] = useState('');
   const [newPositions, setNewPositions] = useState<string[]>([]);
-  type FilterType = 'all' | 'injured' | 'recovering' | 'borrowed' | 'youth';
+  type FilterType = 'all' | 'injured' | 'recovering' | 'borrowed' | 'youth' | 'per_match' | 'hidden';
   const [filter, setFilter] = useState<FilterType>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [newIsBorrowed, setNewIsBorrowed] = useState(false);
   const [newIsYouth, setNewIsYouth] = useState(false);
+  const [newIsPerMatch, setNewIsPerMatch] = useState(false);
+  const [newMatchQuota, setNewMatchQuota] = useState('1');
 
   useHardwareBack(showAddForm, () => setShowAddForm(false));
 
@@ -46,6 +51,8 @@ export default function Roster() {
       positions: newPositions as Position[],
       isBorrowed: newIsBorrowed,
       isYouth: newIsYouth,
+      isPerMatch: newIsPerMatch,
+      matchQuota: newIsPerMatch ? Math.max(1, parseInt(newMatchQuota) || 1) : undefined,
       phone: newPhone,
       note: newNote,
     });
@@ -56,6 +63,8 @@ export default function Roster() {
     setNewPositions([]);
     setNewIsBorrowed(false);
     setNewIsYouth(false);
+    setNewIsPerMatch(false);
+    setNewMatchQuota('1');
     setShowAddForm(false);
     addToast({ type: 'success', message: t('toast.roster_added', { name: newName }) });
   };
@@ -71,9 +80,15 @@ export default function Roster() {
   }
 
   const sortedPlayers = [...players].sort((a, b) => {
-    // 1. Main squad first, then Youth/Borrowed
-    const aIsGuest = a.isBorrowed || a.isYouth ? 1 : 0;
-    const bIsGuest = b.isBorrowed || b.isYouth ? 1 : 0;
+    const aHidden = isPlayerHidden(a, matches) ? 1 : 0;
+    const bHidden = isPlayerHidden(b, matches) ? 1 : 0;
+    if (aHidden !== bHidden) {
+      return aHidden - bHidden;
+    }
+
+    // 1. Main squad first, then Youth/Borrowed/PerMatch
+    const aIsGuest = a.isBorrowed || a.isYouth || a.isPerMatch ? 1 : 0;
+    const bIsGuest = b.isBorrowed || b.isYouth || b.isPerMatch ? 1 : 0;
     
     if (aIsGuest !== bIsGuest) {
       return aIsGuest - bIsGuest;
@@ -100,6 +115,17 @@ export default function Roster() {
     if (searchQuery && !player.name.toLowerCase().includes(searchQuery.toLowerCase())) {
       return false;
     }
+    const isHidden = isPlayerHidden(player, matches);
+
+    if (filter === 'hidden') {
+      return isHidden;
+    }
+
+    // All other tabs exclude hidden players
+    if (isHidden) {
+      return false;
+    }
+
     if (filter === 'injured') {
       return player.healthStatus && player.healthStatus.includes('Chấn thương');
     }
@@ -111,6 +137,9 @@ export default function Roster() {
     }
     if (filter === 'youth') {
       return !!player.isYouth;
+    }
+    if (filter === 'per_match') {
+      return !!player.isPerMatch;
     }
     return true;
   });
@@ -244,6 +273,79 @@ export default function Roster() {
               />
               <span className="font-bold text-text-main font-display">{t('roster.youth_label', 'Cầu thủ đội trẻ lên')}</span>
             </label>
+            <label className="flex items-center gap-3 cursor-pointer select-none group mt-3">
+              <div className={`w-5 h-5 border-2 flex items-center justify-center transition-colors ${
+                newIsPerMatch ? 'bg-amber-600 border-amber-600 text-white' : 'bg-surface border-border-main group-hover:border-amber-600/50'
+              }`}>
+                {newIsPerMatch && <Check size={14} strokeWidth={3} />}
+              </div>
+              <input
+                type="checkbox"
+                className="sr-only"
+                checked={newIsPerMatch}
+                onChange={(e) => setNewIsPerMatch(e.target.checked)}
+              />
+              <span className="font-bold text-text-main font-display">{t('roster.per_match_label', 'ĐÁ THEO SỐ TRẬN')}</span>
+            </label>
+
+            {newIsPerMatch && (
+              <div className="mt-3 p-3.5 bg-surface-2 border-2 border-border-main flex flex-col gap-2.5">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-xs font-bold uppercase tracking-widest text-text-muted">
+                    {t('roster.match_quota_label', 'SỐ TRẬN ĐĂNG KÝ')}
+                  </span>
+                  
+                  {/* Stepper Input */}
+                  <div className="flex items-center border-2 border-border-main bg-surface shadow-sm overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setNewMatchQuota(q => String(Math.max(1, (parseInt(q) || 1) - 1)))}
+                      className="w-8 h-8 flex items-center justify-center font-bold text-base hover:bg-surface-2 active:bg-border-main transition-colors text-text-muted hover:text-text-main"
+                    >
+                      -
+                    </button>
+                    <input
+                      type="number"
+                      min="1"
+                      max="99"
+                      inputMode="numeric"
+                      className="w-12 h-8 text-center bg-transparent font-display font-bold text-base text-primary outline-none"
+                      value={newMatchQuota}
+                      onChange={e => setNewMatchQuota(e.target.value.replace(/[^0-9]/g, ''))}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setNewMatchQuota(q => String((parseInt(q) || 1) + 1))}
+                      className="w-8 h-8 flex items-center justify-center font-bold text-base hover:bg-surface-2 active:bg-border-main transition-colors text-text-muted hover:text-text-main"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {/* Quick Presets */}
+                <div className="grid grid-cols-4 gap-1.5">
+                  {[1, 2, 3, 5].map(num => (
+                    <button
+                      key={num}
+                      type="button"
+                      onClick={() => setNewMatchQuota(String(num))}
+                      className={`py-1 text-xs font-display font-bold uppercase tracking-wider border-2 transition-all active:scale-95 ${
+                        Number(newMatchQuota) === num
+                          ? 'bg-secondary text-white border-secondary shadow-sm'
+                          : 'bg-surface text-text-muted border-border-main hover:border-secondary/50'
+                      }`}
+                    >
+                      {num} {t('roster.match_unit', 'Trận')}
+                    </button>
+                  ))}
+                </div>
+
+                <p className="text-[11px] text-text-muted leading-tight mt-0.5">
+                  {t('roster.per_match_desc', 'Cầu thủ sẽ tự động chuyển sang Mục Ẩn sau khi thi đấu đủ số trận.')}
+                </p>
+              </div>
+            )}
           </div>
           <div className="pt-2 flex gap-3">
             <button type="button" onClick={() => setShowAddForm(false)} className="flex-1 bg-transparent text-text-muted font-display uppercase tracking-wider py-3 border-2 border-border-main hover:bg-surface transition-colors active:scale-95">
@@ -276,60 +378,82 @@ export default function Roster() {
         {/* Filter Tabs */}
         <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar shrink-0 py-1">
           <button
-          type="button"
-          onClick={() => setFilter('all')}
-          className={`px-3.5 py-2 text-xs font-display uppercase tracking-wider font-bold border-2 transition-all shrink-0 ${
-            filter === 'all'
-              ? 'bg-primary text-white border-primary shadow-sm'
-              : 'bg-surface text-text-muted border-border-main hover:border-primary/50'
-          }`}
-        >
-          {t('roster.filter_all', 'Tất cả')} ({players.length})
-        </button>
-        <button
-          type="button"
-          onClick={() => setFilter('injured')}
-          className={`px-3.5 py-2 text-xs font-display uppercase tracking-wider font-bold border-2 transition-all shrink-0 ${
-            filter === 'injured'
-              ? 'bg-rose-600 text-white border-rose-600 shadow-sm'
-              : 'bg-surface text-text-muted border-border-main hover:border-rose-500/50'
-          }`}
-        >
-          {t('roster.filter_injured', 'Chấn thương')} ({players.filter(p => p.healthStatus && p.healthStatus.includes('Chấn thương')).length})
-        </button>
-        <button
-          type="button"
-          onClick={() => setFilter('recovering')}
-          className={`px-3.5 py-2 text-xs font-display uppercase tracking-wider font-bold border-2 transition-all shrink-0 ${
-            filter === 'recovering'
-              ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-              : 'bg-surface text-text-muted border-border-main hover:border-blue-500/50'
-          }`}
-        >
-          {t('roster.filter_recovering', 'Phục hồi')} ({players.filter(p => p.healthStatus === 'Đang hồi phục').length})
-        </button>
-        <button
-          type="button"
-          onClick={() => setFilter('borrowed')}
-          className={`px-3.5 py-2 text-xs font-display uppercase tracking-wider font-bold border-2 transition-all shrink-0 ${
-            filter === 'borrowed'
-              ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
-              : 'bg-surface text-text-muted border-border-main hover:border-purple-500/50'
-          }`}
-        >
-          {t('roster.filter_borrowed', 'Mượn')} ({players.filter(p => p.isBorrowed).length})
-        </button>
-        <button
-          type="button"
-          onClick={() => setFilter('youth')}
-          className={`px-3.5 py-2 text-xs font-display uppercase tracking-wider font-bold border-2 transition-all shrink-0 ${
-            filter === 'youth'
-              ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
-              : 'bg-surface text-text-muted border-border-main hover:border-emerald-500/50'
-          }`}
-        >
-          {t('roster.filter_youth', 'Đội trẻ')} ({players.filter(p => p.isYouth).length})
-        </button>
+            type="button"
+            onClick={() => setFilter('all')}
+            className={`px-3.5 py-2 text-xs font-display uppercase tracking-wider font-bold border-2 transition-all shrink-0 ${
+              filter === 'all'
+                ? 'bg-primary text-white border-primary shadow-sm'
+                : 'bg-surface text-text-muted border-border-main hover:border-primary/50'
+            }`}
+          >
+            {t('roster.filter_all', 'Tất cả')} ({players.filter(p => !isPlayerHidden(p, matches)).length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilter('injured')}
+            className={`px-3.5 py-2 text-xs font-display uppercase tracking-wider font-bold border-2 transition-all shrink-0 ${
+              filter === 'injured'
+                ? 'bg-rose-600 text-white border-rose-600 shadow-sm'
+                : 'bg-surface text-text-muted border-border-main hover:border-rose-500/50'
+            }`}
+          >
+            {t('roster.filter_injured', 'Chấn thương')} ({players.filter(p => !isPlayerHidden(p, matches) && p.healthStatus && p.healthStatus.includes('Chấn thương')).length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilter('recovering')}
+            className={`px-3.5 py-2 text-xs font-display uppercase tracking-wider font-bold border-2 transition-all shrink-0 ${
+              filter === 'recovering'
+                ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                : 'bg-surface text-text-muted border-border-main hover:border-blue-500/50'
+            }`}
+          >
+            {t('roster.filter_recovering', 'Phục hồi')} ({players.filter(p => !isPlayerHidden(p, matches) && p.healthStatus === 'Đang hồi phục').length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilter('borrowed')}
+            className={`px-3.5 py-2 text-xs font-display uppercase tracking-wider font-bold border-2 transition-all shrink-0 ${
+              filter === 'borrowed'
+                ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                : 'bg-surface text-text-muted border-border-main hover:border-purple-500/50'
+            }`}
+          >
+            {t('roster.filter_borrowed', 'Mượn')} ({players.filter(p => !isPlayerHidden(p, matches) && p.isBorrowed).length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilter('youth')}
+            className={`px-3.5 py-2 text-xs font-display uppercase tracking-wider font-bold border-2 transition-all shrink-0 ${
+              filter === 'youth'
+                ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                : 'bg-surface text-text-muted border-border-main hover:border-emerald-500/50'
+            }`}
+          >
+            {t('roster.filter_youth', 'Đội trẻ')} ({players.filter(p => !isPlayerHidden(p, matches) && p.isYouth).length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilter('per_match')}
+            className={`px-3.5 py-2 text-xs font-display uppercase tracking-wider font-bold border-2 transition-all shrink-0 ${
+              filter === 'per_match'
+                ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
+                : 'bg-surface text-text-muted border-border-main hover:border-amber-500/50'
+            }`}
+          >
+            {t('roster.filter_per_match', 'Theo trận')} ({players.filter(p => !isPlayerHidden(p, matches) && p.isPerMatch).length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilter('hidden')}
+            className={`px-3.5 py-2 text-xs font-display uppercase tracking-wider font-bold border-2 transition-all shrink-0 ${
+              filter === 'hidden'
+                ? 'bg-slate-700 text-white border-slate-700 shadow-sm'
+                : 'bg-surface text-text-muted border-border-main hover:border-slate-500/50'
+            }`}
+          >
+            {t('roster.filter_hidden', 'Ẩn')} ({players.filter(p => isPlayerHidden(p, matches)).length})
+          </button>
         </div>
       </div>
 
@@ -342,71 +466,101 @@ export default function Roster() {
         </div>
       ) : (
         <div className="grid grid-cols-2 @md:grid-cols-3 @xl:grid-cols-4 gap-2.5 sm:gap-4">
-          {filteredPlayers.map(player => (
-            <Link key={player.id} to={`/roster/${player.id}`} className="block group">
-              <div className="hallmark-card p-0 relative overflow-hidden bg-surface hover:border-secondary transition-colors h-full flex flex-col">
-                {/* Top Right Badges */}
-                <div className="absolute top-0 right-0 flex z-10 shadow-sm">
-                  {player.healthStatus && player.healthStatus !== 'Khỏe mạnh' && (
-                    <div
-                      className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center border-l-2 border-border-main ${
-                        player.healthStatus.includes('Chấn thương') 
-                          ? 'bg-rose-600 text-white' 
-                          : 'bg-blue-600 text-white'
-                      }`}
-                      title={
-                        player.healthStatus === 'Chấn thương nhẹ' ? t('health.light_injury', 'Chấn thương nhẹ') :
-                        player.healthStatus === 'Chấn thương nặng' ? t('health.severe_injury', 'Chấn thương nặng') :
-                        player.healthStatus === 'Đang hồi phục' ? t('health.recovering', 'Đang hồi phục') :
-                        player.healthStatus
-                      }
-                    >
-                      {player.healthStatus.includes('Chấn thương') ? (
-                        <Cross size={16} className="fill-current" />
-                      ) : (
-                        <Activity size={16} />
+          {filteredPlayers.map(player => {
+            const isHidden = isPlayerHidden(player, matches);
+            const perMatchStatus = player.isPerMatch ? getPlayerPerMatchStatus(player, matches) : null;
+
+            return (
+              <Link key={player.id} to={`/roster/${player.id}`} className="block group">
+                <div className={`hallmark-card p-0 relative overflow-hidden bg-surface hover:border-secondary transition-colors h-full flex flex-col ${
+                  isHidden ? 'opacity-85 border-dashed border-border-main' : ''
+                }`}>
+                  {/* Top Right Badges */}
+                  <div className="absolute top-0 right-0 flex z-10 shadow-sm">
+                    {isHidden && (
+                      <div className="bg-slate-700 text-white font-display font-bold px-2 h-8 sm:h-9 flex items-center justify-center text-xs sm:text-sm border-l-2 border-slate-100/20" title={t('roster.hidden_tooltip', 'Cầu thủ trong mục ẩn')}>
+                        {t('roster.hidden_badge', 'ẨN')}
+                      </div>
+                    )}
+                    {player.healthStatus && player.healthStatus !== 'Khỏe mạnh' && (
+                      <div
+                        className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center border-l-2 border-border-main ${
+                          player.healthStatus.includes('Chấn thương') 
+                            ? 'bg-rose-600 text-white' 
+                            : 'bg-blue-600 text-white'
+                        }`}
+                        title={
+                          player.healthStatus === 'Chấn thương nhẹ' ? t('health.light_injury', 'Chấn thương nhẹ') :
+                          player.healthStatus === 'Chấn thương nặng' ? t('health.severe_injury', 'Chấn thương nặng') :
+                          player.healthStatus === 'Đang hồi phục' ? t('health.recovering', 'Đang hồi phục') :
+                          player.healthStatus
+                        }
+                      >
+                        {player.healthStatus.includes('Chấn thương') ? (
+                          <Cross size={16} className="fill-current" />
+                        ) : (
+                          <Activity size={16} />
+                        )}
+                      </div>
+                    )}
+                    {player.isBorrowed && (
+                      <div className="bg-purple-600 text-white font-display font-bold w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-sm sm:text-base border-l-2 border-slate-100/20" title={t('roster.borrowed_tooltip')}>
+                        L
+                      </div>
+                    )}
+                    {player.isCaptain && (
+                      <div className="bg-amber-500 text-white font-display font-bold w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-sm sm:text-base border-l-2 border-slate-100/20" title={t('roster.captain_tooltip')}>
+                        C
+                      </div>
+                    )}
+                    {player.isYouth && (
+                      <div className="bg-emerald-500 text-white font-display font-bold w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-sm sm:text-base border-l-2 border-slate-100/20" title={t('roster.youth_tooltip', 'Cầu thủ đội trẻ lên')}>
+                        Y
+                      </div>
+                    )}
+                    {player.isPerMatch && (
+                      <div className="bg-amber-600 text-white font-display font-bold w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-sm sm:text-base border-l-2 border-slate-100/20" title={t('roster.per_match_tooltip', 'Cầu thủ đá theo số trận')}>
+                        M
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Top Left Jersey Number */}
+                  <div className="absolute top-0 left-0 bg-primary text-white font-display text-lg sm:text-xl min-w-9 h-9 sm:min-w-10 sm:h-10 px-1.5 flex items-center justify-center shadow-sm z-10">
+                    {player.jersey_number || '-'}
+                  </div>
+
+                  {/* Card Content */}
+                  <div className="p-3 pt-11 sm:p-4 sm:pt-13 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="font-bold text-sm sm:text-base leading-tight mb-1.5 uppercase tracking-wide group-hover:text-secondary transition-colors">
+                        {player.name}
+                      </h3>
+                      {perMatchStatus && (
+                        <div className="mb-2">
+                          <span className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 border ${
+                            perMatchStatus.isCompleted 
+                              ? 'bg-slate-700/10 text-slate-600 border-slate-300' 
+                              : 'bg-amber-500/10 text-amber-700 border-amber-500/30'
+                          }`}>
+                            <Calendar size={11} /> {perMatchStatus.attended}/{perMatchStatus.quota} {t('matchday.team_count_unit', 'Trận')}
+                          </span>
+                        </div>
                       )}
                     </div>
-                  )}
-                  {player.isBorrowed && (
-                    <div className="bg-purple-600 text-white font-display font-bold w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-sm sm:text-base border-l-2 border-slate-100/20" title={t('roster.borrowed_tooltip')}>
-                      L
+                    <div className="flex gap-1 flex-wrap mt-auto pt-1">
+                      {player.positions.map(pos => (
+                        <span key={pos} className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider bg-accent/40 text-primary px-1.5 py-0.5">
+                          {t(`position.${pos}`)}
+                        </span>
+                      ))}
+                      {player.positions.length === 0 && <span className="text-[9px] sm:text-[10px] text-slate-400">{t('roster.no_position')}</span>}
                     </div>
-                  )}
-                  {player.isCaptain && (
-                    <div className="bg-amber-500 text-white font-display font-bold w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-sm sm:text-base border-l-2 border-slate-100/20" title={t('roster.captain_tooltip')}>
-                      C
-                    </div>
-                  )}
-                  {player.isYouth && (
-                    <div className="bg-emerald-500 text-white font-display font-bold w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-sm sm:text-base border-l-2 border-slate-100/20" title={t('roster.youth_tooltip', 'Cầu thủ đội trẻ lên')}>
-                      Y
-                    </div>
-                  )}
-                </div>
-
-                {/* Top Left Jersey Number */}
-                <div className="absolute top-0 left-0 bg-primary text-white font-display text-lg sm:text-xl min-w-9 h-9 sm:min-w-10 sm:h-10 px-1.5 flex items-center justify-center shadow-sm z-10">
-                  {player.jersey_number || '-'}
-                </div>
-
-                {/* Card Content */}
-                <div className="p-3 pt-11 sm:p-4 sm:pt-13 flex-1 flex flex-col justify-between">
-                  <h3 className="font-bold text-sm sm:text-base leading-tight mb-2 uppercase tracking-wide group-hover:text-secondary transition-colors">
-                    {player.name}
-                  </h3>
-                  <div className="flex gap-1 flex-wrap mt-auto">
-                    {player.positions.map(pos => (
-                      <span key={pos} className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider bg-accent/40 text-primary px-1.5 py-0.5">
-                        {t(`position.${pos}`)}
-                      </span>
-                    ))}
-                    {player.positions.length === 0 && <span className="text-[9px] sm:text-[10px] text-slate-400">{t('roster.no_position')}</span>}
                   </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>

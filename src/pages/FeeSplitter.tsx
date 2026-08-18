@@ -1,13 +1,16 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ArrowLeft, Calculator, Copy, Check, Save, Users, Landmark, Coins, Scale, Trophy, RefreshCw, ChevronDown, ChevronUp, UserCheck } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Calculator, Copy, Check, Save, Users, Landmark, Coins, Scale, Trophy, RefreshCw, ChevronDown, ChevronUp, UserCheck, Sun, Moon, MapPin } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useMatchStore } from '../store/useMatchStore';
 import { useFundStore } from '../store/useFundStore';
-
+import { useVenueStore } from '../store/useVenueStore';
 import { useToastStore } from '../store/useToastStore';
 import { useSettingsStore } from '../store/useSettingsStore';
+import { BottomSheet } from '../components/ui/BottomSheet';
+import { MoneyInput } from '../components/MoneyInput';
+import { formatCurrencyAmount, getCurrencyConfig, LANGUAGE_DEFAULT_CURRENCY } from '../utils/currencyUtils';
 
 export type MatchMode = 'internal' | 'opponent';
 export type WagerPreset = 'even' | 'win0_lose100' | 'win30_lose70' | 'win40_lose60' | 'drinks' | 'custom';
@@ -18,29 +21,62 @@ const BANK_STORAGE_KEY = '5tactiq_bank_info';
 
 export default function FeeSplitter() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
+  const queryMatchId = searchParams.get('matchId');
+  const queryVenueId = searchParams.get('venueId');
+
+  const { t, i18n } = useTranslation();
   const { players } = usePlayerStore();
   const { matches } = useMatchStore();
+  const { venues } = useVenueStore();
   const { addTransaction } = useFundStore();
   const addToast = useToastStore(state => state.addToast);
   const { settings } = useSettingsStore();
 
+  const activeCurrency = settings.currency || LANGUAGE_DEFAULT_CURRENCY[i18n.language] || 'VND';
+  const currencyConfig = getCurrencyConfig(activeCurrency);
+
   // Basic Match & Fee inputs
   const [matchMode, setMatchMode] = useState<MatchMode>('opponent');
-  const [pitchFee, setPitchFee] = useState<number>(500000);
+  const [pitchFee, setPitchFee] = useState<number>(currencyConfig.defaultPitchNight);
   const [hasExtraFee, setHasExtraFee] = useState<boolean>(false);
-  const [extraFee, setExtraFee] = useState<number>(100000);
+  const [extraFee, setExtraFee] = useState<number>(currencyConfig.defaultExtra);
+
+  // Venue & Time Slot linking
+  const [selectedVenueId, setSelectedVenueId] = useState<string>(queryVenueId || '');
+  const [activeTimeSlot, setActiveTimeSlot] = useState<'day' | 'night' | null>('night');
+  const [isVenueDropdownOpen, setIsVenueDropdownOpen] = useState(false);
 
   
   // Opponent Wager inputs
   const [hasWager, setHasWager] = useState<boolean>(false);
-  const [matchOutcome, setMatchOutcome] = useState<MatchOutcome>('win');
+  const [manualOutcome, setManualOutcome] = useState<MatchOutcome>('win');
 
   
   // Custom wager % (our team share %)
   const [customWinPercent, setCustomWinPercent] = useState<number>(30);
   const [customDrawPercent, setCustomDrawPercent] = useState<number>(50);
   const [customLosePercent, setCustomLosePercent] = useState<number>(70);
+
+  // Handle changing losing % (auto syncs win %)
+  const handleLosePercentChange = (val: number) => {
+    const clamped = Math.min(100, Math.max(0, val));
+    setCustomLosePercent(clamped);
+    setCustomWinPercent(100 - clamped);
+  };
+
+  // Handle changing winning % (auto syncs lose %)
+  const handleWinPercentChange = (val: number) => {
+    const clamped = Math.min(100, Math.max(0, val));
+    setCustomWinPercent(clamped);
+    setCustomLosePercent(100 - clamped);
+  };
+
+  const applyWagerPreset = (losePct: number) => {
+    setCustomLosePercent(losePct);
+    setCustomWinPercent(100 - losePct);
+    setCustomDrawPercent(50);
+  };
 
 
   // Headcount & Match Selection
@@ -59,6 +95,119 @@ export default function FeeSplitter() {
   const selectedMatch = useMemo(() => {
     return matches.find(m => m.id === selectedMatchId) || null;
   }, [matches, selectedMatchId]);
+
+  // Check if actively linked to a match (user chose match attendance mode)
+  const isLinkedToMatch = headcountMode === 'match' && !!selectedMatch;
+
+  // Derive outcome automatically from selectedMatch score if linked to match, otherwise manual
+  const matchOutcome: MatchOutcome = useMemo(() => {
+    if (isLinkedToMatch && selectedMatch) {
+      const us = Number(selectedMatch.scoreUs ?? 0);
+      const them = Number(selectedMatch.scoreOpponent ?? 0);
+      if (us > them) return 'win';
+      if (us < them) return 'lose';
+      return 'draw';
+    }
+    return manualOutcome;
+  }, [isLinkedToMatch, selectedMatch, manualOutcome]);
+
+  // Current matched venue (from selected venue or from match)
+  const currentVenue = useMemo(() => {
+    if (selectedVenueId === '__none__') {
+      return null;
+    }
+    if (selectedVenueId) {
+      return venues.find(v => v.id === selectedVenueId) || null;
+    }
+    if (headcountMode === 'match' && selectedMatch?.location) {
+      return venues.find(v => v.name.trim().toLowerCase() === selectedMatch.location.trim().toLowerCase()) || null;
+    }
+    return null;
+  }, [selectedVenueId, venues, headcountMode, selectedMatch]);
+
+  // Handle URL Query Params
+  useEffect(() => {
+    if (queryMatchId) {
+      const targetMatch = matches.find(m => m.id === queryMatchId);
+      if (targetMatch) {
+        setHeadcountMode('match');
+        setSelectedMatchId(queryMatchId);
+        setMatchMode(targetMatch.matchType === 'internal' ? 'internal' : 'opponent');
+      }
+    }
+  }, [queryMatchId, matches]);
+
+  useEffect(() => {
+    if (queryVenueId) {
+      const v = venues.find(item => item.id === queryVenueId);
+      if (v) {
+        setSelectedVenueId(v.id);
+        const slot = v.priceNight ? 'night' : 'day';
+        setActiveTimeSlot(slot);
+        const price = slot === 'night' ? (v.priceNight || v.priceDay || 500000) : (v.priceDay || v.priceNight || 350000);
+        setPitchFee(price);
+      }
+    }
+  }, [queryVenueId, venues]);
+
+  // Auto-sync venue price when selected match changes
+  useEffect(() => {
+    if (headcountMode === 'match' && selectedMatch) {
+      const v = venues.find(item => item.name.trim().toLowerCase() === selectedMatch.location?.trim().toLowerCase());
+      if (v) {
+        setSelectedVenueId(v.id);
+
+        let isNight = true;
+        if (selectedMatch.time) {
+          const parts = selectedMatch.time.split(':');
+          if (parts.length > 0 && !isNaN(parseInt(parts[0]))) {
+            const h = parseInt(parts[0]);
+            isNight = h >= 17 || h < 6;
+          }
+        }
+        const slot = selectedMatch.feeTimeSlot || (isNight ? 'night' : 'day');
+        setActiveTimeSlot(slot);
+
+        if (selectedMatch.pitchFee) {
+          setPitchFee(selectedMatch.pitchFee);
+        } else {
+          const price = slot === 'night' 
+            ? (v.priceNight || v.priceDay || 500000) 
+            : (v.priceDay || v.priceNight || 350000);
+          setPitchFee(price);
+        }
+      }
+    }
+  }, [selectedMatch, headcountMode, venues]);
+
+  const handleSelectSlot = (slot: 'day' | 'night', venueToUse = currentVenue) => {
+    setActiveTimeSlot(slot);
+    if (venueToUse) {
+      const price = slot === 'day' 
+        ? (venueToUse.priceDay || venueToUse.priceNight) 
+        : (venueToUse.priceNight || venueToUse.priceDay);
+      if (price) {
+        setPitchFee(price);
+      }
+    }
+  };
+
+  const handleSelectVenue = (venue: typeof venues[0] | null) => {
+    if (!venue) {
+      setSelectedVenueId('__none__');
+      setActiveTimeSlot(null);
+      setIsVenueDropdownOpen(false);
+      return;
+    }
+    setSelectedVenueId(venue.id);
+    setIsVenueDropdownOpen(false);
+    const slot = activeTimeSlot || (venue.priceNight ? 'night' : 'day');
+    setActiveTimeSlot(slot);
+    const price = slot === 'day' 
+      ? (venue.priceDay || venue.priceNight || 350000) 
+      : (venue.priceNight || venue.priceDay || 500000);
+    setPitchFee(price);
+  };
 
   // Select first match of the filtered list if current selection is invalid for matchMode
   useEffect(() => {
@@ -189,7 +338,7 @@ export default function FeeSplitter() {
 
 
   const formatMoney = (val: number) => {
-    return new Intl.NumberFormat('vi-VN').format(Math.round(val)) + 'đ';
+    return formatCurrencyAmount(val, activeCurrency);
   };
   // Generate formatted message for Zalo / Group chat
   const generateGroupMessage = () => {
@@ -349,45 +498,44 @@ export default function FeeSplitter() {
       </div>
 
       {/* HÀNG 1: 1. BẢNG COI TIỀN */}
-      <div className="hallmark-card bg-slate-900 text-white p-6 border-slate-700 shadow-xl relative overflow-hidden space-y-4">
-        <div className="border-b border-slate-700 pb-2">
-          <h3 className="font-display text-xl uppercase text-emerald-400">
-            {t('fee_splitter.row1_title', '1. BẢNG COI TIỀN')}
-          </h3>
-        </div>
+      <div className="hallmark-card p-5 space-y-4">
+        <h3 className="font-display text-xl uppercase text-primary border-b border-border-main pb-2">
+          {t('fee_splitter.row1_title', '1. BẢNG COI TIỀN')}
+        </h3>
 
-        <div className="py-4 flex flex-col items-center justify-center text-center bg-slate-950/40 rounded border border-slate-800/80 my-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
+        {/* Big Per-Person Card */}
+        <div className="py-5 flex flex-col items-center justify-center text-center bg-surface-2 border-2 border-border-main my-2">
+          <span className="text-xs font-bold uppercase tracking-wider text-text-muted mb-1">
             {t('fee_splitter.per_player', 'Mỗi người đóng')}
           </span>
-          <div className="text-4xl @sm:text-5xl font-display text-emerald-400 tracking-tight">
+          <div className="text-4xl @sm:text-5xl font-display font-bold text-primary tracking-tight">
             {formatMoney(calculation.finalPerPerson)}
           </div>
         </div>
 
-
-        <div className="text-xs text-slate-300 border-t border-slate-700 pt-3 space-y-2">
-          <div className="flex justify-between">
-            <span className="text-slate-400">{t('fee_splitter.total_match_cost', 'Tổng chi phí trận đấu')}:</span>
-            <span className="font-bold text-white">{formatMoney(calculation.totalCost)}</span>
+        {/* Financial Breakdown Rows */}
+        <div className="text-xs text-text-muted border-t border-border-main pt-3 space-y-2 font-medium">
+          <div className="flex justify-between items-center">
+            <span>{t('fee_splitter.total_match_cost', 'Tổng chi phí trận đấu')}:</span>
+            <span className="font-bold text-text-main font-display text-sm">{formatMoney(calculation.totalCost)}</span>
           </div>
 
           {matchMode === 'opponent' && (
             <>
-              <div className="flex justify-between">
-                <span className="text-slate-400">{t('fee_splitter.opponent_share', 'Đội bạn trả')} ({calculation.opponentPercent}%):</span>
-                <span className="font-bold text-emerald-400">{formatMoney(calculation.opponentShare)}</span>
+              <div className="flex justify-between items-center">
+                <span>{t('fee_splitter.opponent_share', 'Đội bạn trả')} ({calculation.opponentPercent}%):</span>
+                <span className="font-bold text-emerald-700 dark:text-emerald-400 font-display text-sm">{formatMoney(calculation.opponentShare)}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">{t('fee_splitter.our_share', 'Đội mình trả')} ({calculation.ourPercent}%):</span>
-                <span className="font-bold text-amber-400">{formatMoney(calculation.ourShare)}</span>
+              <div className="flex justify-between items-center">
+                <span>{t('fee_splitter.our_share', 'Đội mình trả')} ({calculation.ourPercent}%):</span>
+                <span className="font-bold text-amber-700 dark:text-amber-400 font-display text-sm">{formatMoney(calculation.ourShare)}</span>
               </div>
             </>
           )}
 
-          <div className="flex justify-between">
-            <span className="text-slate-400">{t('fee_splitter.players_count', 'Số cầu thủ tham gia')}:</span>
-            <span className="font-bold text-white">{effectiveHeadcount} {t('fee_splitter.players_unit', 'người')}</span>
+          <div className="flex justify-between items-center">
+            <span>{t('fee_splitter.players_count', 'Số cầu thủ tham gia')}:</span>
+            <span className="font-bold text-text-main">{effectiveHeadcount} {t('fee_splitter.players_unit', 'người')}</span>
           </div>
         </div>
       </div>
@@ -465,8 +613,8 @@ export default function FeeSplitter() {
                 <div>
                   <button
                     type="button"
-                    onClick={() => setIsMatchDropdownOpen(!isMatchDropdownOpen)}
-                    className="w-full flex items-center justify-between bg-surface border-2 border-border-main p-3 font-display uppercase tracking-wider text-primary text-sm font-bold focus:border-primary focus:outline-none transition-colors cursor-pointer"
+                    onClick={() => setIsMatchDropdownOpen(true)}
+                    className="w-full flex items-center justify-between bg-surface border-2 border-border-main p-3 font-display uppercase tracking-wider text-primary text-sm font-bold focus:border-primary focus:outline-none transition-colors cursor-pointer hover:border-primary"
                   >
                     <span className="truncate">
                       {selectedMatch ? (
@@ -477,48 +625,52 @@ export default function FeeSplitter() {
                         t('fee_splitter.select_match_placeholder', 'CHỌN TRẬN ĐẤU')
                       )}
                     </span>
-                    <ChevronDown size={18} className={`transition-transform duration-200 shrink-0 ml-2 ${isMatchDropdownOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown size={18} className="text-primary shrink-0 ml-2" />
                   </button>
 
-                  {isMatchDropdownOpen && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-40"
-                        onClick={() => setIsMatchDropdownOpen(false)}
-                      />
-                      <div className="absolute left-0 top-full mt-1 w-full bg-surface border-2 border-border-main shadow-xl z-50 divide-y divide-border-main max-h-60 overflow-y-auto">
-                        {filteredMatches.map(m => {
-                          const isSelected = m.id === selectedMatchId;
-                          const label = m.matchType === 'internal'
-                            ? t('fee_splitter.internal_match_label', 'TRẬN NỘI BỘ')
-                            : `VS ${m.opponent.toUpperCase()}`;
-                          return (
-                            <button
-                              key={m.id}
-                              type="button"
-                              onClick={() => {
-                                setSelectedMatchId(m.id);
-                                setIsMatchDropdownOpen(false);
-                              }}
-                              className={`w-full text-left p-3 flex justify-between items-center transition-colors cursor-pointer ${
-                                isSelected ? 'bg-primary text-white font-bold' : 'hover:bg-primary/5 text-primary'
-                              }`}
-                            >
-                              <div className="flex flex-col">
-                                <span className="font-display text-sm tracking-wider uppercase">
-                                  {label}
-                                </span>
-                                <span className={`text-xs ${isSelected ? 'text-white/80' : 'text-text-muted'}`}>
-                                  {m.date} {m.time ? `• ${m.time}` : ''}
-                                </span>
-                              </div>
-                              {isSelected && <Check size={16} className="text-white shrink-0 ml-2" />}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </>
-                  )}
+                  <BottomSheet
+                    isOpen={isMatchDropdownOpen}
+                    onClose={() => setIsMatchDropdownOpen(false)}
+                    title={
+                      <span className="flex items-center gap-2">
+                        <Calculator size={20} /> {t('fee_splitter.select_match_title', 'CHỌN TRẬN ĐẤU')}
+                      </span>
+                    }
+                  >
+                    <div className="flex flex-col gap-2.5">
+                      {filteredMatches.map(m => {
+                        const isSelected = m.id === selectedMatchId;
+                        const label = m.matchType === 'internal'
+                          ? t('fee_splitter.internal_match_label', 'TRẬN NỘI BỘ')
+                          : `VS ${m.opponent.toUpperCase()}`;
+                        return (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedMatchId(m.id);
+                              setIsMatchDropdownOpen(false);
+                            }}
+                            className={`w-full text-left p-3.5 border-2 transition-all active:scale-[0.98] flex items-center justify-between gap-3 cursor-pointer ${
+                              isSelected
+                                ? 'border-primary bg-primary/10 text-primary'
+                                : 'border-border-main bg-surface text-text-main hover:border-primary/40'
+                            }`}
+                          >
+                            <div className="flex flex-col min-w-0 flex-1">
+                              <span className="font-display text-sm font-bold uppercase tracking-wider leading-tight truncate">
+                                {label}
+                              </span>
+                              <span className="text-xs text-text-muted mt-1">
+                                {m.date} {m.time ? `• ${m.time}` : ''} {m.location ? `• ${m.location}` : ''}
+                              </span>
+                            </div>
+                            {isSelected && <Check size={20} className="text-primary shrink-0 ml-2" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </BottomSheet>
                 </div>
               ) : (
                 <p className="text-xs text-text-muted italic">
@@ -566,23 +718,156 @@ export default function FeeSplitter() {
           {t('fee_splitter.row3_title', '3. CHI PHÍ TRẬN ĐẤU')}
         </h3>
 
+        {/* Venue Price Integration / Selector */}
+        {venues.length > 0 && (
+          <div className="space-y-2">
+            <label className="block text-xs font-bold uppercase tracking-wider text-text-muted">
+              {t('fee_splitter.choose_venue_for_price', 'Áp dụng giá nhanh từ Danh bạ Sân')}
+            </label>
+
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsVenueDropdownOpen(true)}
+                className={`w-full flex items-center justify-between bg-surface border-2 ${
+                  currentVenue ? 'border-primary' : 'border-border-main hover:border-primary'
+                } p-3 font-display uppercase tracking-wider text-sm font-bold focus:border-primary focus:outline-none transition-colors cursor-pointer shadow-sm`}
+              >
+                <div className="flex items-center gap-2 min-w-0 pr-2">
+                  <MapPin size={16} className={currentVenue ? 'text-secondary shrink-0' : 'text-text-muted shrink-0'} />
+                  <span className={`truncate ${currentVenue ? 'text-primary' : 'text-text-muted font-normal'}`}>
+                    {currentVenue ? currentVenue.name : t('fee_splitter.select_venue_placeholder', 'Chọn sân bóng để áp dụng giá...')}
+                  </span>
+                </div>
+
+                <ChevronDown size={18} className="text-primary shrink-0" />
+              </button>
+
+              <BottomSheet
+                isOpen={isVenueDropdownOpen}
+                onClose={() => setIsVenueDropdownOpen(false)}
+                title={
+                  <span className="flex items-center gap-2">
+                    <MapPin size={20} /> {t('fee_splitter.select_venue_title', 'CHỌN SÂN BÓNG')}
+                  </span>
+                }
+              >
+                <div className="flex flex-col gap-2.5">
+                  {/* Option: Không chọn sân */}
+                  <button
+                    type="button"
+                    onClick={() => handleSelectVenue(null)}
+                    className={`w-full text-left p-3.5 border-2 transition-all active:scale-[0.98] flex items-center justify-between gap-3 cursor-pointer ${
+                      !currentVenue
+                        ? 'border-primary bg-primary/10 text-primary font-bold'
+                        : 'border-border-main bg-surface text-text-muted hover:border-primary/40'
+                    }`}
+                  >
+                    <span className="font-display text-sm uppercase tracking-wider">
+                      -- {t('fee_splitter.no_venue_selected', 'Không chọn sân')} --
+                    </span>
+                    {!currentVenue && <Check size={20} className="text-primary shrink-0 ml-2" />}
+                  </button>
+
+                  {venues.map(v => {
+                    const isSelected = currentVenue?.id === v.id;
+                    return (
+                      <button
+                        key={v.id}
+                        type="button"
+                        onClick={() => handleSelectVenue(v)}
+                        className={`w-full text-left p-3.5 border-2 transition-all active:scale-[0.98] flex items-center justify-between gap-3 cursor-pointer ${
+                          isSelected
+                            ? 'border-primary bg-primary/10 text-primary'
+                            : 'border-border-main bg-surface text-text-main hover:border-primary/40'
+                        }`}
+                      >
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <span className="font-display text-sm font-bold uppercase tracking-wider text-primary truncate">
+                            {v.name}
+                          </span>
+                          {v.address && (
+                            <span className="text-xs text-text-muted truncate mt-0.5">
+                              {v.address}
+                            </span>
+                          )}
+                          {(v.priceDay || v.priceNight) && (
+                            <div className="flex items-center gap-3 text-xs font-medium text-text-muted mt-1.5 flex-wrap">
+                              {v.priceDay ? (
+                                <span className="text-amber-600 dark:text-amber-400 font-semibold">
+                                  ☀️ {t('venues.day_slot', 'Sáng')}: {formatMoney(v.priceDay)}
+                                </span>
+                              ) : null}
+                              {v.priceNight ? (
+                                <span className="text-indigo-500 dark:text-indigo-400 font-semibold">
+                                  🌙 {t('venues.night_slot', 'Tối')}: {formatMoney(v.priceNight)}
+                                </span>
+                              ) : null}
+                            </div>
+                          )}
+                        </div>
+                        {isSelected && <Check size={20} className="text-primary shrink-0 ml-2" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </BottomSheet>
+            </div>
+
+            {/* Day / Night Rate Quick Toggles */}
+            {currentVenue && (currentVenue.priceDay || currentVenue.priceNight) && (
+              <div className="flex gap-2 pt-1">
+                {currentVenue.priceDay ? (
+                  <button
+                    type="button"
+                    onClick={() => handleSelectSlot('day', currentVenue)}
+                    className={`flex-1 py-2 px-2.5 text-xs font-bold flex items-center justify-center gap-1.5 border-2 transition-all cursor-pointer ${
+                      activeTimeSlot === 'day'
+                        ? 'bg-amber-500/15 border-amber-500 text-amber-600 dark:text-amber-400 shadow-sm'
+                        : 'bg-surface border-border-main text-text-muted hover:border-amber-500/50'
+                    }`}
+                  >
+                    <Sun size={14} className="text-amber-500 shrink-0" />
+                    <span className="truncate">
+                      {t('venues.day_slot', 'Sáng')}: {formatMoney(currentVenue.priceDay)}
+                    </span>
+                  </button>
+                ) : null}
+
+                {currentVenue.priceNight ? (
+                  <button
+                    type="button"
+                    onClick={() => handleSelectSlot('night', currentVenue)}
+                    className={`flex-1 py-2 px-2.5 text-xs font-bold flex items-center justify-center gap-1.5 border-2 transition-all cursor-pointer ${
+                      activeTimeSlot === 'night'
+                        ? 'bg-indigo-500/15 border-indigo-500 text-indigo-500 dark:text-indigo-300 shadow-sm'
+                        : 'bg-surface border-border-main text-text-muted hover:border-indigo-500/50'
+                    }`}
+                  >
+                    <Moon size={14} className="text-indigo-400 shrink-0" />
+                    <span className="truncate">
+                      {t('venues.night_slot', 'Tối')}: {formatMoney(currentVenue.priceNight)}
+                    </span>
+                  </button>
+                ) : null}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Pitch Fee */}
         <div>
           <label className="block text-xs font-bold uppercase tracking-wider text-text-muted mb-1">
-            {t('fee_splitter.pitch_fee_label', 'Tiền thuê sân (VNĐ)')}
+            {t('fee_splitter.pitch_fee_label', 'Tiền thuê sân')}
           </label>
           <div className="relative">
-            <input
-              type="number"
-              step="10000"
+            <MoneyInput
               value={pitchFee === 0 ? '' : pitchFee}
-              onChange={(e) => setPitchFee(Number(e.target.value) || 0)}
-              placeholder="500.000"
-              className="w-full text-2xl font-display text-primary bg-surface border-2 border-border-main px-4 py-2 focus:border-primary focus:outline-none"
+              onChange={(val) => setPitchFee(val)}
+              placeholder={String(currencyConfig.defaultPitchNight)}
+              className="w-full text-2xl font-display font-bold text-primary bg-surface border-2 border-border-main px-4 py-2 focus:border-primary focus:outline-none"
+              currencySymbol={activeCurrency}
             />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-bold text-text-muted">
-              {formatMoney(pitchFee)}
-            </span>
           </div>
         </div>
 
@@ -593,11 +878,11 @@ export default function FeeSplitter() {
               onClick={() => {
                 const next = !hasExtraFee;
                 setHasExtraFee(next);
-                if (next && extraFee === 0) setExtraFee(100000);
+                if (next && extraFee === 0) setExtraFee(currencyConfig.defaultExtra);
               }}
               className="text-xs font-bold uppercase tracking-wider text-text-muted cursor-pointer select-none"
             >
-              {t('fee_splitter.extra_fee_label', 'Tiền nước & dịch vụ khác (VNĐ)')}
+              {t('fee_splitter.extra_fee_label', 'Tiền nước & dịch vụ khác')}
             </label>
             <button
               type="button"
@@ -606,7 +891,7 @@ export default function FeeSplitter() {
               onClick={() => {
                 const next = !hasExtraFee;
                 setHasExtraFee(next);
-                if (next && extraFee === 0) setExtraFee(100000);
+                if (next && extraFee === 0) setExtraFee(currencyConfig.defaultExtra);
               }}
               className={`relative inline-flex h-6 w-12 shrink-0 cursor-pointer border-2 transition-colors duration-200 ease-in-out focus:outline-none ${
                 hasExtraFee ? 'bg-primary border-primary' : 'bg-surface border-border-main'
@@ -623,17 +908,13 @@ export default function FeeSplitter() {
           {hasExtraFee && (
             <div className="space-y-2 pt-1">
               <div className="relative">
-                <input
-                  type="number"
-                  step="5000"
+                <MoneyInput
                   value={extraFee === 0 ? '' : extraFee}
-                  onChange={(e) => setExtraFee(Number(e.target.value) || 0)}
-                  placeholder="100.000"
-                  className="w-full text-2xl font-display text-primary bg-surface border-2 border-border-main px-4 py-2 focus:border-primary focus:outline-none"
+                  onChange={(val) => setExtraFee(val)}
+                  placeholder={String(currencyConfig.defaultExtra)}
+                  className="w-full text-2xl font-display font-bold text-primary bg-surface border-2 border-border-main px-4 py-2 focus:border-primary focus:outline-none"
+                  currencySymbol={activeCurrency}
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-bold text-text-muted">
-                  {formatMoney(extraFee)}
-                </span>
               </div>
             </div>
           )}
@@ -647,47 +928,78 @@ export default function FeeSplitter() {
             {t('fee_splitter.row4_title', '4. KÈO BÓNG & KẾT QUẢ')}
           </h3>
 
-          {/* Outcome Selection */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-text-muted mb-2">
-              {t('fee_splitter.match_outcome_label', 'Kết quả đội mình')}
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => setMatchOutcome('win')}
-                className={`p-3 border-2 font-display uppercase tracking-wider text-center transition-all cursor-pointer ${
-                  matchOutcome === 'win'
-                    ? 'bg-emerald-600 text-white border-emerald-600 shadow'
-                    : 'bg-surface text-emerald-700 border-emerald-300 hover:bg-emerald-50'
-                }`}
-              >
-                {t('fee_splitter.outcome_win', 'Thắng')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setMatchOutcome('draw')}
-                className={`p-3 border-2 font-display uppercase tracking-wider text-center transition-all cursor-pointer ${
-                  matchOutcome === 'draw'
-                    ? 'bg-amber-600 text-white border-amber-600 shadow'
-                    : 'bg-surface text-amber-700 border-amber-300 hover:bg-amber-50'
-                }`}
-              >
-                {t('fee_splitter.outcome_draw', 'Hòa')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setMatchOutcome('lose')}
-                className={`p-3 border-2 font-display uppercase tracking-wider text-center transition-all cursor-pointer ${
-                  matchOutcome === 'lose'
-                    ? 'bg-rose-600 text-white border-rose-600 shadow'
-                    : 'bg-surface text-rose-700 border-rose-300 hover:bg-rose-50'
-                }`}
-              >
-                {t('fee_splitter.outcome_lose', 'Thua')}
-              </button>
+          {/* Match Score & Outcome Display (if linked to match) or Manual Outcome Selection (if manual/menu mode) */}
+          {isLinkedToMatch && selectedMatch ? (
+            <div className="bg-surface-2 p-3.5 border-2 border-border-main flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider min-w-0 flex-wrap">
+                <span className="text-primary truncate">{(settings.teamName || '5TactiQ').toUpperCase()}</span>
+                <span className="px-2 py-0.5 bg-surface border border-border-main text-primary font-display text-sm font-bold shrink-0 shadow-sm">
+                  {selectedMatch.scoreUs ?? 0} - {selectedMatch.scoreOpponent ?? 0}
+                </span>
+                <span className="text-text-muted truncate">{(selectedMatch.opponent || t('matchday.opponent_placeholder')).toUpperCase()}</span>
+              </div>
+
+              {/* Auto Outcome Badge */}
+              <div className="shrink-0">
+                {matchOutcome === 'win' && (
+                  <span className="px-3 py-1 bg-emerald-600 text-white font-display text-xs uppercase font-bold tracking-wider shadow-sm">
+                    {t('fee_splitter.outcome_win', 'Thắng')}
+                  </span>
+                )}
+                {matchOutcome === 'lose' && (
+                  <span className="px-3 py-1 bg-rose-600 text-white font-display text-xs uppercase font-bold tracking-wider shadow-sm">
+                    {t('fee_splitter.outcome_lose', 'Thua')}
+                  </span>
+                )}
+                {matchOutcome === 'draw' && (
+                  <span className="px-3 py-1 bg-amber-600 text-white font-display text-xs uppercase font-bold tracking-wider shadow-sm">
+                    {t('fee_splitter.outcome_draw', 'Hòa')}
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-text-muted mb-2">
+                {t('fee_splitter.match_outcome_label', 'Kết quả đội mình')}
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setManualOutcome('win')}
+                  className={`p-3 border-2 font-display uppercase tracking-wider text-center transition-all cursor-pointer ${
+                    manualOutcome === 'win'
+                      ? 'bg-emerald-600 text-white border-emerald-600 shadow'
+                      : 'bg-surface text-emerald-700 border-emerald-300 hover:bg-emerald-50'
+                  }`}
+                >
+                  {t('fee_splitter.outcome_win', 'Thắng')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setManualOutcome('draw')}
+                  className={`p-3 border-2 font-display uppercase tracking-wider text-center transition-all cursor-pointer ${
+                    manualOutcome === 'draw'
+                      ? 'bg-amber-600 text-white border-amber-600 shadow'
+                      : 'bg-surface text-amber-700 border-amber-300 hover:bg-amber-50'
+                  }`}
+                >
+                  {t('fee_splitter.outcome_draw', 'Hòa')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setManualOutcome('lose')}
+                  className={`p-3 border-2 font-display uppercase tracking-wider text-center transition-all cursor-pointer ${
+                    manualOutcome === 'lose'
+                      ? 'bg-rose-600 text-white border-rose-600 shadow'
+                      : 'bg-surface text-rose-700 border-rose-300 hover:bg-rose-50'
+                  }`}
+                >
+                  {t('fee_splitter.outcome_lose', 'Thua')}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Custom Wager Toggle Switch */}
           <div className="border-t border-border-main pt-3">
@@ -716,49 +1028,44 @@ export default function FeeSplitter() {
             </div>
 
             {hasWager ? (
-              <div className="space-y-3 pt-1">
-                {/* Percentage inputs grid */}
-                <div className="bg-primary/5 p-3 border-2 border-primary/20 grid grid-cols-3 gap-2">
-                  <div>
-                    <label className="text-[10px] font-bold uppercase text-text-muted block text-center mb-1">{t('fee_splitter.win_pay_percent', '% Thắng trả')}</label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={customWinPercent}
-                        onChange={(e) => setCustomWinPercent(Math.min(100, Math.max(0, Number(e.target.value) || 0)))}
-                        className="w-full bg-surface border-2 border-border-main p-2 font-display text-lg text-emerald-700 font-bold text-center focus:border-emerald-500 focus:outline-none"
-                      />
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-text-muted">%</span>
+              <div className="pt-1">
+                {/* Percentage inputs grid - Auto Linked */}
+                <div className="bg-surface-2 p-3.5 border-2 border-border-main">
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Thua trả */}
+                    <div>
+                      <label className="text-[11px] font-bold uppercase text-rose-700 block mb-1">
+                        {t('fee_splitter.lose_pay_percent', '% THUA TRẢ')}
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={customLosePercent}
+                          onChange={(e) => handleLosePercentChange(Number(e.target.value) || 0)}
+                          className="w-full bg-surface border-2 border-rose-300 focus:border-rose-500 p-2.5 font-display text-2xl text-rose-700 font-bold text-center focus:outline-none shadow-sm"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-bold text-rose-500">%</span>
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold uppercase text-text-muted block text-center mb-1">{t('fee_splitter.draw_pay_percent', '% Hòa trả')}</label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={customDrawPercent}
-                        onChange={(e) => setCustomDrawPercent(Math.min(100, Math.max(0, Number(e.target.value) || 0)))}
-                        className="w-full bg-surface border-2 border-border-main p-2 font-display text-lg text-amber-700 font-bold text-center focus:border-amber-500 focus:outline-none"
-                      />
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-text-muted">%</span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold uppercase text-text-muted block text-center mb-1">{t('fee_splitter.lose_pay_percent', '% Thua trả')}</label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={customLosePercent}
-                        onChange={(e) => setCustomLosePercent(Math.min(100, Math.max(0, Number(e.target.value) || 0)))}
-                        className="w-full bg-surface border-2 border-border-main p-2 font-display text-lg text-rose-700 font-bold text-center focus:border-rose-500 focus:outline-none"
-                      />
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-text-muted">%</span>
+
+                    {/* Thắng trả (Tự động tính) */}
+                    <div>
+                      <label className="text-[11px] font-bold uppercase text-emerald-700 block mb-1">
+                        {t('fee_splitter.win_pay_percent', '% THẮNG TRẢ')}
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={customWinPercent}
+                          onChange={(e) => handleWinPercentChange(Number(e.target.value) || 0)}
+                          className="w-full bg-surface border-2 border-emerald-300 focus:border-emerald-500 p-2.5 font-display text-2xl text-emerald-700 font-bold text-center focus:outline-none shadow-sm"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-bold text-emerald-500">%</span>
+                      </div>
                     </div>
                   </div>
                 </div>

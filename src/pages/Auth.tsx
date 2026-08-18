@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToastStore } from '../store/useToastStore';
 import { useThemeStore } from '../store/useThemeStore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Key, LogIn, UserPlus, ShieldAlert, ArrowRight, Laptop, ShieldCheck, Sun, Moon, Monitor, Globe, CheckCircle2, Check, Eye, EyeOff, User as UserIcon } from 'lucide-react';
+import { Mail, Key, LogIn, UserPlus, ShieldAlert, ArrowRight, Laptop, ShieldCheck, Sun, Moon, Monitor, Globe, CheckCircle2, Check, Eye, EyeOff, User as UserIcon, Home } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { BottomSheet } from '../components/ui/BottomSheet';
 import { AuthSkeleton } from '../components/ui/AuthSkeleton';
@@ -17,6 +17,12 @@ const languages = [
   { code: 'pt', name: 'Português', label: 'PT' },
   { code: 'ru', name: 'Русский', label: 'RU' },
   { code: 'ar', name: 'العربية', label: 'SA' },
+  { code: 'fr', name: 'Français', label: 'FR' },
+  { code: 'de', name: 'Deutsch', label: 'DE' },
+  { code: 'it', name: 'Italiano', label: 'IT' },
+  { code: 'ja', name: '日本語', label: 'JP' },
+  { code: 'ko', name: '한국어', label: 'KR' },
+  { code: 'zh', name: '简体中文', label: 'CN' },
 ];
 
 const Auth: React.FC = () => {
@@ -172,7 +178,7 @@ const Auth: React.FC = () => {
     setLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + window.location.pathname + '#/reset-password'
+        redirectTo: window.location.origin + '/reset-password'
       });
       if (error) throw error;
       addToast({ message: t('auth.reset_sent', 'Đã gửi liên kết khôi phục. Vui lòng kiểm tra email!'), type: 'success' });
@@ -220,8 +226,18 @@ const Auth: React.FC = () => {
 
   return (
     <div className="fixed inset-0 w-full h-full h-[100dvh] overflow-y-auto bg-background flex flex-col items-center p-3 sm:p-6 z-10">
-      {/* Top Right Quick Controls: Theme & Language */}
+      {/* Top Right Quick Controls: Exit to Landing, Theme & Language */}
       <div className="sticky top-3 right-3 self-end z-30 flex items-center gap-2 mb-2 sm:mb-0 sm:absolute sm:top-4 sm:right-4">
+        {/* Back to Landing Page Button */}
+        <button
+          type="button"
+          onClick={() => navigate('/landing')}
+          className="w-9 h-9 sm:w-10 sm:h-10 bg-surface border-2 border-border-main hover:border-primary text-text-main flex items-center justify-center transition-colors shadow-md cursor-pointer group"
+          title={t('auth.back_to_landing', 'Về trang giới thiệu')}
+        >
+          <Home size={16} className="text-secondary group-hover:scale-110 transition-transform sm:w-[18px] sm:h-[18px]" />
+        </button>
+
         {/* Theme Toggle Button */}
         <button
           type="button"
@@ -246,7 +262,7 @@ const Auth: React.FC = () => {
       <div className="w-full max-w-md animate-fade-in-up relative z-10 my-auto py-4 sm:py-6 shrink-0">
         {/* Logo/Brand Section */}
         <div className="text-center mb-3 sm:mb-5">
-          <img src="./logo.png" alt="5TactiQ Logo" className="w-14 h-14 sm:w-20 sm:h-20 object-contain mx-auto mb-1.5 drop-shadow-md" />
+          <img src="/logo.png" alt="5TactiQ Logo" className="w-14 h-14 sm:w-20 sm:h-20 object-contain mx-auto mb-1.5 drop-shadow-md" />
           <h1 className="text-3xl sm:text-4xl font-display uppercase tracking-widest text-primary font-bold">5TactiQ</h1>
         </div>
 

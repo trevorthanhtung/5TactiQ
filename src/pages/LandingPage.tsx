@@ -197,7 +197,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Logo & Brand */}
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
-            <img src="./logo.png" alt="5TactiQ Logo" className="w-9 h-9 object-contain drop-shadow-sm" />
+            <img src="/logo.png" alt="5TactiQ Logo" className="w-9 h-9 object-contain drop-shadow-sm" />
             <span className="font-display text-2xl font-bold tracking-widest text-primary uppercase">
               5TACTIQ
             </span>
@@ -1149,7 +1149,7 @@ export default function LandingPage() {
 
             {/* Windows EXE */}
             <a
-              href="https://github.com/trevorthanhtung/5TactiQ/releases/latest/download/5TactiQ-1.0.0-Portable.exe"
+              href="https://github.com/trevorthanhtung/5TactiQ/releases/latest/download/5TactiQ-Setup.exe"
               target="_blank"
               rel="noopener noreferrer"
               className="hallmark-card bg-surface-2 hover:bg-surface border-2 border-border-main p-4 flex flex-col items-center justify-between text-center transition-all shadow-sm hover:shadow-md cursor-pointer group space-y-3"

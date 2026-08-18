@@ -6,20 +6,27 @@ import { useNavigate } from 'react-router-dom';
 import type { FundTransaction } from '../types';
 import { BottomSheet } from '../components/ui/BottomSheet';
 import { CustomDatePicker } from '../components/CustomDatePicker';
+import { MoneyInput } from '../components/MoneyInput';
 import { useTranslation } from 'react-i18next';
+import { useSettingsStore } from '../store/useSettingsStore';
+import { formatCurrencyAmount, getCurrencyConfig, LANGUAGE_DEFAULT_CURRENCY } from '../utils/currencyUtils';
 
 export default function Fund() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { transactions, addTransaction } = useFundStore();
   const { players } = usePlayerStore();
+  const { settings } = useSettingsStore();
   const navigate = useNavigate();
+
+  const activeCurrency = settings.currency || LANGUAGE_DEFAULT_CURRENCY[i18n.language] || 'VND';
+  const currencyConfig = getCurrencyConfig(activeCurrency);
   const [showAddModal, setShowAddModal] = useState(false);
 
   const [newTx, setNewTx] = useState<{
     date: string;
     type: 'Thu' | 'Chi';
     category: FundTransaction['category'];
-    amount: string;
+    amount: string | number;
     note: string;
     playerId: string | null;
   }>({
@@ -36,7 +43,7 @@ export default function Fund() {
   const balance = totalThu - totalChi;
 
   const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
+    return formatCurrencyAmount(val, activeCurrency);
   };
 
   const handleAdd = (e: React.FormEvent) => {
@@ -236,15 +243,16 @@ export default function Fund() {
           )}
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">{t('fund.amount_label', 'Số tiền (VNĐ)')}</label>
-            <input 
-              type="number" 
+            <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">
+              {t('fund.amount_label', 'Số tiền')}
+            </label>
+            <MoneyInput 
               required
-              min="0"
               value={newTx.amount}
-              onChange={e => setNewTx({...newTx, amount: e.target.value})}
+              onChange={val => setNewTx({...newTx, amount: val})}
               className="w-full border-2 border-border-main bg-surface p-3 rounded-none focus:border-primary outline-none font-bold text-xl text-primary"
-              placeholder={t('fund.amount_placeholder', 'Ví dụ: 200000')}
+              placeholder={`Ví dụ: ${currencyConfig.defaultExtra}`}
+              currencySymbol={activeCurrency}
             />
           </div>
 

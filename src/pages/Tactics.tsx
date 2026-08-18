@@ -131,6 +131,7 @@ export default function Tactics() {
   const [textInput, setTextInput] = useState('');
   
   const eraserBtnRef = useRef<HTMLButtonElement>(null);
+  const isBoardInitializedRef = useRef(false);
 
   // Proportional sizing for Konva elements based on board width
   const boardScale = useMemo(() => {
@@ -198,45 +199,18 @@ export default function Tactics() {
 
   const handleResetBoard = () => {
     if (dimensions.width === 0) return;
-    const w = dimensions.width;
-    const h = dimensions.height;
-    const l = dimensions.isLandscape;
-
-    const getPos = (rx: number, ry: number) => {
-      if (l) return { x: (1 - ry) * w, y: rx * h };
-      return { x: rx * w, y: ry * h };
-    };
-
-    const enemies = [
-      { id: 'away-gk', isEnemy: true, ...getPos(0.5, 0.1) },
-      { id: 'away-1', isEnemy: true, ...getPos(0.5, 0.25) },
-      { id: 'away-2', isEnemy: true, ...getPos(0.2, 0.35) },
-      { id: 'away-3', isEnemy: true, ...getPos(0.8, 0.35) },
-      { id: 'away-4', isEnemy: true, ...getPos(0.5, 0.42) }
-    ];
-
-    const ball = { id: 'ball', isBall: true, ...getPos(0.5, 0.5) };
-
-    const home = [
-      { id: 'home-gk', label: 'GK', ...getPos(0.5, 0.9) },
-      { id: 'home-fx', label: 'FX', ...getPos(0.5, 0.75) },
-      { id: 'home-ala1', label: 'ALA', ...getPos(0.2, 0.65) },
-      { id: 'home-ala2', label: 'ALA', ...getPos(0.8, 0.65) },
-      { id: 'home-pv', label: 'PV', ...getPos(0.5, 0.48) }
-    ];
-
-    const initialPos = [ball];
+    const initialPos: Position[] = [];
     setPositions(initialPos);
     setLines([]);
 
     const frameCopy = {
       id: frames.length > 0 ? frames[0].id : 'frame-1',
-      positions: JSON.parse(JSON.stringify(initialPos)),
+      positions: [],
       lines: []
     };
     setFrames([frameCopy]);
     setCurrentFrameIndex(0);
-    setHistory([{ positions: JSON.parse(JSON.stringify(initialPos)), lines: [] }]);
+    setHistory([{ positions: [], lines: [] }]);
     setHistoryStep(0);
   };
 
@@ -572,9 +546,10 @@ export default function Tactics() {
     }
   }, [dimensions]);
 
-  // Auto-restore & initialize positions
+  // Auto-restore & initialize positions once on initial mount
   useEffect(() => {
-    if (dimensions.width > 0 && positions.length === 0) {
+    if (dimensions.width > 0 && !isBoardInitializedRef.current) {
+      isBoardInitializedRef.current = true;
       if (activeBoard && activeBoard.positions && activeBoard.positions.length > 0) {
         setPositions(activeBoard.positions);
         setLines(activeBoard.lines || []);
@@ -587,48 +562,21 @@ export default function Tactics() {
           setHistoryStep(0);
         }
       } else {
-        const w = dimensions.width;
-        const h = dimensions.height;
-        const l = dimensions.isLandscape;
-
-        const getPos = (rx: number, ry: number) => {
-          if (l) return { x: (1 - ry) * w, y: rx * h };
-          return { x: rx * w, y: ry * h };
-        };
-
-        const enemies = [
-          { id: 'away-gk', isEnemy: true, ...getPos(0.5, 0.1) },
-          { id: 'away-1', isEnemy: true, ...getPos(0.5, 0.25) },
-          { id: 'away-2', isEnemy: true, ...getPos(0.2, 0.35) },
-          { id: 'away-3', isEnemy: true, ...getPos(0.8, 0.35) },
-          { id: 'away-4', isEnemy: true, ...getPos(0.5, 0.42) }
-        ];
-
-        const ball = { id: 'ball', isBall: true, ...getPos(0.5, 0.5) };
-
-        const home = [
-          { id: 'home-gk', label: 'GK', ...getPos(0.5, 0.9) },
-          { id: 'home-fx', label: 'FX', ...getPos(0.5, 0.75) },
-          { id: 'home-ala1', label: 'ALA', ...getPos(0.2, 0.65) },
-          { id: 'home-ala2', label: 'ALA', ...getPos(0.8, 0.65) },
-          { id: 'home-pv', label: 'PV', ...getPos(0.5, 0.48) }
-        ];
-
-        const initialPos = [ball];
+        const initialPos: Position[] = [];
         setPositions(initialPos);
 
         if (history.length === 0) {
-          setHistory([{ positions: JSON.parse(JSON.stringify(initialPos)), lines: [] }]);
+          setHistory([{ positions: [], lines: [] }]);
           setHistoryStep(0);
-          setFrames([{ id: 'frame-1', positions: JSON.parse(JSON.stringify(initialPos)), lines: [] }]);
+          setFrames([{ id: 'frame-1', positions: [], lines: [] }]);
         }
       }
     }
-  }, [dimensions.width, dimensions.height, dimensions.isLandscape, positions.length]);
+  }, [dimensions.width, dimensions.height, dimensions.isLandscape]);
 
   // Auto-persist active board state
   useEffect(() => {
-    if (positions.length > 0) {
+    if (isBoardInitializedRef.current) {
       setActiveBoard({
         positions,
         lines,

@@ -116,7 +116,7 @@ export default function InstallPrompt() {
             {t('install_prompt.desc_windows', 'Tải phần mềm (.exe) dành riêng cho Windows. Tận hưởng hiệu năng tối đa!')}
           </p>
           <button 
-            onClick={() => handleDownload('https://github.com/trevorthanhtung/5TactiQ/releases/latest/download/5TactiQ-1.0.0-Portable.exe')}
+            onClick={() => handleDownload('https://github.com/trevorthanhtung/5TactiQ/releases/latest/download/5TactiQ-Setup.exe')}
             className="w-full hallmark-btn bg-primary text-white py-2 text-xs flex items-center justify-center gap-1"
           >
             <Download size={14} /> {t('install_prompt.download_windows', 'TẢI BẢN WINDOWS (.EXE)')}
@@ -167,7 +167,7 @@ export default function InstallPrompt() {
         className="fixed bottom-[100px] left-4 right-4 md:left-auto md:right-4 md:bottom-4 md:w-96 bg-surface border-2 border-border-main p-4 shadow-[8px_8px_0px_0px_var(--color-primary)] z-[6000] flex gap-4 items-start"
       >
         <div className="w-12 h-12 shrink-0 bg-primary/10 border-2 border-border-main flex items-center justify-center p-2">
-          <img src="./splash.png" alt="5TactiQ Logo" className="w-full h-full object-contain" />
+          <img src="/splash.png" alt="5TactiQ Logo" className="w-full h-full object-contain" />
         </div>
         
         <div className="flex-1">

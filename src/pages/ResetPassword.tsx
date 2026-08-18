@@ -103,7 +103,7 @@ export default function ResetPassword() {
       <div className="w-full max-w-md animate-fade-in-up relative z-10 my-auto py-4 sm:py-6 shrink-0">
         {/* Logo Section */}
         <div className="text-center mb-4 sm:mb-6">
-          <img src="./logo.png" alt="5TactiQ Logo" className="w-16 h-16 sm:w-20 sm:h-20 object-contain mx-auto mb-2 drop-shadow-md" />
+          <img src="/logo.png" alt="5TactiQ Logo" className="w-16 h-16 sm:w-20 sm:h-20 object-contain mx-auto mb-2 drop-shadow-md" />
           <h1 className="text-3xl sm:text-4xl font-display uppercase tracking-widest text-primary font-bold">5TactiQ</h1>
         </div>
 

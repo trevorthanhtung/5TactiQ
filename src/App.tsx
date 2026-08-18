@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { HashRouter } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
 import SplashScreen from './components/SplashScreen';
 import Onboarding from './components/Onboarding';
 import { AnimatedRoutes } from './components/AnimatedRoutes';
@@ -96,8 +96,8 @@ function App() {
       let backPressedOnce = false;
       
       const backListener = CapacitorApp.addListener('backButton', () => {
-        const currentPath = window.location.hash;
-        if (currentPath === '#/' || currentPath === '' || currentPath === '#') {
+        const currentPath = window.location.pathname;
+        if (currentPath === '/' || currentPath === '' || window.location.hash === '#/' || window.location.hash === '') {
           if (backPressedOnce) {
             CapacitorApp.exitApp();
           } else {
@@ -190,8 +190,8 @@ function App() {
     // Skip splash screen for web visitors on Landing Page
     const isInstalled = isInstalledApp();
     const { session, isGuest } = useAuthStore.getState();
-    const isLandingHash = window.location.hash.includes('landing');
-    if (!isInstalled && (!session && !isGuest || isLandingHash)) {
+    const isLandingPage = window.location.pathname.includes('landing') || window.location.hash.includes('landing');
+    if (!isInstalled && (!session && !isGuest || isLandingPage)) {
       return false;
     }
     return true;
@@ -203,10 +203,10 @@ function App() {
     // Determine which screens to show
     const isInstalled = isInstalledApp();
     const { session, isGuest } = useAuthStore.getState();
-    const isLandingHash = window.location.hash.includes('landing');
+    const isLandingPage = window.location.pathname.includes('landing') || window.location.hash.includes('landing');
 
     // On Web Landing Page, skip Onboarding and Splash completely
-    if (!isInstalled && (!session && !isGuest || isLandingHash)) {
+    if (!isInstalled && (!session && !isGuest || isLandingPage)) {
       setShowSplash(false);
       setShowOnboarding(false);
       return;
@@ -250,13 +250,13 @@ function App() {
       {!isWebLanding && !showSplash && showOnboarding && <Onboarding onComplete={handleOnboardingComplete} />}
       
       {/* App Content */}
-      <HashRouter>
+      <BrowserRouter>
         <InAppBrowserWarning />
         <AppStatusNotifier />
         <ToastContainer />
         <AnimatedRoutes />
         {!isWebLanding && <InstallPrompt />}
-      </HashRouter>
+      </BrowserRouter>
     </div>
   );
 }

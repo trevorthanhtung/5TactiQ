@@ -1,17 +1,25 @@
 import { useState, useEffect } from 'react';
 import { useVenueStore } from '../store/useVenueStore';
-import { ArrowLeft, MapPin, Phone, Plus, Map, X, Trash2, Edit2, Search, FileText } from 'lucide-react';
+import { ArrowLeft, MapPin, Phone, Plus, Map, Trash2, Search, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useHardwareBack } from '../hooks/useHardwareBack';
 import { VenuesSkeleton } from '../components/ui/VenuesSkeleton';
 import { BottomSheet } from '../components/ui/BottomSheet';
+import { TimeRangePicker } from '../components/TimeRangePicker';
+import { MoneyInput } from '../components/MoneyInput';
 import { useTranslation } from 'react-i18next';
+import { useSettingsStore } from '../store/useSettingsStore';
+import { formatCurrencyAmount, getCurrencyConfig, LANGUAGE_DEFAULT_CURRENCY } from '../utils/currencyUtils';
 import type { Venue } from '../types';
 
 export default function Venues() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { venues, addVenue, updateVenue, deleteVenue } = useVenueStore();
+  const { settings } = useSettingsStore();
   const navigate = useNavigate();
+
+  const activeCurrency = settings.currency || LANGUAGE_DEFAULT_CURRENCY[i18n.language] || 'VND';
+  const currencyConfig = getCurrencyConfig(activeCurrency);
 
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -32,6 +40,10 @@ export default function Venues() {
     address: '',
     phone: '',
     note: '',
+    priceDay: '' as string | number,
+    priceNight: '' as string | number,
+    dayTimeRange: '06:00 - 17:00',
+    nightTimeRange: '17:00 - 23:00',
   });
 
   const handleOpenModal = (venue?: Venue) => {
@@ -42,10 +54,23 @@ export default function Venues() {
         address: venue.address,
         phone: venue.phone,
         note: venue.note || '',
+        priceDay: venue.priceDay !== null && venue.priceDay !== undefined ? venue.priceDay : '',
+        priceNight: venue.priceNight !== null && venue.priceNight !== undefined ? venue.priceNight : '',
+        dayTimeRange: venue.dayTimeRange || '06:00 - 17:00',
+        nightTimeRange: venue.nightTimeRange || '17:00 - 23:00',
       });
     } else {
       setEditingId(null);
-      setFormData({ name: '', address: '', phone: '', note: '' });
+      setFormData({
+        name: '',
+        address: '',
+        phone: '',
+        note: '',
+        priceDay: '',
+        priceNight: '',
+        dayTimeRange: '06:00 - 17:00',
+        nightTimeRange: '17:00 - 23:00',
+      });
     }
     setShowModal(true);
   };
@@ -53,15 +78,35 @@ export default function Venues() {
   const handleCloseModal = () => {
     setShowModal(false);
     setEditingId(null);
-    setFormData({ name: '', address: '', phone: '', note: '' });
+    setFormData({
+      name: '',
+      address: '',
+      phone: '',
+      note: '',
+      priceDay: '',
+      priceNight: '',
+      dayTimeRange: '06:00 - 17:00',
+      nightTimeRange: '17:00 - 23:00',
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const payload = {
+      name: formData.name.trim(),
+      address: formData.address.trim(),
+      phone: formData.phone.trim(),
+      note: formData.note.trim(),
+      priceDay: formData.priceDay !== '' ? Number(formData.priceDay) : null,
+      priceNight: formData.priceNight !== '' ? Number(formData.priceNight) : null,
+      dayTimeRange: formData.dayTimeRange.trim() || '06:00 - 17:00',
+      nightTimeRange: formData.nightTimeRange.trim() || '17:00 - 23:00',
+    };
+
     if (editingId) {
-      updateVenue(editingId, formData);
+      updateVenue(editingId, payload);
     } else {
-      addVenue(formData);
+      addVenue(payload);
     }
     handleCloseModal();
   };
@@ -161,6 +206,33 @@ export default function Venues() {
                   </a>
                 )}
 
+                {/* Day / Night Pricing Badges */}
+                {(venue.priceDay !== null && venue.priceDay !== undefined && venue.priceDay > 0 || venue.priceNight !== null && venue.priceNight !== undefined && venue.priceNight > 0) && (
+                  <div className="grid grid-cols-2 gap-2 my-1 pt-1.5 border-t border-border-main">
+                    {venue.priceDay ? (
+                      <div className="p-2.5 bg-surface-2 border-2 border-border-main flex flex-col justify-between">
+                        <span className="text-[10px] uppercase font-bold font-display tracking-widest text-text-muted">
+                          {t('venues.day_slot', 'Sáng')}
+                        </span>
+                        <span className="font-display font-bold text-primary text-base mt-0.5 tracking-tight">
+                          {formatCurrencyAmount(venue.priceDay, activeCurrency)}
+                        </span>
+                      </div>
+                    ) : null}
+
+                    {venue.priceNight ? (
+                      <div className="p-2.5 bg-surface-2 border-2 border-border-main flex flex-col justify-between">
+                        <span className="text-[10px] uppercase font-bold font-display tracking-widest text-text-muted">
+                          {t('venues.night_slot', 'Tối')}
+                        </span>
+                        <span className="font-display font-bold text-primary text-base mt-0.5 tracking-tight">
+                          {formatCurrencyAmount(venue.priceNight, activeCurrency)}
+                        </span>
+                      </div>
+                    ) : null}
+                  </div>
+                )}
+
                 {venue.note && (
                   <div className="flex items-start gap-2 p-2.5 bg-surface-2 border border-border-main/60 text-xs text-text-muted">
                     <FileText size={15} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
@@ -168,14 +240,15 @@ export default function Venues() {
                   </div>
                 )}
 
+                {/* Footer Actions */}
                 {venue.phone && (
-                  <div className="mt-auto pt-1">
+                  <div className="mt-auto pt-2 flex flex-wrap items-center justify-between gap-2 border-t border-border-main/40">
                     <a
                       href={`tel:${venue.phone}`}
                       onClick={(e) => e.stopPropagation()}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold uppercase tracking-wider hover:bg-emerald-700 hover:-translate-y-0.5 transition-all shadow-[2px_2px_0px_0px_rgba(4,120,87,1)] border-2 border-emerald-700"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-600 text-white text-xs font-bold uppercase tracking-wider hover:bg-emerald-700 hover:-translate-y-0.5 transition-all shadow-[2px_2px_0px_0px_rgba(4,120,87,1)] border-2 border-emerald-700"
                     >
-                      <Phone size={14} /> {t('venues.call_book', 'GỌI ĐẶT SÂN: ')} {venue.phone}
+                      <Phone size={13} /> {t('venues.call_book', 'GỌI: ')} {venue.phone}
                     </a>
                   </div>
                 )}
@@ -189,6 +262,7 @@ export default function Venues() {
       <BottomSheet
         isOpen={showModal}
         onClose={handleCloseModal}
+        maxWidth="2xl"
         title={
           <span className="flex items-center gap-2">
             <Map size={24} /> {editingId ? t('venues.modal_edit_title', 'Cập nhật') : t('venues.modal_add_title', 'Thêm Sân Bóng')}
@@ -236,10 +310,77 @@ export default function Venues() {
             />
           </div>
 
+          {/* Pricing & Time Slots Configuration */}
+          <div className="pt-2 border-t-2 border-border-main">
+            <div className="text-xs font-display uppercase tracking-widest text-primary font-bold mb-3">
+              {t('venues.pricing_section_title', 'BẢNG GIÁ & KHUNG GIỜ THI ĐẤU')}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Day Slot */}
+              <div className="bg-surface-2 p-3 border-2 border-border-main space-y-2.5">
+                <div className="text-xs font-bold uppercase text-amber-500">
+                  {t('venues.day_slot_title', 'Ban Ngày')}
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-text-muted mb-1">
+                    {t('venues.time_range_label', 'Khung giờ')}
+                  </label>
+                  <TimeRangePicker
+                    value={formData.dayTimeRange}
+                    onChange={val => setFormData({ ...formData, dayTimeRange: val })}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-text-muted mb-0.5">
+                    {t('venues.price_label', 'Giá tiền sân')}
+                  </label>
+                  <MoneyInput
+                    value={formData.priceDay}
+                    onChange={val => setFormData({ ...formData, priceDay: val })}
+                    className="w-full border border-border-main bg-surface px-2.5 py-1.5 text-sm font-display font-bold text-primary focus:border-primary outline-none"
+                    placeholder={`Ví dụ: ${currencyConfig.defaultPitchDay}`}
+                  />
+                </div>
+              </div>
+
+              {/* Night Slot */}
+              <div className="bg-surface-2 p-3 border-2 border-border-main space-y-2.5">
+                <div className="text-xs font-bold uppercase text-indigo-400">
+                  {t('venues.night_slot_title', 'Ban Đêm')}
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-text-muted mb-1">
+                    {t('venues.time_range_label', 'Khung giờ')}
+                  </label>
+                  <TimeRangePicker
+                    value={formData.nightTimeRange}
+                    onChange={val => setFormData({ ...formData, nightTimeRange: val })}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-text-muted mb-0.5">
+                    {t('venues.price_label', 'Giá tiền sân')}
+                  </label>
+                  <MoneyInput
+                    value={formData.priceNight}
+                    onChange={val => setFormData({ ...formData, priceNight: val })}
+                    className="w-full border border-border-main bg-surface px-2.5 py-1.5 text-sm font-display font-bold text-secondary focus:border-primary outline-none"
+                    placeholder={`Ví dụ: ${currencyConfig.defaultPitchNight}`}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div>
             <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">{t('venues.note', 'Ghi chú / Lưu ý')}</label>
             <textarea
-              rows={3}
+              rows={2}
               value={formData.note}
               onChange={e => setFormData({ ...formData, note: e.target.value })}
               className="w-full border-2 border-border-main bg-surface p-3 rounded-none focus:border-primary outline-none font-medium text-sm resize-none"

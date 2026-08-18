@@ -160,30 +160,8 @@ export function CustomTimePicker({ value, onChange, label }: CustomTimePickerPro
 
           </div>
 
-          {/* Quick Football Time Slot Pills */}
-          <div className="pb-6 border-t border-border-main/60 pt-4">
-            <div className="text-[10px] font-bold font-display uppercase tracking-widest text-slate-400 mb-2">{t('common.suggested_times')}</div>
-            <div className="flex flex-wrap gap-1.5 justify-center">
-              {['17:30', '18:00', '18:30', '19:00', '19:30', '20:00', '20:30'].map((slot) => (
-                <button
-                  key={slot}
-                  type="button"
-                  onClick={() => {
-                    const parsed = parse24to12(slot);
-                    setHour12(parsed.h12Str);
-                    setMinute(parsed.mStr);
-                    setPeriod(parsed.period);
-                  }}
-                  className="px-2.5 py-1 text-xs font-bold font-display uppercase border border-border-main bg-surface-2 text-text-main hover:border-primary hover:bg-primary/10 hover:text-primary transition-colors"
-                >
-                  {slot}
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Footer Action Buttons */}
-          <div className="flex gap-3 mt-2 pt-4 border-t-2 border-primary/10">
+          <div className="flex gap-3 mt-4 pt-4 border-t-2 border-primary/10">
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); setIsOpen(false); }}

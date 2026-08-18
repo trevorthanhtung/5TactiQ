@@ -17,6 +17,7 @@ input::-webkit-credentials-auto-fill-button {
 }
 
 :root {
+  color-scheme: light;
   --color-primary-base: #46543b;
   --color-secondary-base: #e35d2a;
   --color-accent-base: #e5dec8;
@@ -30,6 +31,7 @@ input::-webkit-credentials-auto-fill-button {
 }
 
 .dark {
+  color-scheme: dark;
   --color-primary-base: #7d9669; /* Keep green for titles/logo */
   --color-secondary-base: #ff7a3d; /* Vibrant orange for accent */
   --color-accent-base: #3f3d35;
@@ -40,6 +42,20 @@ input::-webkit-credentials-auto-fill-button {
   --color-text: #f5f5f5;
   --color-text-muted-base: #a0a0a8;
   --color-border: rgba(255, 255, 255, 0.1);
+}
+
+/* Fix browser autofill (email/password) glaring white/blue background in dark mode */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: var(--color-text) !important;
+  -webkit-box-shadow: 0 0 0px 1000px var(--color-surface-2-bg) inset !important;
+  box-shadow: 0 0 0px 1000px var(--color-surface-2-bg) inset !important;
+  caret-color: var(--color-text) !important;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 @theme {

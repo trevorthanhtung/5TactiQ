@@ -29,8 +29,13 @@ import FeeSplitter from '../pages/FeeSplitter';
 export const AnimatedRoutes: React.FC = () => {
   const location = useLocation();
   const isTactics = location.pathname.startsWith('/tactics');
-  const isResetPassword = location.pathname === '/reset-password' || window.location.hash.includes('reset-password') || window.location.hash.includes('type=recovery') || window.location.hash.includes('error_code');
-  const isAuthRoute = location.pathname === '/auth' || window.location.hash.includes('/auth') || window.location.hash.includes('auth');
+  const isResetPassword = location.pathname.startsWith('/reset-password') || 
+                          window.location.hash.includes('reset-password') || 
+                          window.location.hash.includes('type=recovery') || 
+                          window.location.search.includes('type=recovery') || 
+                          window.location.hash.includes('error_code') || 
+                          window.location.search.includes('error_code');
+  const isAuthRoute = location.pathname.startsWith('/auth');
   const { session, isGuest, isLoading } = useAuthStore();
 
   if (isLoading) {

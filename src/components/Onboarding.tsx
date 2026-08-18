@@ -64,7 +64,7 @@ const MiniMatchday = () => {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-slate-100 font-display text-4xl -z-10">VS</div>
       <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="flex flex-col items-center gap-1.5">
         <div className="w-10 h-10 md:w-12 md:h-12 bg-surface rounded-full border-2 border-primary shadow-sm flex items-center justify-center p-1.5">
-          <img src="./logo.png" alt="home" className="w-full h-full object-contain" />
+          <img src="/logo.png" alt="home" className="w-full h-full object-contain" />
         </div>
         <span className="text-[10px] font-bold text-primary whitespace-nowrap">5TACTIQ</span>
       </motion.div>

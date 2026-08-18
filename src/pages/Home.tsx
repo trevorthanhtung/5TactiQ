@@ -41,7 +41,8 @@ export default function Home() {
   const goalCounts: Record<string, number> = {};
   
   finishedMatches.forEach(m => {
-    if (m.matchType !== 'internal') {
+    const shouldTrackStats = m.matchType !== 'internal' || !!m.trackStats;
+    if (shouldTrackStats) {
       m.stats?.forEach(s => {
         if (s.goals > 0) {
           goalCounts[s.playerId] = (goalCounts[s.playerId] || 0) + s.goals;

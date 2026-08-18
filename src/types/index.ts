@@ -17,6 +17,9 @@ export interface Player {
   isCaptain?: boolean;
   isBorrowed?: boolean;
   isYouth?: boolean;
+  isPerMatch?: boolean;
+  matchQuota?: number;
+  isManuallyHidden?: boolean;
   tier?: 'S' | 'A' | 'B' | 'C' | null;
   phone?: string;
   note?: string;
@@ -44,6 +47,7 @@ export interface MatchInfo {
     note: string;
   };
   teamCount?: 2 | 3 | 4;
+  trackStats?: boolean;
   teamAColor: string;
   teamBColor: string;
   teamCColor?: string;
@@ -58,6 +62,8 @@ export interface MatchInfo {
   eta?: Record<string, string>;
   teams?: Record<string, 'A' | 'B' | 'C' | 'D' | null>;
   stats?: PlayerMatchStat[];
+  pitchFee?: number | null;
+  feeTimeSlot?: 'day' | 'night' | null;
 }
 
 export interface Match {
@@ -118,6 +124,10 @@ export interface Venue {
   address: string;
   phone: string;
   note?: string;
+  priceDay?: number | null;
+  priceNight?: number | null;
+  dayTimeRange?: string;
+  nightTimeRange?: string;
 }
 
 export interface TeamSettings {
@@ -129,4 +139,5 @@ export interface TeamSettings {
   secondaryColor?: string;
   seasonStartDate?: string; // ISO format YYYY-MM-DD
   seasonEndDate?: string;   // ISO format YYYY-MM-DD
+  currency?: string;
 }
