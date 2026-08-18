@@ -92,7 +92,7 @@ export default function Layout() {
       {/* Main Content Area - Uses Container Queries */}
       <main id="main-content" className="flex-1 overflow-hidden lg:pb-0 @container bg-accent/30 relative">
         <AnimatePresence mode="wait">
-          <PageWrapper key={location.pathname} className="absolute inset-0 overflow-y-auto pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-0" style={{ paddingTop: 'var(--safe-top)' }}>
+          <PageWrapper key={location.pathname} className="absolute inset-0 overflow-y-auto pb-[calc(4.75rem+env(safe-area-inset-bottom,0px))] lg:pb-8" style={{ paddingTop: 'var(--safe-top)' }}>
             {outlet}
           </PageWrapper>
         </AnimatePresence>

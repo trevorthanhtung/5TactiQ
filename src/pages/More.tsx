@@ -316,7 +316,7 @@ export default function More() {
   }
 
   return (
-    <div className="p-4 md:p-6 flex flex-col min-h-full max-w-5xl mx-auto w-full pb-8">
+    <div className="p-4 md:p-6 flex flex-col max-w-5xl mx-auto w-full">
       <header className="mb-6 pt-2">
         <h1 className="text-4xl @sm:text-5xl font-display uppercase text-primary leading-normal pt-0.5">{t('more.title', 'THÊM')}</h1>
         <div className="hallmark-divider"></div>

@@ -4,6 +4,7 @@ import SplashScreen from './components/SplashScreen';
 import Onboarding from './components/Onboarding';
 import { AnimatedRoutes } from './components/AnimatedRoutes';
 import InstallPrompt from './components/ui/InstallPrompt';
+import AppUpdateModal from './components/ui/AppUpdateModal';
 import ToastContainer from './components/ui/ToastContainer';
 import AppStatusNotifier from './components/ui/AppStatusNotifier';
 import InAppBrowserWarning from './components/ui/InAppBrowserWarning';
@@ -256,6 +257,7 @@ function App() {
         <ToastContainer />
         <AnimatedRoutes />
         {!isWebLanding && <InstallPrompt />}
+        <AppUpdateModal />
       </BrowserRouter>
     </div>
   );

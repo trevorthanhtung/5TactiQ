@@ -136,7 +136,7 @@ export default function Stats() {
   }
 
   return (
-    <div className="p-3.5 sm:p-6 lg:p-8 flex flex-col min-h-full max-w-7xl 2xl:max-w-[1520px] mx-auto w-full pb-32 lg:pb-12 animate-fade-in-up">
+    <div className="p-3.5 sm:p-6 lg:p-8 flex flex-col max-w-7xl 2xl:max-w-[1520px] mx-auto w-full animate-fade-in-up">
       
       {/* 🧭 Back Navigation */}
       <div className="mb-4 sm:mb-5">

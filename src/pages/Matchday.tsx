@@ -893,7 +893,7 @@ export default function Matchday() {
     };
 
     return (
-      <div className="p-3.5 sm:p-6 lg:p-8 flex flex-col min-h-full max-w-7xl 2xl:max-w-[1520px] mx-auto w-full pb-32 lg:pb-12 animate-fade-in-up">
+      <div className="p-3.5 sm:p-6 lg:p-8 flex flex-col max-w-7xl 2xl:max-w-[1520px] mx-auto w-full animate-fade-in-up">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-3 sm:gap-4 mb-6 pb-2 border-b-2 border-border-main">
           <div>
@@ -1213,7 +1213,7 @@ export default function Matchday() {
   const totalAttendanceCount = presentCount + absentCount + pendingCount;
 
   return (
-    <div className="p-3.5 sm:p-6 lg:p-8 flex flex-col min-h-full max-w-7xl 2xl:max-w-[1520px] mx-auto w-full gap-5 sm:gap-6 pb-32 lg:pb-12 animate-fade-in-up">
+    <div className="p-3.5 sm:p-6 lg:p-8 flex flex-col max-w-7xl 2xl:max-w-[1520px] mx-auto w-full gap-5 sm:gap-6 animate-fade-in-up">
 
       {/* 1. Header Toolbar Card */}
       <div className="bg-surface border-2 border-border-main p-3 sm:p-4 shadow-sm flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3 sm:gap-4 shrink-0">

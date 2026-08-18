@@ -2,7 +2,7 @@ import React from 'react';
 
 export function HomeSkeleton() {
   return (
-    <div className="p-3.5 sm:p-6 lg:p-8 flex flex-col min-h-full max-w-7xl 2xl:max-w-[1520px] mx-auto w-full pb-20 lg:pb-12 gap-4 sm:gap-6 animate-pulse">
+    <div className="p-3.5 sm:p-6 lg:p-8 flex flex-col max-w-7xl 2xl:max-w-[1520px] mx-auto w-full gap-4 sm:gap-6 animate-pulse">
       
       {/* ⚽ Athletic Hero Header Skeleton */}
       <header className="relative overflow-hidden hallmark-card bg-surface border-2 border-border-main p-4 sm:p-6 md:p-8">

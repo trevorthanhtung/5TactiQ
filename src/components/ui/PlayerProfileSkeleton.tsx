@@ -3,7 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 
 export function PlayerProfileSkeleton() {
   return (
-    <div className="p-3.5 sm:p-6 lg:p-8 flex flex-col min-h-full max-w-7xl 2xl:max-w-[1520px] mx-auto w-full pb-20 lg:pb-12 animate-pulse">
+    <div className="p-3.5 sm:p-6 lg:p-8 flex flex-col max-w-7xl 2xl:max-w-[1520px] mx-auto w-full animate-pulse">
       {/* Back link skeleton */}
       <div className="flex items-center gap-2 font-bold text-text-muted/40 mb-6">
         <ArrowLeft size={16} /> <div className="h-4 w-24 bg-text-muted/20 rounded"></div>

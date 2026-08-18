@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useInstallPrompt } from '../../hooks/useInstallPrompt';
-import { X, Download, Share } from 'lucide-react';
+import { X, Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { useAppUpdateStore } from '../../store/useAppUpdateStore';
 import { useAuthStore } from '../../store/useAuthStore';
 
 export default function InstallPrompt() {
@@ -14,9 +13,6 @@ export default function InstallPrompt() {
   const { isInstallable, promptInstall } = useInstallPrompt();
   const [isVisible, setIsVisible] = useState(false);
   const [platform, setPlatform] = useState('unknown');
-  
-  const { showUpdateModal, setShowUpdateModal, latestVersion } = useAppUpdateStore();
-  const isUpdate = showUpdateModal;
 
   const isLandingPage = location.pathname === '/landing' || 
                         location.pathname === '/landing/' ||
@@ -60,16 +56,12 @@ export default function InstallPrompt() {
     });
   }, [isLandingPage]);
 
-  if (isLandingPage) {
+  if (isLandingPage || !isVisible) {
     return null;
   }
 
   const handleDismiss = () => {
-    if (isUpdate) {
-      setShowUpdateModal(false);
-    } else {
-      setIsVisible(false);
-    }
+    setIsVisible(false);
   };
 
   const handleDownload = (url: string) => {
@@ -77,19 +69,15 @@ export default function InstallPrompt() {
     handleDismiss();
   };
 
-  if (!isVisible && !isUpdate) return null;
-
   const renderContent = () => {
     if (platform === 'ios' || platform === 'mac') {
       return (
-        <>
-          <p className="text-xs text-text-muted mb-3 font-sans">
-            {platform === 'ios' ? t('install_prompt.desc_ios_1') : t('install_prompt.desc_mac_1', 'Mở menu trình duyệt (Safari/Chrome)')} <br/>
-            <span className="font-bold text-primary">
-              {platform === 'ios' ? t('install_prompt.desc_ios_2') : t('install_prompt.desc_mac_2', 'Chọn \'Add to Dock\' hoặc \'Install App\' để cài đặt')}
-            </span>
-          </p>
-        </>
+        <p className="text-xs text-text-muted mb-3 font-sans">
+          {platform === 'ios' ? t('install_prompt.desc_ios_1') : t('install_prompt.desc_mac_1', 'Mở menu trình duyệt (Safari/Chrome)')} <br/>
+          <span className="font-bold text-primary">
+            {platform === 'ios' ? t('install_prompt.desc_ios_2') : t('install_prompt.desc_mac_2', 'Chọn \'Add to Dock\' hoặc \'Install App\' để cài đặt')}
+          </span>
+        </p>
       );
     }
 
@@ -101,7 +89,7 @@ export default function InstallPrompt() {
           </p>
           <button 
             onClick={() => handleDownload('https://github.com/trevorthanhtung/5TactiQ/releases/latest/download/5TactiQ.apk')}
-            className="w-full hallmark-btn bg-primary text-white py-2 text-xs flex items-center justify-center gap-1"
+            className="w-full hallmark-btn bg-primary text-white py-2 text-xs flex items-center justify-center gap-1 cursor-pointer"
           >
             <Download size={14} /> {t('install_prompt.download_apk', 'TẢI FILE APK')}
           </button>
@@ -117,7 +105,7 @@ export default function InstallPrompt() {
           </p>
           <button 
             onClick={() => handleDownload('https://github.com/trevorthanhtung/5TactiQ/releases/latest/download/5TactiQ-Portable.exe')}
-            className="w-full hallmark-btn bg-primary text-white py-2 text-xs flex items-center justify-center gap-1"
+            className="w-full hallmark-btn bg-primary text-white py-2 text-xs flex items-center justify-center gap-1 cursor-pointer"
           >
             <Download size={14} /> {t('install_prompt.download_windows', 'TẢI BẢN WINDOWS (.EXE)')}
           </button>
@@ -133,7 +121,7 @@ export default function InstallPrompt() {
           </p>
           <button 
             onClick={() => handleDownload('https://github.com/trevorthanhtung/5TactiQ/releases/latest/download/5TactiQ.AppImage')}
-            className="w-full hallmark-btn bg-primary text-white py-2 text-xs flex items-center justify-center gap-1"
+            className="w-full hallmark-btn bg-primary text-white py-2 text-xs flex items-center justify-center gap-1 cursor-pointer"
           >
             <Download size={14} /> {t('install_prompt.download_linux', 'TẢI BẢN LINUX (APPIMAGE)')}
           </button>
@@ -150,7 +138,7 @@ export default function InstallPrompt() {
             const accepted = await promptInstall();
             if (accepted) handleDismiss();
           }}
-          className="w-full hallmark-btn bg-primary text-white py-2 text-xs flex items-center justify-center gap-1"
+          className="w-full hallmark-btn bg-primary text-white py-2 text-xs flex items-center justify-center gap-1 cursor-pointer"
         >
           <Download size={14} /> {t('install_prompt.add_now')}
         </button>
@@ -172,14 +160,14 @@ export default function InstallPrompt() {
         
         <div className="flex-1">
           <h4 className="font-display font-bold text-primary uppercase text-sm mb-1">
-            {isUpdate ? t('install_prompt.update_title', { version: latestVersion, defaultValue: `CẬP NHẬT ỨNG DỤNG (v{{version}})` }) : t('install_prompt.title')}
+            {t('install_prompt.title')}
           </h4>
           {renderContent()}
         </div>
 
         <button 
           onClick={handleDismiss}
-          className="absolute -top-3 -right-3 w-8 h-8 bg-surface border-2 border-primary text-primary flex items-center justify-center hover:bg-secondary hover:text-white transition-colors active:scale-95"
+          className="absolute -top-3 -right-3 w-8 h-8 bg-surface border-2 border-primary text-primary flex items-center justify-center hover:bg-secondary hover:text-white transition-colors active:scale-95 cursor-pointer"
         >
           <X size={18} strokeWidth={2.5} />
         </button>

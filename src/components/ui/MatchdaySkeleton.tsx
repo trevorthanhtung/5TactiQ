@@ -2,7 +2,7 @@ import React from 'react';
 
 export function MatchdaySkeleton() {
   return (
-    <div className="p-3.5 sm:p-6 lg:p-8 flex flex-col min-h-full max-w-7xl 2xl:max-w-[1520px] mx-auto w-full pb-32 lg:pb-12 animate-pulse">
+    <div className="p-3.5 sm:p-6 lg:p-8 flex flex-col max-w-7xl 2xl:max-w-[1520px] mx-auto w-full animate-pulse">
       {/* Header Skeleton */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-3 sm:gap-4 mb-6 pb-2 border-b-2 border-border-main">
         <div>

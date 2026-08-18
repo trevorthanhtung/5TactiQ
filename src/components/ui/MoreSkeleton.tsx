@@ -2,7 +2,7 @@ import React from 'react';
 
 export function MoreSkeleton() {
   return (
-    <div className="p-4 md:p-6 flex flex-col min-h-full max-w-5xl mx-auto w-full pb-8 animate-pulse">
+    <div className="p-4 md:p-6 flex flex-col max-w-5xl mx-auto w-full animate-pulse">
       {/* Header Skeleton */}
       <header className="mb-6 pt-2">
         <div className="h-10 w-32 bg-text-muted/25 rounded mb-2"></div>

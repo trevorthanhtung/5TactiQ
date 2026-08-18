@@ -152,7 +152,7 @@ export default function Roster() {
   });
 
   return (
-    <div className="p-3.5 sm:p-6 lg:p-8 flex flex-col min-h-full max-w-7xl 2xl:max-w-[1520px] mx-auto w-full pb-20 lg:pb-12 animate-fade-in-up">
+    <div className="p-3.5 sm:p-6 lg:p-8 flex flex-col max-w-7xl 2xl:max-w-[1520px] mx-auto w-full animate-fade-in-up">
       <div className="flex justify-between items-end mb-6 pt-2">
         <h1 className="text-3xl sm:text-5xl font-display uppercase text-primary leading-none">{t('roster.title')}</h1>
         <div className="flex items-center gap-3 sm:gap-4">
