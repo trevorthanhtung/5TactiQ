@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, RefreshCw, X, ExternalLink, ShieldCheck } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAppUpdateStore } from '../../store/useAppUpdateStore';
 import { APP_VERSION } from '../../config/version';
@@ -125,9 +125,8 @@ export default function AppUpdateModal() {
                   handleDownload('https://github.com/trevorthanhtung/5TactiQ/releases/latest/download/5TactiQ.apk');
                   setShowUpdateModal(false);
                 }}
-                className="hallmark-btn w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 font-display font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm active:scale-98 transition-all cursor-pointer"
+                className="hallmark-btn w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 font-display font-bold text-sm uppercase tracking-wider flex items-center justify-center shadow-sm active:scale-98 transition-all cursor-pointer"
               >
-                <Download size={18} />
                 <span>{t('update.btn_download_apk', 'TẢI FILE APK MỚI (v{{version}})', { version: latestVersion })}</span>
               </button>
             )}
@@ -138,9 +137,8 @@ export default function AppUpdateModal() {
                   handleDownload('https://github.com/trevorthanhtung/5TactiQ/releases/latest/download/5TactiQ-Portable.exe');
                   setShowUpdateModal(false);
                 }}
-                className="hallmark-btn w-full bg-primary hover:brightness-110 text-white py-3 px-4 font-display font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm active:scale-98 transition-all cursor-pointer"
+                className="hallmark-btn w-full bg-primary hover:brightness-110 text-white py-3 px-4 font-display font-bold text-sm uppercase tracking-wider flex items-center justify-center shadow-sm active:scale-98 transition-all cursor-pointer"
               >
-                <Download size={18} />
                 <span>{t('update.btn_download_exe', 'TẢI BẢN WINDOWS (.EXE)')}</span>
               </button>
             )}
@@ -151,9 +149,8 @@ export default function AppUpdateModal() {
                   handleDownload('https://github.com/trevorthanhtung/5TactiQ/releases/latest/download/5TactiQ.AppImage');
                   setShowUpdateModal(false);
                 }}
-                className="hallmark-btn w-full bg-primary hover:brightness-110 text-white py-3 px-4 font-display font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm active:scale-98 transition-all cursor-pointer"
+                className="hallmark-btn w-full bg-primary hover:brightness-110 text-white py-3 px-4 font-display font-bold text-sm uppercase tracking-wider flex items-center justify-center shadow-sm active:scale-98 transition-all cursor-pointer"
               >
-                <Download size={18} />
                 <span>{t('update.btn_download_linux', 'TẢI BẢN LINUX (APPIMAGE)')}</span>
               </button>
             )}
@@ -161,17 +158,15 @@ export default function AppUpdateModal() {
             {platform === 'web' && (
               <button
                 onClick={handleReloadWeb}
-                className="hallmark-btn w-full bg-primary hover:brightness-110 text-white py-3 px-4 font-display font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm active:scale-98 transition-all cursor-pointer"
+                className="hallmark-btn w-full bg-primary hover:brightness-110 text-white py-3 px-4 font-display font-bold text-sm uppercase tracking-wider flex items-center justify-center shadow-sm active:scale-98 transition-all cursor-pointer"
               >
-                <RefreshCw size={18} />
                 <span>{t('update.btn_reload', 'TẢI LẠI TRANG ĐỂ CẬP NHẬT')}</span>
               </button>
             )}
 
             {/* Platform instructions tip */}
             {platform === 'android' && (
-              <div className="flex items-start gap-2 p-2.5 bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-300 text-[11px] font-sans">
-                <ShieldCheck size={16} className="shrink-0 text-amber-500 mt-0.5" />
+              <div className="p-2.5 bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-300 text-[11px] font-sans">
                 <span>
                   Sau khi tải xong, hãy nhấn vào file <strong>5TactiQ.apk</strong> trong bảng thông báo hoặc thư mục Download để cài đặt đè lên bản cũ (toàn bộ dữ liệu của bạn vẫn được giữ nguyên).
                 </span>
@@ -185,10 +180,9 @@ export default function AppUpdateModal() {
               href="https://github.com/trevorthanhtung/5TactiQ/releases/latest"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-text-muted hover:text-primary flex items-center gap-1 font-sans underline"
+              className="text-text-muted hover:text-primary font-sans underline"
             >
               <span>{t('update.release_notes', 'Xem chi tiết thay đổi trên GitHub')}</span>
-              <ExternalLink size={12} />
             </a>
             <button
               onClick={() => setShowUpdateModal(false)}

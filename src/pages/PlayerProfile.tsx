@@ -16,7 +16,7 @@ import { useTranslation, Trans } from 'react-i18next';
 import { isPlayerHidden, getPlayerPerMatchStatus } from '../utils/playerUtils';
 
 export default function PlayerProfile() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const { players, deletePlayer, setCaptain, updatePlayer } = usePlayerStore();
@@ -571,13 +571,15 @@ export default function PlayerProfile() {
                   let resultBadge = null;
                   if (m.status === 'finished' && typeof m.scoreUs === 'number' && typeof m.scoreOpponent === 'number') {
                     if (m.scoreUs > m.scoreOpponent) {
-                      resultBadge = <span className="px-2 py-0.5 bg-emerald-500 text-white font-display text-xs font-bold">THẮNG {m.scoreUs}-{m.scoreOpponent}</span>;
+                      resultBadge = <span className="px-2 py-0.5 bg-emerald-500 text-white font-display text-xs font-bold">{t('roster.result_win', 'THẮNG')} {m.scoreUs}-{m.scoreOpponent}</span>;
                     } else if (m.scoreUs < m.scoreOpponent) {
-                      resultBadge = <span className="px-2 py-0.5 bg-rose-600 text-white font-display text-xs font-bold">THUA {m.scoreUs}-{m.scoreOpponent}</span>;
+                      resultBadge = <span className="px-2 py-0.5 bg-rose-600 text-white font-display text-xs font-bold">{t('roster.result_loss', 'THUA')} {m.scoreUs}-{m.scoreOpponent}</span>;
                     } else {
-                      resultBadge = <span className="px-2 py-0.5 bg-amber-500 text-white font-display text-xs font-bold">HÒA {m.scoreUs}-{m.scoreOpponent}</span>;
+                      resultBadge = <span className="px-2 py-0.5 bg-amber-500 text-white font-display text-xs font-bold">{t('roster.result_draw', 'HÒA')} {m.scoreUs}-{m.scoreOpponent}</span>;
                     }
                   }
+
+                  const dateLocale = i18n.language === 'vi' ? 'vi-VN' : i18n.language === 'en' ? 'en-US' : i18n.language === 'es' ? 'es-ES' : i18n.language === 'pt' ? 'pt-BR' : i18n.language === 'ru' ? 'ru-RU' : 'ar-SA';
 
                   return (
                     <div 
@@ -587,12 +589,12 @@ export default function PlayerProfile() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-display font-bold text-sm sm:text-base text-text-main uppercase tracking-wide">
-                            vs {m.opponent || 'Trận đấu nội bộ'}
+                            vs {m.opponent || t('roster.internal_match', 'Trận đấu nội bộ')}
                           </span>
                           {resultBadge}
                         </div>
                         <div className="text-[11px] text-text-muted font-medium mt-0.5">
-                          {m.date ? new Date(m.date).toLocaleDateString('vi-VN') : ''} • {m.location || 'Sân bóng'}
+                          {m.date ? new Date(m.date).toLocaleDateString(dateLocale) : ''} • {m.location || t('roster.default_pitch', 'Sân bóng')}
                         </div>
                       </div>
 

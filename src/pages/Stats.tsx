@@ -215,8 +215,8 @@ export default function Stats() {
             
             {/* Table Subheader */}
             <div className="p-3 sm:p-4 bg-surface-2 border-b-2 border-border-main flex justify-between items-center text-xs font-display font-bold uppercase tracking-wider text-text-muted">
-              <span>HẠNG & CẦU THỦ</span>
-              <span>{activeTab === 'goals' ? 'TỔNG BÀN' : activeTab === 'assists' ? 'TỔNG KIẾN TẠO' : 'SỐ TRẬN'}</span>
+              <span>{t('stats.rank_and_player', 'HẠNG & CẦU THỦ')}</span>
+              <span>{activeTab === 'goals' ? t('stats.total_goals_col', 'TỔNG BÀN') : activeTab === 'assists' ? t('stats.total_assists_col', 'TỔNG KIẾN TẠO') : t('stats.total_matches_col', 'SỐ TRẬN')}</span>
             </div>
 
             {displayedPlayers.length === 0 ? (
@@ -281,17 +281,17 @@ export default function Stats() {
               <button
                 type="button"
                 onClick={() => setShowAllZeroStats(!showAllZeroStats)}
-                className="w-full p-3 bg-surface-2 hover:bg-surface border-t-2 border-border-main text-xs font-display font-bold uppercase tracking-wider text-text-muted hover:text-text-main transition-colors flex items-center justify-center gap-1.5"
+                className="w-full p-3 bg-surface-2 hover:bg-surface border-t-2 border-border-main text-xs font-display font-bold uppercase tracking-wider text-text-muted hover:text-text-main transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 {showAllZeroStats ? (
                   <>
                     <ChevronUp size={15} />
-                    <span>Thu gọn danh sách (Ẩn {zeroStatPlayers.length} cầu thủ 0 {getUnitLabel()})</span>
+                    <span>{t('stats.collapse_zero_list', 'Thu gọn danh sách (Ẩn {{count}} cầu thủ 0 {{unit}})', { count: zeroStatPlayers.length, unit: getUnitLabel() })}</span>
                   </>
                 ) : (
                   <>
                     <ChevronDown size={15} />
-                    <span>Xem thêm {zeroStatPlayers.length} cầu thủ chưa có {getUnitLabel()} (0)</span>
+                    <span>{t('stats.expand_zero_list', 'Xem thêm {{count}} cầu thủ chưa có {{unit}} (0)', { count: zeroStatPlayers.length, unit: getUnitLabel() })}</span>
                   </>
                 )}
               </button>
@@ -305,22 +305,30 @@ export default function Stats() {
           {/* 📊 Team Summary Metrics (3-4 KPI Cards) */}
           <div className="grid grid-cols-2 gap-3 sm:gap-4">
             <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">TỔNG BÀN THẮNG</div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">
+                {t('stats.total_team_goals', 'TỔNG BÀN THẮNG')}
+              </div>
               <div className="text-3xl sm:text-4xl font-display text-primary font-bold">{totalTeamGoals}</div>
             </div>
 
             <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">TỔNG KIẾN TẠO</div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">
+                {t('stats.total_team_assists', 'TỔNG KIẾN TẠO')}
+              </div>
               <div className="text-3xl sm:text-4xl font-display text-secondary font-bold">{totalTeamAssists}</div>
             </div>
 
             <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">SỐ TRẬN TỔNG</div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">
+                {t('stats.total_matches', 'SỐ TRẬN TỔNG')}
+              </div>
               <div className="text-3xl sm:text-4xl font-display text-text-main font-bold">{filteredMatches.length}</div>
             </div>
 
             <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">TB BÀN / TRẬN</div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">
+                {t('stats.avg_goals_match', 'TB BÀN / TRẬN')}
+              </div>
               <div className="text-3xl sm:text-4xl font-display text-text-main font-bold">{avgGoalsPerMatch}</div>
             </div>
           </div>
@@ -329,16 +337,16 @@ export default function Stats() {
           <div className="hallmark-card bg-surface border-2 border-border-main p-4 sm:p-6 flex flex-col gap-4 shadow-sm">
             <div className="flex justify-between items-center pb-2 border-b border-border-main">
               <h2 className="font-display text-base sm:text-lg uppercase tracking-widest text-primary font-bold">
-                TOP HIỆU SUẤT TRỰC QUAN
+                {t('stats.top_performers_title', 'TOP HIỆU SUẤT TRỰC QUAN')}
               </h2>
               <span className="text-[11px] font-display uppercase tracking-wider text-text-muted font-bold">
-                {activeTab === 'goals' ? 'GHI BÀN' : activeTab === 'assists' ? 'KIẾN TẠO' : 'RA SÂN'}
+                {activeTab === 'goals' ? t('stats.tab_scoring', 'GHI BÀN') : activeTab === 'assists' ? t('stats.tab_assisting', 'KIẾN TẠO') : t('stats.tab_appearance', 'RA SÂN')}
               </span>
             </div>
 
             {topPerformers.length === 0 ? (
               <div className="p-6 text-center text-text-muted text-xs font-medium">
-                Chưa có số liệu cho hạng mục này
+                {t('stats.no_chart_data', 'Chưa có số liệu cho hạng mục này')}
               </div>
             ) : (
               <div className="flex flex-col gap-3.5 pt-1">

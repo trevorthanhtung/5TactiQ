@@ -933,25 +933,31 @@ export default function Matchday() {
             <div className="hallmark-card bg-surface border-2 border-border-main p-4 sm:p-5 shadow-sm flex flex-col gap-4">
               <div className="flex justify-between items-center pb-2 border-b border-border-main">
                 <h3 className="font-display text-sm sm:text-base uppercase tracking-widest text-primary font-bold">
-                  THỐNG KÊ MÙA GIẢI
+                  {t('matchday.season_stats_title', 'THỐNG KÊ MÙA GIẢI')}
                 </h3>
                 <span className="text-[10px] font-display uppercase tracking-wider text-text-muted font-bold">
-                  {seasonStats.totalFinished} TRẬN
+                  {seasonStats.totalFinished} {t('roster.match_unit', 'TRẬN')}
                 </span>
               </div>
 
               {/* W-D-L Cluster */}
               <div className="grid grid-cols-3 gap-2 text-center">
                 <div className="bg-surface-2 p-2 border border-border-main">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 font-display">THẮNG</div>
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 font-display">
+                    {t('roster.result_win', 'THẮNG')}
+                  </div>
                   <div className="text-xl sm:text-2xl font-display font-bold text-emerald-600">{seasonStats.wins}</div>
                 </div>
                 <div className="bg-surface-2 p-2 border border-border-main">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-amber-500 font-display">HÒA</div>
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-amber-500 font-display">
+                    {t('roster.result_draw', 'HÒA')}
+                  </div>
                   <div className="text-xl sm:text-2xl font-display font-bold text-amber-500">{seasonStats.draws}</div>
                 </div>
                 <div className="bg-surface-2 p-2 border border-border-main">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-rose-600 font-display">THUA</div>
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-rose-600 font-display">
+                    {t('roster.result_loss', 'THUA')}
+                  </div>
                   <div className="text-xl sm:text-2xl font-display font-bold text-rose-600">{seasonStats.losses}</div>
                 </div>
               </div>
@@ -959,15 +965,15 @@ export default function Matchday() {
               {/* Goals & Goal Diff */}
               <div className="space-y-2 text-xs pt-1">
                 <div className="flex justify-between items-center py-1.5 border-b border-border-main/50 font-display uppercase font-bold">
-                  <span className="text-text-muted">TỔNG BÀN THẮNG:</span>
-                  <span className="text-primary text-sm">{seasonStats.goalsFor} bàn</span>
+                  <span className="text-text-muted">{t('matchday.goals_for_label', 'TỔNG BÀN THẮNG:')}</span>
+                  <span className="text-primary text-sm">{seasonStats.goalsFor} {t('roster.goal_unit', 'bàn')}</span>
                 </div>
                 <div className="flex justify-between items-center py-1.5 border-b border-border-main/50 font-display uppercase font-bold">
-                  <span className="text-text-muted">TỔNG BÀN THUA:</span>
-                  <span className="text-rose-500 text-sm">{seasonStats.goalsAgainst} bàn</span>
+                  <span className="text-text-muted">{t('matchday.goals_against_label', 'TỔNG BÀN THUA:')}</span>
+                  <span className="text-rose-500 text-sm">{seasonStats.goalsAgainst} {t('roster.goal_unit', 'bàn')}</span>
                 </div>
                 <div className="flex justify-between items-center py-1.5 font-display uppercase font-bold">
-                  <span className="text-text-muted">HIỆU SỐ (GD):</span>
+                  <span className="text-text-muted">{t('matchday.goal_diff_label', 'HIỆU SỐ (GD):')}</span>
                   <span className={`text-sm ${seasonStats.goalDiff > 0 ? 'text-emerald-600' : seasonStats.goalDiff < 0 ? 'text-rose-600' : 'text-text-main'}`}>
                     {seasonStats.goalDiff > 0 ? `+${seasonStats.goalDiff}` : seasonStats.goalDiff}
                   </span>
@@ -978,9 +984,9 @@ export default function Matchday() {
               <div className="pt-3 border-t border-border-main/70 flex flex-col gap-2">
                 <Link
                   to="/stats"
-                  className="hallmark-btn bg-surface hover:bg-surface-2 text-text-main border-2 border-border-main py-2.5 text-center font-display text-xs uppercase tracking-wider font-bold transition-all"
+                  className="hallmark-btn bg-surface hover:bg-surface-2 text-text-main border-2 border-border-main py-2.5 text-center font-display text-xs uppercase tracking-wider font-bold transition-all cursor-pointer"
                 >
-                  XEM BẢNG XẾP HẠNG CHI TIẾT →
+                  {t('matchday.view_detailed_stats', 'XEM BẢNG XẾP HẠNG CHI TIẾT →')}
                 </Link>
               </div>
             </div>
