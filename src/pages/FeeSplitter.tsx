@@ -508,81 +508,80 @@ export default function FeeSplitter() {
       </div>
 
       {/* 2-Column Responsive Layout */}
-      <div className="flex flex-col lg:flex-row gap-5 lg:gap-6 items-start">
-        {/* RIGHT COLUMN: Results & Quick Message (sticky on desktop) */}
-        <div className="w-full lg:w-[390px] xl:w-[420px] lg:shrink-0 lg:order-2 space-y-5">
-          <div className="lg:sticky lg:top-4 space-y-5">
-            {/* HÀNG 1: 1. BẢNG COI TIỀN */}
-            <div className="hallmark-card p-5 space-y-4">
-              <div>
-                <h3 className="font-display text-xl uppercase text-primary border-b border-border-main pb-2">
-                  {t('fee_splitter.row1_title', '1. BẢNG COI TIỀN')}
-                </h3>
-                <p className="text-[10px] text-text-muted mt-1 italic">{t('fee_splitter.auto_update_note', 'Tự động tính theo các bước bên cạnh')}</p>
-              </div>
-
-        {/* Big Per-Person Card */}
-        <div className="py-5 flex flex-col items-center justify-center text-center bg-surface-2 border-2 border-border-main my-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-text-muted mb-1">
-            {t('fee_splitter.per_player', 'Mỗi người đóng')}
-          </span>
-          <div className="text-4xl @sm:text-5xl font-display font-bold text-primary tracking-tight">
-            {formatMoney(calculation.finalPerPerson)}
-          </div>
-        </div>
-
-        {/* Financial Breakdown Rows */}
-        <div className="text-xs text-text-muted border-t border-border-main pt-3 space-y-2 font-medium">
-          <div className="flex justify-between items-center">
-            <span>{t('fee_splitter.total_match_cost', 'Tổng chi phí trận đấu')}:</span>
-            <span className="font-bold text-text-main font-display text-sm">{formatMoney(calculation.totalCost)}</span>
-          </div>
-
-          {matchMode === 'opponent' && (
-            <>
-              <div className="flex justify-between items-center">
-                <span>{t('fee_splitter.opponent_share', 'Đội bạn trả')} ({calculation.opponentPercent}%):</span>
-                <span className="font-bold text-emerald-700 dark:text-emerald-400 font-display text-sm">{formatMoney(calculation.opponentShare)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>{t('fee_splitter.our_share', 'Đội mình trả')} ({calculation.ourPercent}%):</span>
-                <span className="font-bold text-amber-700 dark:text-amber-400 font-display text-sm">{formatMoney(calculation.ourShare)}</span>
-              </div>
-            </>
-          )}
-
-          <div className="flex justify-between items-center">
-            <span>{t('fee_splitter.players_count', 'Số cầu thủ tham gia')}:</span>
-            <span className="font-bold text-text-main">{effectiveHeadcount} {t('fee_splitter.players_unit', 'người')}</span>
-          </div>
-        </div>
-      </div>
-
-            {/* HÀNG 5: 5. TIN NHẮN NHANH */}
-            <div className="hallmark-card p-5 space-y-3 bg-slate-50 border-slate-200">
-              <h3 className="font-display text-xl uppercase text-primary border-b border-slate-200 pb-2">
-                {t('fee_splitter.row5_title', '5. TIN NHẮN NHANH')}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start">
+        {/* HÀNG 1: 1. BẢNG COI TIỀN (Mobile: 1st, Desktop: Right Column Row 1) */}
+        <div className="order-1 lg:order-2 lg:col-span-5 xl:col-span-4 lg:col-start-8 xl:col-start-9 lg:row-start-1 w-full">
+          <div className="hallmark-card p-5 space-y-4">
+            <div>
+              <h3 className="font-display text-xl uppercase text-primary border-b border-border-main pb-2">
+                {t('fee_splitter.row1_title', '1. BẢNG COI TIỀN')}
               </h3>
-              <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
-                {t('fee_splitter.preview_msg_label', 'Xem trước văn bản tin nhắn:')}
+              <p className="text-[10px] text-text-muted mt-1 italic">{t('fee_splitter.auto_update_note', 'Tự động tính theo các bước bên cạnh')}</p>
+            </div>
+
+            {/* Big Per-Person Card */}
+            <div className="py-5 flex flex-col items-center justify-center text-center bg-surface-2 border-2 border-border-main my-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-text-muted mb-1">
+                {t('fee_splitter.per_player', 'Mỗi người đóng')}
+              </span>
+              <div className="text-4xl @sm:text-5xl font-display font-bold text-primary tracking-tight">
+                {formatMoney(calculation.finalPerPerson)}
               </div>
-              <pre className="text-xs font-mono whitespace-pre-wrap bg-white p-3 border border-slate-200 text-slate-700 max-h-48 overflow-y-auto leading-relaxed">
-                {generateGroupMessage()}
-              </pre>
-              <button
-                type="button"
-                onClick={handleCopyZalo}
-                className="w-full p-3 bg-emerald-600 hover:bg-emerald-700 text-white font-display text-base uppercase tracking-wider flex items-center justify-center gap-2 transition-colors shadow cursor-pointer active:scale-95"
-              >
-                {copied ? <Check size={18} /> : <Copy size={18} />}
-                <span>{copied ? t('fee_splitter.copied_btn', 'ĐÃ SAO CHÉP!') : t('fee_splitter.copy_msg_btn', 'SAO CHÉP NỘI DUNG TIN NHẮN')}</span>
-              </button>
+            </div>
+
+            {/* Financial Breakdown Rows */}
+            <div className="text-xs text-text-muted border-t border-border-main pt-3 space-y-2 font-medium">
+              <div className="flex justify-between items-center">
+                <span>{t('fee_splitter.total_match_cost', 'Tổng chi phí trận đấu')}:</span>
+                <span className="font-bold text-text-main font-display text-sm">{formatMoney(calculation.totalCost)}</span>
+              </div>
+
+              {matchMode === 'opponent' && (
+                <>
+                  <div className="flex justify-between items-center">
+                    <span>{t('fee_splitter.opponent_share', 'Đội bạn trả')} ({calculation.opponentPercent}%):</span>
+                    <span className="font-bold text-emerald-700 dark:text-emerald-400 font-display text-sm">{formatMoney(calculation.opponentShare)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>{t('fee_splitter.our_share', 'Đội mình trả')} ({calculation.ourPercent}%):</span>
+                    <span className="font-bold text-amber-700 dark:text-amber-400 font-display text-sm">{formatMoney(calculation.ourShare)}</span>
+                  </div>
+                </>
+              )}
+
+              <div className="flex justify-between items-center">
+                <span>{t('fee_splitter.players_count', 'Số cầu thủ tham gia')}:</span>
+                <span className="font-bold text-text-main">{effectiveHeadcount} {t('fee_splitter.players_unit', 'người')}</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* LEFT COLUMN: Input Form (Steps 2, 3, 4) */}
-        <div className="flex-1 min-w-0 w-full space-y-5 lg:order-1">
+        {/* HÀNG 5: 5. TIN NHẮN NHANH (Mobile: 5th (Last), Desktop: Right Column Row 2) */}
+        <div className="order-3 lg:order-3 lg:col-span-5 xl:col-span-4 lg:col-start-8 xl:col-start-9 lg:row-start-2 w-full">
+          <div className="hallmark-card p-5 space-y-3 bg-surface border-2 border-border-main">
+            <h3 className="font-display text-xl uppercase text-primary border-b border-border-main pb-2">
+              {t('fee_splitter.row5_title', '5. TIN NHẮN NHANH')}
+            </h3>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
+              {t('fee_splitter.preview_msg_label', 'Xem trước văn bản tin nhắn:')}
+            </div>
+            <pre className="text-xs font-mono whitespace-pre-wrap bg-surface-2 p-3 border-2 border-border-main text-text-main max-h-48 overflow-y-auto leading-relaxed">
+              {generateGroupMessage()}
+            </pre>
+            <button
+              type="button"
+              onClick={handleCopyZalo}
+              className="w-full p-3 bg-emerald-600 hover:bg-emerald-700 text-white font-display text-base uppercase tracking-wider flex items-center justify-center gap-2 transition-colors shadow cursor-pointer active:scale-95"
+            >
+              {copied ? <Check size={18} /> : <Copy size={18} />}
+              <span>{copied ? t('fee_splitter.copied_btn', 'ĐÃ SAO CHÉP!') : t('fee_splitter.copy_msg_btn', 'SAO CHÉP NỘI DUNG TIN NHẮN')}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* LEFT COLUMN: Input Form (Steps 2, 3, 4) (Mobile: 2nd, Desktop: Left Column) */}
+        <div className="order-2 lg:order-1 lg:col-span-7 xl:col-span-8 lg:col-start-1 xl:col-start-1 lg:row-start-1 lg:row-span-2 w-full space-y-5">
           {/* HÀNG 2: 2. ĐIỂM DANH ĐẾM NGƯỜI */}
           <div className="hallmark-card p-5 space-y-4">
             <h3 className="font-display text-xl uppercase text-primary border-b border-border-main pb-2">

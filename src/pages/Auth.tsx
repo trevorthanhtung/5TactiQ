@@ -18,12 +18,6 @@ const languages = [
   { code: 'pt', name: 'Português', label: 'PT' },
   { code: 'ru', name: 'Русский', label: 'RU' },
   { code: 'ar', name: 'العربية', label: 'SA' },
-  { code: 'fr', name: 'Français', label: 'FR' },
-  { code: 'de', name: 'Deutsch', label: 'DE' },
-  { code: 'it', name: 'Italiano', label: 'IT' },
-  { code: 'ja', name: '日本語', label: 'JP' },
-  { code: 'ko', name: '한국어', label: 'KR' },
-  { code: 'zh', name: '简体中文', label: 'CN' },
 ];
 
 const Auth: React.FC = () => {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { HeartPulse, History, Settings, ChevronRight, MapPin, RefreshCw, ShieldCheck, Info, Coffee, MessageSquare, Package, Eraser, AlertTriangle, Smartphone, BellRing, Globe, Check, Moon, Sun, Monitor, Crown, LogOut, User as UserIcon, LogIn, Save, Cloud, CloudOff, Wifi, WifiOff, CheckCircle2, AlertCircle, Calculator, Loader2, Coins } from 'lucide-react';
+import { HeartPulse, History, Settings, ChevronRight, MapPin, RefreshCw, ShieldCheck, Info, Coffee, MessageSquare, Package, Eraser, AlertTriangle, Smartphone, BellRing, Globe, Check, Moon, Sun, Monitor, Crown, LogOut, User as UserIcon, LogIn, Save, Cloud, CloudOff, Wifi, WifiOff, CheckCircle2, AlertCircle, Calculator, Loader2, Coins, ExternalLink } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { useAppBadge } from '../hooks/useAppBadge';
@@ -222,7 +222,18 @@ export default function More() {
     { icon: <MessageSquare size={20} className="text-sky-500" />, title: t('more.feedback_title'), action: () => window.open('mailto:trevorthanhtung@gmail.com?subject=Góp ý ứng dụng 5TactiQ') },
     hasUpdate 
       ? { icon: <Package size={20} className="text-blue-500" />, title: `CẬP NHẬT PHIÊN BẢN (v${latestVersion})`, action: () => setShowUpdateModal(true) }
-      : { icon: <Package size={20} className="text-text-muted" />, title: t('more.version_title'), value: APP_VERSION },
+      : { 
+          icon: <Package size={20} className="text-text-muted" />, 
+          title: t('more.version_title'), 
+          value: APP_VERSION,
+          action: () => {
+            addToast({ 
+              type: 'success', 
+              message: t('toast.already_latest', { version: APP_VERSION }),
+              duration: 2500
+            });
+          }
+        },
   ];
 
   const dangerItems = [

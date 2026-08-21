@@ -241,6 +241,7 @@
     "push_not_supported": "Navegador não suporta Notificações Push",
     "update_available": "Atualização disponível. Atualize para aplicar.",
     "update_action": "Atualizar",
+    "already_latest": "Você está usando a versão mais recente (v{{version}})",
     "offline": "Offline. Dados salvos localmente.",
     "online": "Conexão restabelecida",
     "unmarked_youth": "Status de base removido de {{name}}",

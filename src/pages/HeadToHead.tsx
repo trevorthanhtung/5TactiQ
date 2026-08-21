@@ -6,6 +6,7 @@ import { ArrowLeft, Users, Trophy, Flame, ChevronDown, ChevronUp, MapPin, Calend
 import { useNavigate } from 'react-router-dom';
 import { HeadToHeadSkeleton } from '../components/ui/HeadToHeadSkeleton';
 import { CustomSelect } from '../components/CustomSelect';
+import { getCurrentSeasonRange, isMatchInSeason } from '../utils/seasonUtils';
 
 export const normalizeOpponentName = (name: string) => {
   return name.trim().toLowerCase();
@@ -22,9 +23,8 @@ export default function HeadToHead() {
   const [matchTypeFilter, setMatchTypeFilter] = useState<'all' | 'external' | 'internal'>('all');
   const [isLoading, setIsLoading] = useState(true);
 
-  const seasonStart = settings.seasonStartDate ? new Date(settings.seasonStartDate) : null;
-  const seasonEnd = settings.seasonEndDate ? new Date(settings.seasonEndDate) : null;
-  const hasSeasonConfig = !!(seasonStart && seasonEnd);
+  const seasonRange = useMemo(() => getCurrentSeasonRange(settings), [settings.seasonStartDate, settings.seasonEndDate]);
+  const hasSeasonConfig = !!seasonRange?.hasSeasonConfig;
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 300);
@@ -39,9 +39,7 @@ export default function HeadToHead() {
       if (matchTypeFilter === 'internal' && m.matchType !== 'internal') return false;
       
       if (filterMode === 'current_season' && hasSeasonConfig) {
-        if (!m.date) return true;
-        const matchDate = new Date(m.date);
-        return matchDate >= seasonStart! && matchDate <= seasonEnd!;
+        return isMatchInSeason(m.date, seasonRange);
       }
       return true;
     });
@@ -130,7 +128,7 @@ export default function HeadToHead() {
       totalWins,
       totalLosses
     };
-  }, [matches, t, filterMode, hasSeasonConfig, seasonStart, seasonEnd]);
+  }, [matches, t, filterMode, hasSeasonConfig, seasonRange]);
 
   const formatDate = (dateStr: string) => {
     if (!dateStr) return '';
@@ -166,13 +164,9 @@ export default function HeadToHead() {
         </button>
         <div>
           <h1 className="text-2xl @md:text-4xl font-display uppercase text-primary leading-none">{t('h2h.title', 'Lịch sử đối đầu')}</h1>
-          {hasSeasonConfig && (
+          {hasSeasonConfig && seasonRange && (
             <p className="text-xs font-bold text-text-muted uppercase tracking-widest mt-1">
-              {t('stats.season', { 
-                year: seasonStart!.getFullYear() === seasonEnd!.getFullYear() 
-                  ? seasonStart!.getFullYear() 
-                  : `${seasonStart!.getFullYear()}/${seasonEnd!.getFullYear()}` 
-              })}
+              {t('stats.season', { year: seasonRange.label })}
             </p>
           )}
         </div>

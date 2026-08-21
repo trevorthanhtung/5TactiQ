@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { compareVietnameseNames } from '../utils/sortUtils';
 import { isPlayerHidden, getPlayerPerMatchStatus } from '../utils/playerUtils';
 import { formatCurrencyAmount, LANGUAGE_DEFAULT_CURRENCY } from '../utils/currencyUtils';
+import { getCurrentSeasonRange, isMatchInSeason } from '../utils/seasonUtils';
 
 export default function Matchday() {
   const { t, i18n } = useTranslation();
@@ -700,17 +701,13 @@ export default function Matchday() {
     }
 
     // Has matches but none selected — show Match List view
-    const seasonStart = settings.seasonStartDate ? new Date(settings.seasonStartDate) : null;
-    const seasonEnd = settings.seasonEndDate ? new Date(settings.seasonEndDate) : null;
-    const hasSeasonConfig = !!(seasonStart && seasonEnd);
+    const seasonRange = getCurrentSeasonRange(settings);
+    const hasSeasonConfig = !!seasonRange?.hasSeasonConfig;
 
     const filteredMatches = matches.filter(m => {
       // Season filter
       if (filterMode === 'current_season' && hasSeasonConfig) {
-        if (m.date) {
-          const matchDate = new Date(m.date);
-          if (matchDate < seasonStart! || matchDate > seasonEnd!) return false;
-        }
+        if (!isMatchInSeason(m.date, seasonRange)) return false;
       }
 
       // Search filter
@@ -898,9 +895,9 @@ export default function Matchday() {
         <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-3 sm:gap-4 mb-6 pb-2 border-b-2 border-border-main">
           <div>
             <h1 className="text-3xl sm:text-5xl font-display uppercase text-primary leading-none mb-1">{t('matchday.title')}</h1>
-            {(filterMode === 'current_season' && hasSeasonConfig) && (
+            {(filterMode === 'current_season' && hasSeasonConfig && seasonRange) && (
               <p className="text-[11px] sm:text-xs font-bold text-text-muted uppercase tracking-widest font-display">
-                {t('stats.season', { year: seasonStart!.getFullYear() === seasonEnd!.getFullYear() ? seasonStart!.getFullYear() : `${seasonStart!.getFullYear()}/${seasonEnd!.getFullYear()}` })}
+                {t('stats.season', { year: seasonRange.label })}
               </p>
             )}
           </div>
@@ -929,8 +926,69 @@ export default function Matchday() {
         {/* 📐 2-Column Responsive Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           
-          {/* 👈 LEFT COLUMN: Match Lists (8 cols on lg) */}
-          <div className="lg:col-span-8 flex flex-col gap-6">
+          {/* 👉 Season Record Panel (On top on mobile, right column on desktop) */}
+          <div className="lg:col-span-4 flex flex-col gap-4 sm:gap-6 lg:order-2 lg:sticky lg:top-4">
+            
+            {/* Season Record Panel */}
+            <div className="hallmark-card bg-surface border-2 border-border-main p-4 sm:p-5 shadow-sm flex flex-col gap-4">
+              <div className="flex justify-between items-center pb-2 border-b border-border-main">
+                <h3 className="font-display text-sm sm:text-base uppercase tracking-widest text-primary font-bold">
+                  THỐNG KÊ MÙA GIẢI
+                </h3>
+                <span className="text-[10px] font-display uppercase tracking-wider text-text-muted font-bold">
+                  {seasonStats.totalFinished} TRẬN
+                </span>
+              </div>
+
+              {/* W-D-L Cluster */}
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="bg-surface-2 p-2 border border-border-main">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 font-display">THẮNG</div>
+                  <div className="text-xl sm:text-2xl font-display font-bold text-emerald-600">{seasonStats.wins}</div>
+                </div>
+                <div className="bg-surface-2 p-2 border border-border-main">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-amber-500 font-display">HÒA</div>
+                  <div className="text-xl sm:text-2xl font-display font-bold text-amber-500">{seasonStats.draws}</div>
+                </div>
+                <div className="bg-surface-2 p-2 border border-border-main">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-rose-600 font-display">THUA</div>
+                  <div className="text-xl sm:text-2xl font-display font-bold text-rose-600">{seasonStats.losses}</div>
+                </div>
+              </div>
+
+              {/* Goals & Goal Diff */}
+              <div className="space-y-2 text-xs pt-1">
+                <div className="flex justify-between items-center py-1.5 border-b border-border-main/50 font-display uppercase font-bold">
+                  <span className="text-text-muted">TỔNG BÀN THẮNG:</span>
+                  <span className="text-primary text-sm">{seasonStats.goalsFor} bàn</span>
+                </div>
+                <div className="flex justify-between items-center py-1.5 border-b border-border-main/50 font-display uppercase font-bold">
+                  <span className="text-text-muted">TỔNG BÀN THUA:</span>
+                  <span className="text-rose-500 text-sm">{seasonStats.goalsAgainst} bàn</span>
+                </div>
+                <div className="flex justify-between items-center py-1.5 font-display uppercase font-bold">
+                  <span className="text-text-muted">HIỆU SỐ (GD):</span>
+                  <span className={`text-sm ${seasonStats.goalDiff > 0 ? 'text-emerald-600' : seasonStats.goalDiff < 0 ? 'text-rose-600' : 'text-text-main'}`}>
+                    {seasonStats.goalDiff > 0 ? `+${seasonStats.goalDiff}` : seasonStats.goalDiff}
+                  </span>
+                </div>
+              </div>
+
+              {/* Quick Navigation Links */}
+              <div className="pt-3 border-t border-border-main/70 flex flex-col gap-2">
+                <Link
+                  to="/stats"
+                  className="hallmark-btn bg-surface hover:bg-surface-2 text-text-main border-2 border-border-main py-2.5 text-center font-display text-xs uppercase tracking-wider font-bold transition-all"
+                >
+                  XEM BẢNG XẾP HẠNG CHI TIẾT →
+                </Link>
+              </div>
+            </div>
+
+          </div>
+
+          {/* 👈 LEFT COLUMN: Match Lists (8 cols on lg, below stats on mobile) */}
+          <div className="lg:col-span-8 flex flex-col gap-6 lg:order-1">
             
             {/* Search Filter */}
             <div className="relative w-full">
@@ -989,67 +1047,6 @@ export default function Matchday() {
                 {t('matchday.no_matches_found', 'Không tìm thấy trận đấu nào phù hợp')}
               </div>
             )}
-
-          </div>
-
-          {/* 👉 RIGHT COLUMN: Quick Season Digest & Actions (4 cols on lg) */}
-          <div className="lg:col-span-4 flex flex-col gap-4 sm:gap-6">
-            
-            {/* Season Record Panel */}
-            <div className="hallmark-card bg-surface border-2 border-border-main p-4 sm:p-5 shadow-sm flex flex-col gap-4">
-              <div className="flex justify-between items-center pb-2 border-b border-border-main">
-                <h3 className="font-display text-sm sm:text-base uppercase tracking-widest text-primary font-bold">
-                  THỐNG KÊ MÙA GIẢI
-                </h3>
-                <span className="text-[10px] font-display uppercase tracking-wider text-text-muted font-bold">
-                  {seasonStats.totalFinished} TRẬN
-                </span>
-              </div>
-
-              {/* W-D-L Cluster */}
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div className="bg-surface-2 p-2 border border-border-main">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 font-display">THẮNG</div>
-                  <div className="text-xl sm:text-2xl font-display font-bold text-emerald-600">{seasonStats.wins}</div>
-                </div>
-                <div className="bg-surface-2 p-2 border border-border-main">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-amber-500 font-display">HÒA</div>
-                  <div className="text-xl sm:text-2xl font-display font-bold text-amber-500">{seasonStats.draws}</div>
-                </div>
-                <div className="bg-surface-2 p-2 border border-border-main">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-rose-600 font-display">THUA</div>
-                  <div className="text-xl sm:text-2xl font-display font-bold text-rose-600">{seasonStats.losses}</div>
-                </div>
-              </div>
-
-              {/* Goals & Goal Diff */}
-              <div className="space-y-2 text-xs pt-1">
-                <div className="flex justify-between items-center py-1.5 border-b border-border-main/50 font-display uppercase font-bold">
-                  <span className="text-text-muted">TỔNG BÀN THẮNG:</span>
-                  <span className="text-primary text-sm">{seasonStats.goalsFor} bàn</span>
-                </div>
-                <div className="flex justify-between items-center py-1.5 border-b border-border-main/50 font-display uppercase font-bold">
-                  <span className="text-text-muted">TỔNG BÀN THUA:</span>
-                  <span className="text-rose-500 text-sm">{seasonStats.goalsAgainst} bàn</span>
-                </div>
-                <div className="flex justify-between items-center py-1.5 font-display uppercase font-bold">
-                  <span className="text-text-muted">HIỆU SỐ (GD):</span>
-                  <span className={`text-sm ${seasonStats.goalDiff > 0 ? 'text-emerald-600' : seasonStats.goalDiff < 0 ? 'text-rose-600' : 'text-text-main'}`}>
-                    {seasonStats.goalDiff > 0 ? `+${seasonStats.goalDiff}` : seasonStats.goalDiff}
-                  </span>
-                </div>
-              </div>
-
-              {/* Quick Navigation Links */}
-              <div className="pt-3 border-t border-border-main/70 flex flex-col gap-2">
-                <Link
-                  to="/stats"
-                  className="hallmark-btn bg-surface hover:bg-surface-2 text-text-main border-2 border-border-main py-2.5 text-center font-display text-xs uppercase tracking-wider font-bold transition-all"
-                >
-                  XEM BẢNG XẾP HẠNG CHI TIẾT →
-                </Link>
-              </div>
-            </div>
 
           </div>
 

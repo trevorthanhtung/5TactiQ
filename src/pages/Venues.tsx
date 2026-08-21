@@ -415,13 +415,13 @@ export default function Venues() {
               <button
                 type="button"
                 onClick={() => setDeleteConfirmId(editingId)}
-                className="p-3 bg-rose-50 border-2 border-rose-200 text-rose-600 hover:bg-rose-100 transition-colors flex items-center justify-center shrink-0 active:scale-95"
+                className="p-3 bg-rose-500/10 border-2 border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 transition-colors flex items-center justify-center shrink-0 active:scale-95 cursor-pointer"
                 title={t('venues.delete_tooltip', 'Xóa sân bóng')}
               >
                 <Trash2 size={24} />
               </button>
             )}
-            <button type="button" onClick={handleCloseModal} className="flex-1 bg-transparent text-text-muted font-display uppercase tracking-wider py-3 border-2 border-slate-300 hover:bg-surface transition-colors active:scale-95">
+            <button type="button" onClick={handleCloseModal} className="flex-1 bg-transparent text-text-muted font-display uppercase tracking-wider py-3 border-2 border-border-main hover:bg-surface transition-colors active:scale-95 cursor-pointer">
               {t('venues.cancel', 'HỦY')}
             </button>
             <button type="submit" className="flex-1 bg-secondary text-white font-display uppercase tracking-wider py-3 border-2 border-secondary hover:bg-[#d05c21] transition-colors active:scale-95">

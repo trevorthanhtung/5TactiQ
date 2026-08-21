@@ -241,6 +241,7 @@
     "push_not_supported": "Web Push not supported in this browser",
     "update_available": "Update available. Refresh to apply.",
     "update_action": "Refresh",
+    "already_latest": "You are using the latest version (v{{version}})",
     "offline": "Offline. Saving data locally.",
     "online": "Back online",
     "unmarked_youth": "Unmarked youth for {{name}}",
@@ -690,7 +691,7 @@
     "season_title": "Season Duration",
     "season_start": "Start Date",
     "season_end": "End Date",
-    "season_note": "Used to filter stats and matches within this period.",
+    "season_note": "Used to filter stats and matches. Cycles automatically roll over year-to-year.",
     "dark_theme": "Dark Theme",
     "light_theme": "Light Theme",
     "system_theme": "System Theme"

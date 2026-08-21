@@ -19,6 +19,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { HomeSkeleton } from '../components/ui/HomeSkeleton';
 import { compareVietnameseNames } from '../utils/sortUtils';
+import { getCurrentSeasonRange, isMatchInSeason } from '../utils/seasonUtils';
 
 export default function Home() {
   const { t } = useTranslation();
@@ -40,20 +41,17 @@ export default function Home() {
     return matches.find(m => m.status === 'live') || matches.find(m => m.status === 'upcoming');
   }, [matches]);
 
-  const seasonStart = settings.seasonStartDate ? new Date(settings.seasonStartDate) : null;
-  const seasonEnd = settings.seasonEndDate ? new Date(settings.seasonEndDate) : null;
-  const hasSeasonConfig = !!(seasonStart && seasonEnd);
+  const seasonRange = useMemo(() => getCurrentSeasonRange(settings), [settings.seasonStartDate, settings.seasonEndDate]);
+  const hasSeasonConfig = !!seasonRange?.hasSeasonConfig;
 
   // Calculate top scorers from finished matches within the configured season
   const finishedMatches = useMemo(() => {
     return matches.filter(m => {
       if (m.status !== 'finished') return false;
       if (!hasSeasonConfig) return true;
-      if (!m.date) return true;
-      const matchDate = new Date(m.date);
-      return matchDate >= seasonStart! && matchDate <= seasonEnd!;
+      return isMatchInSeason(m.date, seasonRange);
     }).sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
-  }, [matches, hasSeasonConfig, seasonStart, seasonEnd]);
+  }, [matches, hasSeasonConfig, seasonRange]);
 
   const goalCounts: Record<string, number> = {};
   

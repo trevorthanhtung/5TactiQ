@@ -241,6 +241,7 @@
     "push_not_supported": "Tu navegador no soporta Notificaciones Push",
     "update_available": "Actualización disponible. Refresca para aplicar.",
     "update_action": "Refrescar",
+    "already_latest": "Estás utilizando la última versión (v{{version}})",
     "offline": "Desconectado. Datos guardados localmente.",
     "online": "Conexión restablecida",
     "unmarked_youth": "Estado juvenil anulado para {{name}}",

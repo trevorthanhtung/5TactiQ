@@ -243,6 +243,7 @@
     "push_not_supported": "Trình duyệt không hỗ trợ Web Push",
     "update_available": "Đã có bản cập nhật. Làm mới để áp dụng.",
     "update_action": "Làm mới",
+    "already_latest": "Bạn đang sử dụng phiên bản mới nhất (v{{version}})",
     "offline": "Ngoại tuyến. Dữ liệu sẽ được lưu cục bộ.",
     "online": "Đã kết nối mạng",
     "health_updated": "Đã cập nhật sức khỏe cho {{name}}",
@@ -689,7 +690,7 @@
     "season_title": "Thời gian mùa giải",
     "season_start": "Bắt đầu",
     "season_end": "Kết thúc",
-    "season_note": "Dùng để lọc thống kê và trận đấu trong khoảng thời gian này.",
+    "season_note": "Dùng để lọc thống kê và trận đấu. Hệ thống tự động chuyển tiếp chu kỳ sang các năm tiếp theo.",
     "dark_theme": "Giao diện Tối",
     "light_theme": "Giao diện Sáng",
     "system_theme": "Giao diện Hệ thống"

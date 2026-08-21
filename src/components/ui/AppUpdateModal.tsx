@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Download, RefreshCw, X, ExternalLink, ShieldCheck } from 'lucide-react';
+import { Download, RefreshCw, X, ExternalLink, ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAppUpdateStore } from '../../store/useAppUpdateStore';
 import { APP_VERSION } from '../../config/version';
@@ -71,18 +71,13 @@ export default function AppUpdateModal() {
           </button>
 
           {/* Header */}
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 border-2 border-primary bg-primary/10 flex items-center justify-center text-primary shrink-0">
-              <Sparkles size={24} className="animate-pulse" />
-            </div>
-            <div>
-              <span className="text-[11px] font-mono uppercase font-bold tracking-wider text-primary">
-                {platform === 'android' ? 'Android APK' : platform === 'windows' ? 'Windows App' : platform === 'linux' ? 'Linux App' : '5TactiQ Web'}
-              </span>
-              <h3 className="font-display font-extrabold text-xl uppercase tracking-tight text-text-main leading-tight">
-                {t('update.title', 'CẬP NHẬT PHIÊN BẢN')}
-              </h3>
-            </div>
+          <div className="flex flex-col pr-8">
+            <span className="text-[11px] font-mono uppercase font-bold tracking-wider text-primary">
+              {platform === 'android' ? 'Android APK' : platform === 'windows' ? 'Windows App' : platform === 'linux' ? 'Linux App' : '5TactiQ Web'}
+            </span>
+            <h3 className="font-display font-extrabold text-2xl uppercase tracking-tight text-text-main leading-tight">
+              {t('update.title', 'CẬP NHẬT PHIÊN BẢN')}
+            </h3>
           </div>
 
           {/* Version comparison badge */}

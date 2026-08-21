@@ -8,6 +8,7 @@ import { StatsSkeleton } from '../components/ui/StatsSkeleton';
 import { CustomSelect } from '../components/CustomSelect';
 import { useTranslation } from 'react-i18next';
 import { compareVietnameseNames } from '../utils/sortUtils';
+import { getCurrentSeasonRange, isMatchInSeason } from '../utils/seasonUtils';
 
 export default function Stats() {
   const { t } = useTranslation();
@@ -34,23 +35,18 @@ export default function Stats() {
     playerStatsAgg[p.id] = { goals: 0, assists: 0, attendance: 0 };
   });
 
-  const seasonStart = settings.seasonStartDate ? new Date(settings.seasonStartDate) : null;
-  const seasonEnd = settings.seasonEndDate ? new Date(settings.seasonEndDate) : null;
-  const hasSeasonConfig = !!(seasonStart && seasonEnd);
+  const seasonRange = useMemo(() => getCurrentSeasonRange(settings), [settings.seasonStartDate, settings.seasonEndDate]);
+  const hasSeasonConfig = !!seasonRange?.hasSeasonConfig;
 
   const filteredMatches = matches.filter(m => {
     if (m.status !== 'finished') return false;
     if (filterMode === 'all_time' || !hasSeasonConfig) return true;
-    if (!m.date) return true;
-    const matchDate = new Date(m.date);
-    return matchDate >= seasonStart! && matchDate <= seasonEnd!;
+    return isMatchInSeason(m.date, seasonRange);
   });
 
   const getSeasonString = () => {
-    if (filterMode === 'current_season' && hasSeasonConfig) {
-      const y1 = seasonStart!.getFullYear();
-      const y2 = seasonEnd!.getFullYear();
-      return t('stats.season', { year: y1 === y2 ? y1 : `${y1}/${y2}` });
+    if (filterMode === 'current_season' && hasSeasonConfig && seasonRange) {
+      return t('stats.season', { year: seasonRange.label });
     }
     return t('stats.aggregated_data', { count: filteredMatches.length });
   };
