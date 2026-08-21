@@ -185,6 +185,7 @@ export default function Matchday() {
   // Live Update Form State
   const [liveData, setLiveData] = useState({ scoreUs: 0, scoreOpponent: 0, scoreTeamA: 0, scoreTeamB: 0, scoreTeamC: 0, scoreTeamD: 0 });
   const [liveStatsMap, setLiveStatsMap] = useState<Record<string, { goals: number; assists: number }>>({});
+  const [liveModalTeamFilter, setLiveModalTeamFilter] = useState<'ALL' | 'A' | 'B' | 'C' | 'D' | 'UNASSIGNED'>('ALL');
 
   const openLiveUpdateModal = () => {
     const match = getMatchInfo();
@@ -205,6 +206,7 @@ export default function Matchday() {
       });
     }
     setLiveStatsMap(initialMap);
+    setLiveModalTeamFilter('ALL');
     setShowLiveUpdateModal(true);
   };
 
@@ -246,16 +248,16 @@ export default function Matchday() {
       if (currentMatch.matchType === 'internal') {
         const team = currentMatch.teams?.[p.id] || p.team;
         if (team === 'A') {
-          setLiveData(prev => ({ ...prev, scoreTeamA: prev.scoreTeamA + (increment ? 1 : -1) }));
+          setLiveData(prev => ({ ...prev, scoreTeamA: Math.max(0, prev.scoreTeamA + (increment ? 1 : -1)) }));
         } else if (team === 'B') {
-          setLiveData(prev => ({ ...prev, scoreTeamB: prev.scoreTeamB + (increment ? 1 : -1) }));
+          setLiveData(prev => ({ ...prev, scoreTeamB: Math.max(0, prev.scoreTeamB + (increment ? 1 : -1)) }));
         } else if (team === 'C') {
-          setLiveData(prev => ({ ...prev, scoreTeamC: (prev.scoreTeamC || 0) + (increment ? 1 : -1) }));
+          setLiveData(prev => ({ ...prev, scoreTeamC: Math.max(0, (prev.scoreTeamC || 0) + (increment ? 1 : -1)) }));
         } else if (team === 'D') {
-          setLiveData(prev => ({ ...prev, scoreTeamD: (prev.scoreTeamD || 0) + (increment ? 1 : -1) }));
+          setLiveData(prev => ({ ...prev, scoreTeamD: Math.max(0, (prev.scoreTeamD || 0) + (increment ? 1 : -1)) }));
         }
       } else {
-        setLiveData(prev => ({ ...prev, scoreUs: prev.scoreUs + (increment ? 1 : -1) }));
+        setLiveData(prev => ({ ...prev, scoreUs: Math.max(0, prev.scoreUs + (increment ? 1 : -1)) }));
       }
     }
   };
@@ -2368,15 +2370,217 @@ export default function Matchday() {
 
               {/* Player Goals & Assists Logging */}
               <div>
-                <h4 className="text-xs font-display uppercase tracking-widest text-primary mb-3 font-bold flex items-center gap-1.5">
-                  {t('matchday.goals_assists_direct')}
-                </h4>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                  <h4 className="text-xs font-display uppercase tracking-widest text-primary font-bold flex items-center gap-1.5">
+                    {t('matchday.goals_assists_direct')}
+                  </h4>
 
-                {players.filter(p => currentMatch?.attendance?.[p.id] === 'present').length === 0 ? (
+                  {/* Team Filter Pills for Internal Matches */}
+                  {currentMatch.matchType === 'internal' && presentPlayers.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1.5 bg-surface-2 p-1 border border-border-main text-xs">
+                      <button
+                        type="button"
+                        onClick={() => setLiveModalTeamFilter('ALL')}
+                        className={`px-2.5 py-1 font-display font-bold uppercase tracking-wider text-[11px] transition-all cursor-pointer ${
+                          liveModalTeamFilter === 'ALL'
+                            ? 'bg-primary text-white shadow-xs'
+                            : 'text-text-muted hover:text-text-main'
+                        }`}
+                      >
+                        {t('matchday.filter_all_teams', 'Tất cả')}
+                      </button>
+
+                      {(['A', 'B', 'C', 'D'] as const).slice(0, currentMatch.teamCount || 2).map(team => {
+                        const teamColorField = `team${team}Color` as keyof typeof currentMatch;
+                        const colorLabel = getBibColorLabel(currentMatch[teamColorField] as string);
+                        const isActive = liveModalTeamFilter === team;
+
+                        return (
+                          <button
+                            key={team}
+                            type="button"
+                            onClick={() => setLiveModalTeamFilter(team)}
+                            className={`px-2.5 py-1 font-display font-bold uppercase tracking-wider text-[11px] flex items-center gap-1 transition-all cursor-pointer ${
+                              isActive
+                                ? team === 'A'
+                                  ? 'bg-primary text-white shadow-xs'
+                                  : team === 'B'
+                                  ? 'bg-slate-800 text-white dark:bg-slate-700 shadow-xs'
+                                  : team === 'C'
+                                  ? 'bg-emerald-700 text-white shadow-xs'
+                                  : 'bg-amber-600 text-white shadow-xs'
+                                : 'text-text-muted hover:text-text-main'
+                            }`}
+                          >
+                            <span>{t(`matchday.team_${team.toLowerCase()}`)}</span>
+                            {colorLabel && <span className="opacity-80 text-[10px]">({colorLabel})</span>}
+                          </button>
+                        );
+                      })}
+
+                      {presentPlayers.some(p => !getPlayerTeam(p.id)) && (
+                        <button
+                          type="button"
+                          onClick={() => setLiveModalTeamFilter('UNASSIGNED')}
+                          className={`px-2.5 py-1 font-display font-bold uppercase tracking-wider text-[11px] transition-all cursor-pointer ${
+                            liveModalTeamFilter === 'UNASSIGNED'
+                              ? 'bg-text-muted text-white shadow-xs'
+                              : 'text-text-muted hover:text-text-main'
+                          }`}
+                        >
+                          {t('matchday.unassigned_players', 'Chưa chia')}
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {presentPlayers.length === 0 ? (
                   <div className="text-center text-slate-400 py-4">{t('matchday.no_players_yet')}</div>
+                ) : currentMatch.matchType === 'internal' ? (
+                  <div className="space-y-4">
+                    {(() => {
+                      const teamsToRender = (['A', 'B', 'C', 'D'] as const)
+                        .slice(0, currentMatch.teamCount || 2)
+                        .filter(team => liveModalTeamFilter === 'ALL' || liveModalTeamFilter === team);
+
+                      const unassignedPlayers = presentPlayers.filter(p => !getPlayerTeam(p.id));
+                      const showUnassigned = (liveModalTeamFilter === 'ALL' || liveModalTeamFilter === 'UNASSIGNED') && unassignedPlayers.length > 0;
+
+                      const renderPlayerRow = (p: typeof presentPlayers[0]) => {
+                        const stat = liveStatsMap[p.id] || { goals: 0, assists: 0 };
+                        return (
+                          <div key={p.id} className="p-2.5 sm:p-3 bg-surface border-2 border-border-main flex items-center justify-between gap-3 hover:border-primary/40 transition-colors">
+                            <div className="flex items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
+                              <span className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-surface-2 text-text-muted border border-border-main font-display text-xs font-bold shrink-0">
+                                {p.jersey_number || '?'}
+                              </span>
+                              <div className="flex flex-col min-w-0">
+                                <span className="font-bold text-sm sm:text-base text-text-main leading-snug uppercase truncate" title={p.name}>
+                                  {p.name}
+                                </span>
+                                {p.positions && p.positions.length > 0 && (
+                                  <span className="text-[10px] text-text-muted font-medium">
+                                    {p.positions.map(pos => t(`position.${pos}`, pos)).join(', ')}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2.5 sm:gap-4 shrink-0 ml-auto">
+                              {/* Goals */}
+                              <div className="flex shrink-0 justify-center items-center gap-1 sm:gap-1.5 bg-surface-2 px-1.5 sm:px-2.5 py-1 border border-border-main shadow-xs">
+                                <span className="text-[10px] sm:text-xs font-bold text-text-muted">{t('matchday.goals_short')}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleLiveGoalChange(p, false)}
+                                  className="w-6 h-6 sm:w-7 sm:h-7 bg-surface hover:bg-surface-2 font-bold border border-border-main text-text-main flex items-center justify-center text-xs sm:text-sm shrink-0 cursor-pointer active:scale-95"
+                                >
+                                  -
+                                </button>
+                                <span className="w-4 sm:w-6 text-center font-display text-base sm:text-lg text-primary font-bold">{stat.goals}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleLiveGoalChange(p, true)}
+                                  className="w-6 h-6 sm:w-7 sm:h-7 bg-primary text-white font-bold hover:brightness-110 flex items-center justify-center text-xs sm:text-sm shrink-0 cursor-pointer active:scale-95"
+                                >
+                                  +
+                                </button>
+                              </div>
+
+                              {/* Assists */}
+                              <div className="flex shrink-0 justify-center items-center gap-1 sm:gap-1.5 bg-surface-2 px-1.5 sm:px-2.5 py-1 border border-border-main shadow-xs">
+                                <span className="text-[10px] sm:text-xs font-bold text-text-muted">{t('matchday.assists_short')}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setLiveStatsMap(prev => ({
+                                    ...prev,
+                                    [p.id]: { ...stat, assists: Math.max(0, stat.assists - 1) }
+                                  }))}
+                                  className="w-6 h-6 sm:w-7 sm:h-7 bg-surface hover:bg-surface-2 font-bold border border-border-main text-text-main flex items-center justify-center text-xs sm:text-sm shrink-0 cursor-pointer active:scale-95"
+                                >
+                                  -
+                                </button>
+                                <span className="w-4 sm:w-6 text-center font-display text-base sm:text-lg text-secondary font-bold">{stat.assists}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setLiveStatsMap(prev => ({
+                                    ...prev,
+                                    [p.id]: { ...stat, assists: stat.assists + 1 }
+                                  }))}
+                                  className="w-6 h-6 sm:w-7 sm:h-7 bg-secondary text-white font-bold hover:brightness-110 flex items-center justify-center text-xs sm:text-sm shrink-0 cursor-pointer active:scale-95"
+                                >
+                                  +
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      };
+
+                      return (
+                        <>
+                          {teamsToRender.map(team => {
+                            const teamColorField = `team${team}Color` as keyof typeof currentMatch;
+                            const colorLabel = getBibColorLabel(currentMatch[teamColorField] as string);
+                            const teamPlayers = presentPlayers.filter(p => getPlayerTeam(p.id) === team);
+
+                            const teamHeaderColor = 
+                              team === 'A' ? 'bg-primary text-white border-primary' :
+                              team === 'B' ? 'bg-slate-800 text-white dark:bg-slate-700 border-slate-800' :
+                              team === 'C' ? 'bg-emerald-700 text-white border-emerald-700' :
+                              'bg-amber-600 text-white border-amber-600';
+
+                            return (
+                              <div key={team} className="border-2 border-border-main overflow-hidden bg-surface shadow-xs">
+                                {/* Team Header Banner */}
+                                <div className={`${teamHeaderColor} px-3.5 py-2 flex items-center justify-between`}>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-display font-bold uppercase text-sm tracking-wider">
+                                      {t(`matchday.team_${team.toLowerCase()}`)}
+                                    </span>
+                                    {colorLabel && (
+                                      <span className="text-xs opacity-90 font-medium px-2 py-0.5 bg-black/20 rounded-xs">
+                                        {colorLabel}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Player Rows */}
+                                <div className="p-2 sm:p-2.5 space-y-2">
+                                  {teamPlayers.length === 0 ? (
+                                    <div className="text-center text-text-muted py-3 text-xs italic">
+                                      {t('matchday.no_players_in_team', 'Chưa có cầu thủ nào trong đội này')}
+                                    </div>
+                                  ) : (
+                                    teamPlayers.map(p => renderPlayerRow(p))
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+
+                          {/* Unassigned section if any */}
+                          {showUnassigned && (
+                            <div className="border-2 border-dashed border-border-main overflow-hidden bg-surface/50 shadow-xs">
+                              <div className="bg-surface-2 text-text-muted px-3.5 py-2 flex items-center justify-between border-b border-border-main">
+                                <span className="font-display font-bold uppercase text-xs tracking-wider">
+                                  {t('matchday.unassigned_players', 'Chưa chia đội')}
+                                </span>
+                              </div>
+                              <div className="p-2 sm:p-2.5 space-y-2">
+                                {unassignedPlayers.map(p => renderPlayerRow(p))}
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
                 ) : (
                   <div className="space-y-2.5">
-                    {players.filter(p => currentMatch?.attendance?.[p.id] === 'present').map((p) => {
+                    {presentPlayers.map((p) => {
                       const stat = liveStatsMap[p.id] || { goals: 0, assists: 0 };
                       return (
                         <div key={p.id} className="p-2.5 sm:p-3 bg-surface border-2 border-border-main flex items-center justify-between gap-3 hover:border-primary/40 transition-colors">
@@ -2384,19 +2588,26 @@ export default function Matchday() {
                             <span className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-surface-2 text-text-muted border border-border-main font-display text-xs font-bold shrink-0">
                               {p.jersey_number || '?'}
                             </span>
-                            <span className="font-bold text-sm sm:text-base text-text-main leading-snug uppercase truncate" title={p.name}>
-                              {p.name}
-                            </span>
+                            <div className="flex flex-col min-w-0">
+                              <span className="font-bold text-sm sm:text-base text-text-main leading-snug uppercase truncate" title={p.name}>
+                                {p.name}
+                              </span>
+                              {p.positions && p.positions.length > 0 && (
+                                <span className="text-[10px] text-text-muted font-medium">
+                                  {p.positions.map(pos => t(`position.${pos}`, pos)).join(', ')}
+                                </span>
+                              )}
+                            </div>
                           </div>
 
                           <div className="flex items-center gap-2.5 sm:gap-4 shrink-0 ml-auto">
                             {/* Goals */}
-                            <div className="flex shrink-0 justify-center items-center gap-1 sm:gap-1.5 bg-surface-2 px-1.5 sm:px-2.5 py-1 border border-border-main shadow-sm">
+                            <div className="flex shrink-0 justify-center items-center gap-1 sm:gap-1.5 bg-surface-2 px-1.5 sm:px-2.5 py-1 border border-border-main shadow-xs">
                               <span className="text-[10px] sm:text-xs font-bold text-text-muted">{t('matchday.goals_short')}</span>
                               <button
                                 type="button"
                                 onClick={() => handleLiveGoalChange(p, false)}
-                                className="w-6 h-6 sm:w-7 sm:h-7 bg-surface hover:bg-surface-2 font-bold border border-border-main text-text-main flex items-center justify-center text-xs sm:text-sm shrink-0"
+                                className="w-6 h-6 sm:w-7 sm:h-7 bg-surface hover:bg-surface-2 font-bold border border-border-main text-text-main flex items-center justify-center text-xs sm:text-sm shrink-0 cursor-pointer active:scale-95"
                               >
                                 -
                               </button>
@@ -2404,14 +2615,14 @@ export default function Matchday() {
                               <button
                                 type="button"
                                 onClick={() => handleLiveGoalChange(p, true)}
-                                className="w-6 h-6 sm:w-7 sm:h-7 bg-primary text-white font-bold hover:bg-emerald-800 flex items-center justify-center text-xs sm:text-sm shrink-0"
+                                className="w-6 h-6 sm:w-7 sm:h-7 bg-primary text-white font-bold hover:brightness-110 flex items-center justify-center text-xs sm:text-sm shrink-0 cursor-pointer active:scale-95"
                               >
                                 +
                               </button>
                             </div>
 
                             {/* Assists */}
-                            <div className="flex shrink-0 justify-center items-center gap-1 sm:gap-1.5 bg-surface-2 px-1.5 sm:px-2.5 py-1 border border-border-main shadow-sm">
+                            <div className="flex shrink-0 justify-center items-center gap-1 sm:gap-1.5 bg-surface-2 px-1.5 sm:px-2.5 py-1 border border-border-main shadow-xs">
                               <span className="text-[10px] sm:text-xs font-bold text-text-muted">{t('matchday.assists_short')}</span>
                               <button
                                 type="button"
@@ -2419,7 +2630,7 @@ export default function Matchday() {
                                   ...prev,
                                   [p.id]: { ...stat, assists: Math.max(0, stat.assists - 1) }
                                 }))}
-                                className="w-6 h-6 sm:w-7 sm:h-7 bg-surface hover:bg-surface-2 font-bold border border-border-main text-text-main flex items-center justify-center text-xs sm:text-sm shrink-0"
+                                className="w-6 h-6 sm:w-7 sm:h-7 bg-surface hover:bg-surface-2 font-bold border border-border-main text-text-main flex items-center justify-center text-xs sm:text-sm shrink-0 cursor-pointer active:scale-95"
                               >
                                 -
                               </button>
@@ -2430,7 +2641,7 @@ export default function Matchday() {
                                   ...prev,
                                   [p.id]: { ...stat, assists: stat.assists + 1 }
                                 }))}
-                                className="w-6 h-6 sm:w-7 sm:h-7 bg-secondary text-white font-bold hover:bg-amber-600 flex items-center justify-center text-xs sm:text-sm shrink-0"
+                                className="w-6 h-6 sm:w-7 sm:h-7 bg-secondary text-white font-bold hover:brightness-110 flex items-center justify-center text-xs sm:text-sm shrink-0 cursor-pointer active:scale-95"
                               >
                                 +
                               </button>
