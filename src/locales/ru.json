@@ -154,7 +154,26 @@
     "confirmed_players": "подтверждено на матч",
     "total_short": "всего",
     "injured": "травмированы",
-    "absent": "отсутствуют"
+    "absent": "отсутствуют",
+    "players_unit": "игроков",
+    "matches_played_label": "СЫГРАНО",
+    "goals_label": "ГОЛЫ",
+    "internal_match_type": "Внутренний матч",
+    "friendly_match_type": "Товарищеский матч",
+    "view_lineup_and_score": "Просмотр расстановки и ведение счета в реальном времени",
+    "no_scorer_desc": "В этом сезоне пока нет голов. Отмечайте голы в деталях матча!",
+    "see_full_leaderboard": "Полная таблица бомбардиров",
+    "recent_form_title": "Текущая форма",
+    "no_form_data": "Нет данных о последних матчах.",
+    "quick_actions_title": "Быстрые действия",
+    "shortcut_matchday": "Матчи",
+    "shortcut_tactics": "Тактика",
+    "shortcut_roster": "Посещаемость",
+    "shortcut_stats": "Статистика",
+    "form_win": "В",
+    "form_draw": "Н",
+    "form_loss": "П",
+    "form_internal": "ВНУ"
   },
   "nav": {
     "home": "Главная",
@@ -1162,5 +1181,25 @@
     "bank_name": "Название банка",
     "bank_account": "Номер счета",
     "account_holder": "Владелец счета"
+  },
+  "update": {
+    "title": "ОБНОВЛЕНИЕ ПРИЛОЖЕНИЯ",
+    "platform_android": "Android APK",
+    "platform_windows": "Windows App",
+    "platform_linux": "Linux App",
+    "platform_web": "5TactiQ Web",
+    "current": "Текущая версия",
+    "latest": "Новая версия",
+    "desc_android": "Доступна новая версия v{{version}} для Android! Нажмите ниже, чтобы скачать APK и обновить приложение.",
+    "desc_windows": "Доступна новая версия v{{version}} для Windows! Скачайте новую Portable версию для доступа к новым функциям.",
+    "desc_linux": "Доступна новая версия v{{version}} для Linux (AppImage)! Скачайте и запустите напрямую.",
+    "desc_web": "Доступна новая версия v{{version}}. Перезагрузите страницу для применения обновлений.",
+    "btn_download_apk": "СКАЧАТЬ НОВЫЙ APK (v{{version}})",
+    "btn_download_exe": "СКАЧАТЬ ДЛЯ WINDOWS (.EXE)",
+    "btn_download_linux": "СКАЧАТЬ ДЛЯ LINUX (APPIMAGE)",
+    "btn_reload": "ПЕРЕЗАГРУЗИТЬ СТРАНИЦУ",
+    "tip_android": "После загрузки нажмите на файл 5TactiQ.apk в панели уведомлений или папке Загрузки для установки (все ваши данные сохранятся).",
+    "release_notes": "Список изменений на GitHub",
+    "later": "Позже"
   }
 }

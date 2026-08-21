@@ -154,7 +154,26 @@
     "confirmed_players": "đã xác nhận đá",
     "total_short": "tổng",
     "injured": "chấn thương",
-    "absent": "vắng"
+    "absent": "vắng",
+    "players_unit": "cầu thủ",
+    "matches_played_label": "Đã đấu",
+    "goals_label": "Bàn thắng",
+    "internal_match_type": "Đấu Tập Nội Bộ",
+    "friendly_match_type": "Trận Đấu Giao Hữu",
+    "view_lineup_and_score": "Xem bảng đội hình & ghi nhận tỷ số trực tiếp",
+    "no_scorer_desc": "Chưa có dữ liệu bàn thắng mùa này. Hãy ghi nhận bàn thắng trong chi tiết trận đấu!",
+    "see_full_leaderboard": "Xem bảng xếp hạng đầy đủ",
+    "recent_form_title": "Phong Độ Gần Đây",
+    "no_form_data": "Chưa có dữ liệu phong độ trận đấu.",
+    "quick_actions_title": "Thao tác nhanh",
+    "shortcut_matchday": "Lịch thi đấu",
+    "shortcut_tactics": "Vẽ sa bàn",
+    "shortcut_roster": "Điểm danh",
+    "shortcut_stats": "Thống kê",
+    "form_win": "T",
+    "form_draw": "H",
+    "form_loss": "B",
+    "form_internal": "NB"
   },
   "nav": {
     "home": "Trang chủ",
@@ -1161,5 +1180,25 @@
     "bank_name": "Tên Ngân Hàng",
     "bank_account": "Số Tài Khoản",
     "account_holder": "Chủ Tài Khoản"
+  },
+  "update": {
+    "title": "CẬP NHẬT PHIÊN BẢN",
+    "platform_android": "Android APK",
+    "platform_windows": "Windows App",
+    "platform_linux": "Linux App",
+    "platform_web": "5TactiQ Web",
+    "current": "Bản hiện tại",
+    "latest": "Bản mới nhất",
+    "desc_android": "Đã có phiên bản v{{version}} mới nhất cho ứng dụng Android! Nhấn nút bên dưới để tải file APK và cài đặt nâng cấp ngay.",
+    "desc_windows": "Đã có phiên bản v{{version}} mới nhất cho Windows. Tải bản Portable mới để sử dụng các tính năng mới nhất!",
+    "desc_linux": "Đã có phiên bản v{{version}} mới nhất cho Linux (AppImage). Tải về và chạy trực tiếp!",
+    "desc_web": "Đã có phiên bản v{{version}} mới nhất. Tải lại trang web để áp dụng ngay các cập nhật mới.",
+    "btn_download_apk": "TẢI FILE APK MỚI (v{{version}})",
+    "btn_download_exe": "TẢI BẢN WINDOWS (.EXE)",
+    "btn_download_linux": "TẢI BẢN LINUX (APPIMAGE)",
+    "btn_reload": "TẢI LẠI TRANG ĐỂ CẬP NHẬT",
+    "tip_android": "Sau khi tải xong, hãy nhấn vào file 5TactiQ.apk trong bảng thông báo hoặc thư mục Download để cài đặt đè lên bản cũ (toàn bộ dữ liệu của bạn vẫn được giữ nguyên).",
+    "release_notes": "Xem chi tiết thay đổi trên GitHub",
+    "later": "Để sau"
   }
 }

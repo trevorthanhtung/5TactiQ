@@ -154,7 +154,26 @@
     "confirmed_players": "confirmados para el partido",
     "total_short": "total",
     "injured": "lesionados",
-    "absent": "ausentes"
+    "absent": "ausentes",
+    "players_unit": "jugadores",
+    "matches_played_label": "PARTIDOS",
+    "goals_label": "GOLES",
+    "internal_match_type": "Partido de Entrenamiento",
+    "friendly_match_type": "Partido Amistoso",
+    "view_lineup_and_score": "Ver alineación del equipo y registrar marcador en vivo",
+    "no_scorer_desc": "Aún no hay goles registrados esta temporada. ¡Registra goles en el detalle del partido!",
+    "see_full_leaderboard": "Ver tabla de goleadores completa",
+    "recent_form_title": "Forma Reciente",
+    "no_form_data": "Sin datos de forma de partidos recientes.",
+    "quick_actions_title": "Acciones Rápidas",
+    "shortcut_matchday": "Partidos",
+    "shortcut_tactics": "Pizarra Táctica",
+    "shortcut_roster": "Asistencia",
+    "shortcut_stats": "Estadísticas",
+    "form_win": "V",
+    "form_draw": "E",
+    "form_loss": "D",
+    "form_internal": "INT"
   },
   "nav": {
     "home": "Inicio",
@@ -1162,5 +1181,25 @@
     "bank_name": "Nombre del banco",
     "bank_account": "Número de cuenta",
     "account_holder": "Titular de la cuenta"
+  },
+  "update": {
+    "title": "ACTUALIZACIÓN DE LA APP",
+    "platform_android": "Android APK",
+    "platform_windows": "Windows App",
+    "platform_linux": "Linux App",
+    "platform_web": "5TactiQ Web",
+    "current": "Versión actual",
+    "latest": "Última versión",
+    "desc_android": "¡Una nueva versión v{{version}} está disponible para Android! Toca abajo para descargar el archivo APK y actualizar ahora.",
+    "desc_windows": "¡Una nueva versión v{{version}} está disponible para Windows! Descarga la versión portátil para disfrutar de las últimas funciones.",
+    "desc_linux": "¡Una nueva versión v{{version}} está disponible para Linux (AppImage)! ¡Descárgala y ejecútala directamente!",
+    "desc_web": "Una nueva versión v{{version}} está disponible. Recarga la página para aplicar las actualizaciones de inmediato.",
+    "btn_download_apk": "DESCARGAR NUEVO APK (v{{version}})",
+    "btn_download_exe": "DESCARGAR WINDOWS (.EXE)",
+    "btn_download_linux": "DESCARGAR LINUX (APPIMAGE)",
+    "btn_reload": "RECARGAR PÁGINA PARA ACTUALIZAR",
+    "tip_android": "Tras la descarga, abre el archivo 5TactiQ.apk en notificaciones o en Descargas para instalar encima (todos tus datos se conservarán).",
+    "release_notes": "Ver notas de la versión en GitHub",
+    "later": "Más tarde"
   }
 }

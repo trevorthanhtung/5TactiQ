@@ -154,7 +154,26 @@
     "confirmed_players": "مؤكدون للمباراة",
     "total_short": "إجمالي",
     "injured": "مصاب",
-    "absent": "غائب"
+    "absent": "غائب",
+    "players_unit": "لاعبين",
+    "matches_played_label": "المباريات",
+    "goals_label": "الأهداف",
+    "internal_match_type": "مباراة تدريبية داخلية",
+    "friendly_match_type": "مباراة ودية",
+    "view_lineup_and_score": "عرض تشكيلة الفريق وتسجيل النتيجة مباشرة",
+    "no_scorer_desc": "لم يتم تسجيل أي أهداف هذا الموسم بعد. قم بتسجيل الأهداف في تفاصيل المباراة!",
+    "see_full_leaderboard": "عرض جدول الترتيب بالكامل",
+    "recent_form_title": "الأداء الأخير",
+    "no_form_data": "لا توجد بيانات للأداء في المباريات الأخيرة.",
+    "quick_actions_title": "إجراءات سريعة",
+    "shortcut_matchday": "المباريات",
+    "shortcut_tactics": "اللوحة التكتيكية",
+    "shortcut_roster": "الحضور",
+    "shortcut_stats": "الإحصائيات",
+    "form_win": "ف",
+    "form_draw": "ت",
+    "form_loss": "خ",
+    "form_internal": "داخلي"
   },
   "nav": {
     "home": "الرئيسية",
@@ -1162,5 +1181,25 @@
     "bank_name": "اسم البنك",
     "bank_account": "رقم الحساب",
     "account_holder": "صاحب الحساب"
+  },
+  "update": {
+    "title": "تحديث التطبيق",
+    "platform_android": "Android APK",
+    "platform_windows": "Windows App",
+    "platform_linux": "Linux App",
+    "platform_web": "5TactiQ Web",
+    "current": "الإصدار الحالي",
+    "latest": "أحدث إصدار",
+    "desc_android": "يتوفر إصدار جديد v{{version}} لتطبيق Android! اضغط أدناه لتنزيل ملف APK والتحديث الآن.",
+    "desc_windows": "يتوفر إصدار جديد v{{version}} لنظام Windows! قم بتنزيل الإصدار المحمول للاستمتاع بأحدث الميزات.",
+    "desc_linux": "يتوفر إصدار جديد v{{version}} لنظام Linux (AppImage)! قم بالتنزيل والتشغيل مباشرة.",
+    "desc_web": "يتوفر إصدار جديد v{{version}}. أعد تحميل الصفحة لتطبيق التحديثات فوراً.",
+    "btn_download_apk": "تنزيل APK الجديد (v{{version}})",
+    "btn_download_exe": "تنزيل لـ WINDOWS (.EXE)",
+    "btn_download_linux": "تنزيل لـ LINUX (APPIMAGE)",
+    "btn_reload": "إعادة تحميل الصفحة للتحديث",
+    "tip_android": "بعد التنزيل، اضغط على ملف 5TactiQ.apk في شريط الإشعارات أو مجلد التنزيلات لتثبيته (سيتم الاحتفاظ بجميع بياناتك).",
+    "release_notes": "عرض تفاصيل التغييرات على GitHub",
+    "later": "لاحقاً"
   }
 }

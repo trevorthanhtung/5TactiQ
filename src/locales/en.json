@@ -154,7 +154,26 @@
     "confirmed_players": "confirmed for match",
     "total_short": "total",
     "injured": "injured",
-    "absent": "absent"
+    "absent": "absent",
+    "players_unit": "players",
+    "matches_played_label": "MATCHES",
+    "goals_label": "GOALS",
+    "internal_match_type": "Internal Training Match",
+    "friendly_match_type": "Friendly Match",
+    "view_lineup_and_score": "View squad lineup & track live score",
+    "no_scorer_desc": "No goals recorded this season yet. Track goals in match details!",
+    "see_full_leaderboard": "View full leaderboard",
+    "recent_form_title": "Recent Form",
+    "no_form_data": "No recent match form data.",
+    "quick_actions_title": "Quick Actions",
+    "shortcut_matchday": "Matchday",
+    "shortcut_tactics": "Tactics Board",
+    "shortcut_roster": "Attendance",
+    "shortcut_stats": "Statistics",
+    "form_win": "W",
+    "form_draw": "D",
+    "form_loss": "L",
+    "form_internal": "INT"
   },
   "nav": {
     "home": "Home",
@@ -1162,5 +1181,25 @@
     "bank_name": "Bank Name",
     "bank_account": "Account Number",
     "account_holder": "Account Holder"
+  },
+  "update": {
+    "title": "APP UPDATE",
+    "platform_android": "Android APK",
+    "platform_windows": "Windows App",
+    "platform_linux": "Linux App",
+    "platform_web": "5TactiQ Web",
+    "current": "Current version",
+    "latest": "Latest version",
+    "desc_android": "A new version v{{version}} is available for Android! Tap below to download the APK and upgrade now.",
+    "desc_windows": "A new version v{{version}} is available for Windows. Download the new Portable app to enjoy the latest features!",
+    "desc_linux": "A new version v{{version}} is available for Linux (AppImage). Download and run directly!",
+    "desc_web": "A new version v{{version}} is available. Reload the page to apply the latest updates immediately.",
+    "btn_download_apk": "DOWNLOAD NEW APK (v{{version}})",
+    "btn_download_exe": "DOWNLOAD WINDOWS (.EXE)",
+    "btn_download_linux": "DOWNLOAD LINUX (APPIMAGE)",
+    "btn_reload": "RELOAD PAGE TO UPDATE",
+    "tip_android": "After downloading, tap the 5TactiQ.apk file in notifications or your Downloads folder to install over the current version (all your data will be preserved).",
+    "release_notes": "View release notes on GitHub",
+    "later": "Later"
   }
 }

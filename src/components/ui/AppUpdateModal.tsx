@@ -73,7 +73,7 @@ export default function AppUpdateModal() {
           {/* Header */}
           <div className="flex flex-col pr-8">
             <span className="text-[11px] font-mono uppercase font-bold tracking-wider text-primary">
-              {platform === 'android' ? 'Android APK' : platform === 'windows' ? 'Windows App' : platform === 'linux' ? 'Linux App' : '5TactiQ Web'}
+              {platform === 'android' ? t('update.platform_android', 'Android APK') : platform === 'windows' ? t('update.platform_windows', 'Windows App') : platform === 'linux' ? t('update.platform_linux', 'Linux App') : t('update.platform_web', '5TactiQ Web')}
             </span>
             <h3 className="font-display font-extrabold text-2xl uppercase tracking-tight text-text-main leading-tight">
               {t('update.title', 'CẬP NHẬT PHIÊN BẢN')}
@@ -97,22 +97,22 @@ export default function AppUpdateModal() {
           <div className="text-xs text-text-muted leading-relaxed font-sans">
             {platform === 'android' && (
               <p>
-                Đã có phiên bản <strong>v{latestVersion}</strong> mới nhất cho ứng dụng Android! Nhấn nút bên dưới để tải file APK và cài đặt nâng cấp ngay.
+                {t('update.desc_android', 'Đã có phiên bản v{{version}} mới nhất cho ứng dụng Android! Nhấn nút bên dưới để tải file APK và cài đặt nâng cấp ngay.', { version: latestVersion })}
               </p>
             )}
             {platform === 'windows' && (
               <p>
-                Đã có phiên bản <strong>v{latestVersion}</strong> mới nhất cho Windows. Tải bản Portable mới để sử dụng các tính năng mới nhất!
+                {t('update.desc_windows', 'Đã có phiên bản v{{version}} mới nhất cho Windows. Tải bản Portable mới để sử dụng các tính năng mới nhất!', { version: latestVersion })}
               </p>
             )}
             {platform === 'linux' && (
               <p>
-                Đã có phiên bản <strong>v{latestVersion}</strong> mới nhất cho Linux (AppImage). Tải về và chạy trực tiếp!
+                {t('update.desc_linux', 'Đã có phiên bản v{{version}} mới nhất cho Linux (AppImage). Tải về và chạy trực tiếp!', { version: latestVersion })}
               </p>
             )}
             {platform === 'web' && (
               <p>
-                Đã có phiên bản <strong>v{latestVersion}</strong> mới nhất. Tải lại trang web để áp dụng ngay các cập nhật mới.
+                {t('update.desc_web', 'Đã có phiên bản v{{version}} mới nhất. Tải lại trang web để áp dụng ngay các cập nhật mới.', { version: latestVersion })}
               </p>
             )}
           </div>
@@ -168,7 +168,7 @@ export default function AppUpdateModal() {
             {platform === 'android' && (
               <div className="p-2.5 bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-300 text-[11px] font-sans">
                 <span>
-                  Sau khi tải xong, hãy nhấn vào file <strong>5TactiQ.apk</strong> trong bảng thông báo hoặc thư mục Download để cài đặt đè lên bản cũ (toàn bộ dữ liệu của bạn vẫn được giữ nguyên).
+                  {t('update.tip_android', 'Sau khi tải xong, hãy nhấn vào file 5TactiQ.apk trong bảng thông báo hoặc thư mục Download để cài đặt đè lên bản cũ (toàn bộ dữ liệu của bạn vẫn được giữ nguyên).')}
                 </span>
               </div>
             )}

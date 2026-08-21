@@ -128,29 +128,29 @@ export default function Home() {
               <span className="text-[11px] sm:text-xs uppercase tracking-wider text-text-muted font-bold leading-normal pt-0.5">{t('home.roster_title')}</span>
               <div className="flex items-baseline gap-1 mt-0.5">
                 <span className="text-2xl sm:text-3xl lg:text-4xl font-display font-bold text-primary">{players.length}</span>
-                <span className="text-[11px] sm:text-xs text-text-muted font-medium">cầu thủ</span>
+                <span className="text-[11px] sm:text-xs text-text-muted font-medium">{t('home.players_unit', 'cầu thủ')}</span>
               </div>
             </div>
 
             <div className="w-[1px] h-8 bg-border-main hidden sm:block" />
 
             <div className="flex flex-col">
-              <span className="text-[11px] sm:text-xs uppercase tracking-wider text-text-muted font-bold leading-normal pt-0.5">Đã đấu</span>
+              <span className="text-[11px] sm:text-xs uppercase tracking-wider text-text-muted font-bold leading-normal pt-0.5">{t('home.matches_played_label', 'Đã đấu')}</span>
               <div className="flex items-baseline gap-1 mt-0.5">
                 <span className="text-2xl sm:text-3xl lg:text-4xl font-display font-bold text-secondary">{finishedMatches.length}</span>
-                <span className="text-[11px] sm:text-xs text-text-muted font-medium">trận</span>
+                <span className="text-[11px] sm:text-xs text-text-muted font-medium">{t('roster.match_unit', 'trận')}</span>
               </div>
             </div>
 
             <div className="w-[1px] h-8 bg-border-main hidden sm:block" />
 
             <div className="flex flex-col">
-              <span className="text-[11px] sm:text-xs uppercase tracking-wider text-text-muted font-bold leading-normal pt-0.5">Bàn thắng</span>
+              <span className="text-[11px] sm:text-xs uppercase tracking-wider text-text-muted font-bold leading-normal pt-0.5">{t('home.goals_label', 'Bàn thắng')}</span>
               <div className="flex items-baseline gap-1 mt-0.5">
                 <span className="text-2xl sm:text-3xl lg:text-4xl font-display font-bold text-text-main">
                   {Object.values(goalCounts).reduce((a, b) => a + b, 0)}
                 </span>
-                <span className="text-[11px] sm:text-xs text-text-muted font-medium">bàn</span>
+                <span className="text-[11px] sm:text-xs text-text-muted font-medium">{t('roster.goal_unit', 'bàn')}</span>
               </div>
             </div>
           </div>
@@ -197,12 +197,12 @@ export default function Home() {
                 {/* Opponent & Match Title */}
                 <div className="my-1 sm:my-2">
                   <div className="text-[11px] sm:text-xs uppercase tracking-wider text-text-muted font-bold mb-1">
-                    {activeOrUpcomingMatch.matchType === 'internal' ? 'Đấu Tập Nội Bộ' : 'Trận Đấu Giao Hữu'}
+                    {activeOrUpcomingMatch.matchType === 'internal' ? t('home.internal_match_type', 'Đấu Tập Nội Bộ') : t('home.friendly_match_type', 'Trận Đấu Giao Hữu')}
                   </div>
                   <h2 className="text-2xl sm:text-4xl lg:text-5xl font-bold font-display uppercase leading-tight sm:leading-none text-primary break-words">
                     {activeOrUpcomingMatch.matchType === 'internal' 
                       ? t('home.internal_match') 
-                      : `VS ${activeOrUpcomingMatch.opponent || 'ĐỐI THỦ'}`}
+                      : `VS ${(activeOrUpcomingMatch.opponent || t('matchday.opponent_placeholder', 'ĐỐI THỦ')).toUpperCase()}`}
                   </h2>
                 </div>
 
@@ -210,7 +210,7 @@ export default function Home() {
                 <div className="flex flex-wrap items-center gap-y-2 gap-x-4 sm:gap-x-6 text-xs sm:text-sm text-text-muted font-medium mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-border-main">
                   <div className="flex items-center gap-1.5 text-text-main font-semibold">
                     <Clock size={15} className="text-secondary" />
-                    <span>{activeOrUpcomingMatch.time || 'Chưa định giờ'}</span>
+                    <span>{activeOrUpcomingMatch.time || t('matchday.time_tbd', 'Chưa định giờ')}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <MapPin size={15} className="text-primary" />
@@ -222,7 +222,7 @@ export default function Home() {
               {/* Action Bar */}
               <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-border-main flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <span className="text-[11px] sm:text-xs text-text-muted hidden sm:inline-block">
-                  Xem bảng đội hình & ghi nhận tỷ số trực tiếp
+                  {t('home.view_lineup_and_score', 'Xem bảng đội hình & ghi nhận tỷ số trực tiếp')}
                 </span>
                 <Link 
                   to={`/matchday?id=${activeOrUpcomingMatch.id}`} 
@@ -265,19 +265,19 @@ export default function Home() {
             {/* Position Badges Grid */}
             <div className="grid grid-cols-2 gap-2 pt-2.5 border-t border-border-main text-xs">
               <div className="p-2 sm:p-2.5 bg-accent/30 flex justify-between items-center">
-                <span className="font-bold text-text-muted text-xs sm:text-sm font-display tracking-wider">GK</span>
+                <span className="font-bold text-text-muted text-xs sm:text-sm font-display tracking-wider">{t('position.GK', 'GK')}</span>
                 <span className="font-display font-bold text-primary text-sm sm:text-base">{positionStats.GK}</span>
               </div>
               <div className="p-2 sm:p-2.5 bg-accent/30 flex justify-between items-center">
-                <span className="font-bold text-text-muted text-xs sm:text-sm font-display tracking-wider">Fixo</span>
+                <span className="font-bold text-text-muted text-xs sm:text-sm font-display tracking-wider">{t('position.Fixo', 'Fixo')}</span>
                 <span className="font-display font-bold text-primary text-sm sm:text-base">{positionStats.Fixo}</span>
               </div>
               <div className="p-2 sm:p-2.5 bg-accent/30 flex justify-between items-center">
-                <span className="font-bold text-text-muted text-xs sm:text-sm font-display tracking-wider">Ala</span>
+                <span className="font-bold text-text-muted text-xs sm:text-sm font-display tracking-wider">{t('position.Ala', 'Ala')}</span>
                 <span className="font-display font-bold text-primary text-sm sm:text-base">{positionStats.Ala}</span>
               </div>
               <div className="p-2 sm:p-2.5 bg-accent/30 flex justify-between items-center">
-                <span className="font-bold text-text-muted text-xs sm:text-sm font-display tracking-wider">Pivô</span>
+                <span className="font-bold text-text-muted text-xs sm:text-sm font-display tracking-wider">{t('position.Pivô', 'Pivô')}</span>
                 <span className="font-display font-bold text-primary text-sm sm:text-base">{positionStats.Pivô}</span>
               </div>
             </div>
@@ -394,13 +394,13 @@ export default function Home() {
               </div>
             ) : (
               <div className="py-6 text-center text-text-muted text-xs">
-                Chưa có dữ liệu bàn thắng mùa này. Hãy ghi nhận bàn thắng trong chi tiết trận đấu!
+                {t('home.no_scorer_desc', 'Chưa có dữ liệu bàn thắng mùa này. Hãy ghi nhận bàn thắng trong chi tiết trận đấu!')}
               </div>
             )}
           </div>
 
           <Link to="/stats" className="mt-3 sm:mt-4 pt-3 border-t border-border-main flex items-center justify-between text-secondary font-bold font-display uppercase tracking-widest text-xs group hover:text-primary transition-colors">
-            <span>Xem bảng xếp hạng đầy đủ</span>
+            <span>{t('home.see_full_leaderboard', 'Xem bảng xếp hạng đầy đủ')}</span>
             <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
@@ -410,51 +410,78 @@ export default function Home() {
           <div>
             <div className="flex justify-between items-center mb-3 sm:mb-4">
               <h2 className="font-display text-lg sm:text-xl uppercase tracking-widest text-primary">
-                Phong Độ Gần Đây
+                {t('home.recent_form_title', 'Phong Độ Gần Đây')}
               </h2>
             </div>
 
             {recentForm.length > 0 ? (
               <div>
                 <div className="flex items-center gap-2 mb-3 sm:mb-4">
-                  {recentForm.map((f, idx) => (
-                    <div 
-                      key={f.id || idx}
-                      title={`Trận ${f.note}`}
-                      className={`w-8 h-8 sm:w-9 sm:h-9 rounded flex flex-col items-center justify-center font-display font-bold text-xs text-white shadow-sm ${
-                        f.result === 'W' ? 'bg-emerald-600' :
-                        f.result === 'L' ? 'bg-rose-600' : 'bg-amber-600'
-                      }`}
-                    >
-                      <span>{f.label}</span>
-                    </div>
-                  ))}
+                  {recentForm.map((f, idx) => {
+                    const isInternal = f.type === 'internal';
+                    const badgeLabel = isInternal 
+                      ? t('home.form_internal', 'NB') 
+                      : f.result === 'W' 
+                        ? t('home.form_win', 'W') 
+                        : f.result === 'L' 
+                          ? t('home.form_loss', 'L') 
+                          : t('home.form_draw', 'D');
+
+                    const badgeTitle = isInternal
+                      ? t('home.internal_match', 'Đá Nội Bộ')
+                      : `${t('roster.match_unit', 'Trận')} (${f.note})`;
+
+                    const badgeColor = isInternal
+                      ? 'bg-amber-600'
+                      : f.result === 'W'
+                        ? 'bg-emerald-600'
+                        : f.result === 'L'
+                          ? 'bg-rose-600'
+                          : 'bg-slate-600';
+
+                    return (
+                      <div 
+                        key={f.id || idx}
+                        title={badgeTitle}
+                        className={`w-8 h-8 sm:w-9 sm:h-9 rounded flex flex-col items-center justify-center font-display font-bold text-xs text-white shadow-sm ${badgeColor}`}
+                      >
+                        <span>{badgeLabel}</span>
+                      </div>
+                    );
+                  })}
                 </div>
                 <div className="text-[11px] sm:text-xs text-text-muted font-medium">
-                  {recentForm.filter(f => f.result === 'W').length} Thắng - {recentForm.filter(f => f.result === 'D').length} Hòa - {recentForm.filter(f => f.result === 'L').length} Thua
+                  {recentForm.filter(f => f.type === 'friendly' && f.result === 'W').length} {t('roster.result_win', 'Thắng')} - {recentForm.filter(f => f.type === 'friendly' && f.result === 'D').length} {t('roster.result_draw', 'Hòa')} - {recentForm.filter(f => f.type === 'friendly' && f.result === 'L').length} {t('roster.result_loss', 'Thua')}
+                  {recentForm.some(f => f.type === 'internal') && (
+                    <span className="ml-1.5 opacity-80">
+                      ({recentForm.filter(f => f.type === 'internal').length} {t('home.internal_match', 'Đá Nội Bộ')})
+                    </span>
+                  )}
                 </div>
               </div>
             ) : (
               <div className="py-3 text-xs text-text-muted">
-                Chưa có dữ liệu phong độ trận đấu.
+                {t('home.no_form_data', 'Chưa có dữ liệu phong độ trận đấu.')}
               </div>
             )}
 
             {/* Quick Action Shortcuts (Clean Typography Buttons) */}
             <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-border-main">
-              <div className="text-[11px] sm:text-xs uppercase tracking-wider text-text-muted font-bold mb-2">Thao tác nhanh</div>
+              <div className="text-[11px] sm:text-xs uppercase tracking-wider text-text-muted font-bold mb-2">
+                {t('home.quick_actions_title', 'Thao tác nhanh')}
+              </div>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <Link to="/matchday" className="p-2 sm:p-2.5 bg-accent/30 hover:bg-surface-2 hover:border-secondary border border-transparent active:scale-95 transition-all font-display font-bold uppercase tracking-wider text-text-main text-center">
-                  Lịch thi đấu
+                  {t('home.shortcut_matchday', 'Lịch thi đấu')}
                 </Link>
                 <Link to="/tactics" className="p-2 sm:p-2.5 bg-accent/30 hover:bg-surface-2 hover:border-secondary border border-transparent active:scale-95 transition-all font-display font-bold uppercase tracking-wider text-text-main text-center">
-                  Vẽ sa bàn
+                  {t('home.shortcut_tactics', 'Vẽ sa bàn')}
                 </Link>
                 <Link to="/roster" className="p-2 sm:p-2.5 bg-accent/30 hover:bg-surface-2 hover:border-secondary border border-transparent active:scale-95 transition-all font-display font-bold uppercase tracking-wider text-text-main text-center">
-                  Điểm danh
+                  {t('home.shortcut_roster', 'Điểm danh')}
                 </Link>
                 <Link to="/stats" className="p-2 sm:p-2.5 bg-accent/30 hover:bg-surface-2 hover:border-secondary border border-transparent active:scale-95 transition-all font-display font-bold uppercase tracking-wider text-text-main text-center">
-                  Thống kê
+                  {t('home.shortcut_stats', 'Thống kê')}
                 </Link>
               </div>
             </div>
