@@ -68,6 +68,7 @@ export default function Home() {
 
   const topScorers = useMemo(() => {
     return players
+      .filter(p => !p.isNPC || p.includeInStats)
       .map(p => ({ ...p, goals: goalCounts[p.id] || 0 }))
       .sort((a, b) => {
         const diff = b.goals - a.goals;
@@ -96,7 +97,7 @@ export default function Home() {
   // Position breakdown
   const positionStats = useMemo(() => {
     const counts = { GK: 0, Fixo: 0, Ala: 0, Pivô: 0 };
-    players.forEach(p => {
+    players.filter(p => !p.isNPC).forEach(p => {
       p.positions?.forEach(pos => {
         if (pos in counts) counts[pos as keyof typeof counts]++;
       });
@@ -127,7 +128,7 @@ export default function Home() {
             <div className="flex flex-col">
               <span className="text-[11px] sm:text-xs uppercase tracking-wider text-text-muted font-bold leading-normal pt-0.5">{t('home.roster_title')}</span>
               <div className="flex items-baseline gap-1 mt-0.5">
-                <span className="text-2xl sm:text-3xl lg:text-4xl font-display font-bold text-primary">{players.length}</span>
+                <span className="text-2xl sm:text-3xl lg:text-4xl font-display font-bold text-primary">{players.filter(p => !p.isNPC).length}</span>
                 <span className="text-[11px] sm:text-xs text-text-muted font-medium">{t('home.players_unit', 'cầu thủ')}</span>
               </div>
             </div>

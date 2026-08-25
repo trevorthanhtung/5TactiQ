@@ -20,6 +20,8 @@ export interface Player {
   isPerMatch?: boolean;
   matchQuota?: number;
   isManuallyHidden?: boolean;
+  isNPC?: boolean;
+  includeInStats?: boolean;
   tier?: 'S' | 'A' | 'B' | 'C' | null;
   phone?: string;
   note?: string;

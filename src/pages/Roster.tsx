@@ -10,7 +10,7 @@ import { BottomSheet } from '../components/ui/BottomSheet';
 import type { Position } from '../types';
 import { useTranslation } from 'react-i18next';
 import { compareVietnameseNames } from '../utils/sortUtils';
-import { isPlayerHidden, getPlayerPerMatchStatus } from '../utils/playerUtils';
+import { isPlayerHidden, getPlayerPerMatchStatus, comparePlayers } from '../utils/playerUtils';
 
 export default function Roster() {
   const { t } = useTranslation();
@@ -24,7 +24,7 @@ export default function Roster() {
   const [newPhone, setNewPhone] = useState('');
   const [newNote, setNewNote] = useState('');
   const [newPositions, setNewPositions] = useState<string[]>([]);
-  type FilterType = 'all' | 'injured' | 'recovering' | 'borrowed' | 'youth' | 'per_match' | 'hidden';
+  type FilterType = 'all' | 'injured' | 'recovering' | 'borrowed' | 'youth' | 'per_match' | 'npc' | 'hidden';
   const [filter, setFilter] = useState<FilterType>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [newIsBorrowed, setNewIsBorrowed] = useState(false);
@@ -79,44 +79,7 @@ export default function Roster() {
     return <RosterSkeleton />;
   }
 
-  const sortedPlayers = [...players].sort((a, b) => {
-    const aHidden = isPlayerHidden(a, matches) ? 1 : 0;
-    const bHidden = isPlayerHidden(b, matches) ? 1 : 0;
-    if (aHidden !== bHidden) {
-      return aHidden - bHidden;
-    }
-
-    // 1. Group hierarchy: Main squad (0) -> Youth (1) -> Borrowed/Loan (2) -> Per-Match (3)
-    const getCategoryRank = (p: typeof a) => {
-      if (p.isPerMatch) return 3;
-      if (p.isBorrowed) return 2;
-      if (p.isYouth) return 1;
-      return 0;
-    };
-
-    const aRank = getCategoryRank(a);
-    const bRank = getCategoryRank(b);
-    
-    if (aRank !== bRank) {
-      return aRank - bRank;
-    }
-
-    // 2. Sort by jersey number if both have one
-    const numA = (a.jersey_number !== null && a.jersey_number !== undefined && !isNaN(Number(a.jersey_number))) ? Number(a.jersey_number) : null;
-    const numB = (b.jersey_number !== null && b.jersey_number !== undefined && !isNaN(Number(b.jersey_number))) ? Number(b.jersey_number) : null;
-
-    if (numA !== null && numB !== null) {
-      if (numA !== numB) return numA - numB;
-      return compareVietnameseNames(a.name, b.name);
-    }
-    
-    // 3. Players with jersey numbers come before those without
-    if (numA !== null) return -1;
-    if (numB !== null) return 1;
-
-    // 4. Finally sort by name
-    return compareVietnameseNames(a.name, b.name);
-  });
+  const sortedPlayers = [...players].sort((a, b) => comparePlayers(a, b, matches));
 
   const filteredPlayers = sortedPlayers.filter(player => {
     if (searchQuery && !player.name.toLowerCase().includes(searchQuery.toLowerCase())) {
@@ -130,6 +93,15 @@ export default function Roster() {
 
     // All other tabs exclude hidden players
     if (isHidden) {
+      return false;
+    }
+
+    if (filter === 'npc') {
+      return !!player.isNPC;
+    }
+
+    // Regular squad tabs exclude temporary NPCs
+    if (player.isNPC) {
       return false;
     }
 
@@ -372,10 +344,15 @@ export default function Roster() {
             {t('roster.filter_youth', 'Đội trẻ')} ({players.filter(p => !isPlayerHidden(p, matches) && p.isYouth).length})
           </button>
           <button type="button" onClick={() => setFilter('per_match')} className={`px-3.5 py-2 text-xs font-display uppercase tracking-wider font-bold border-2 transition-all shrink-0 ${filter === 'per_match' ? 'bg-amber-600 text-white border-amber-600 shadow-sm' : 'bg-surface text-text-muted border-border-main hover:border-amber-500/50'}`}>
-            {t('roster.filter_per_match', 'Theo trận')} ({players.filter(p => !isPlayerHidden(p, matches) && p.isPerMatch).length})
+            {t('roster.filter_per_match', 'Theo trận')} ({players.filter(p => !isPlayerHidden(p, matches) && !p.isNPC && p.isPerMatch).length})
           </button>
+          {players.some(p => p.isNPC) && (
+            <button type="button" onClick={() => setFilter('npc')} className={`px-3.5 py-2 text-xs font-display uppercase tracking-wider font-bold border-2 transition-all shrink-0 ${filter === 'npc' ? 'bg-slate-600 text-white border-slate-600 shadow-sm' : 'bg-surface text-text-muted border-border-main hover:border-slate-500/50'}`}>
+              {t('roster.filter_npc', 'NPC / Khách')} ({players.filter(p => p.isNPC).length})
+            </button>
+          )}
           <button type="button" onClick={() => setFilter('hidden')} className={`px-3.5 py-2 text-xs font-display uppercase tracking-wider font-bold border-2 transition-all shrink-0 ${filter === 'hidden' ? 'bg-slate-700 text-white border-slate-700 shadow-sm' : 'bg-surface text-text-muted border-border-main hover:border-slate-500/50'}`}>
-            {t('roster.filter_hidden', 'Ẩn')} ({players.filter(p => isPlayerHidden(p, matches)).length})
+            {t('roster.filter_hidden', 'Ẩn')} ({players.filter(p => isPlayerHidden(p, matches) && !p.isNPC).length})
           </button>
         </div>
       </div>
@@ -399,6 +376,11 @@ export default function Roster() {
                     {isHidden && (
                       <div className="bg-slate-700 text-white font-display font-bold px-2 h-8 sm:h-9 flex items-center justify-center text-xs sm:text-sm border-l-2 border-slate-100/20" title={t('roster.hidden_tooltip')}>
                         {t('roster.hidden_badge', 'ẨN')}
+                      </div>
+                    )}
+                    {player.isNPC && (
+                      <div className="bg-slate-600 text-white font-display font-bold px-2 h-8 sm:h-9 flex items-center justify-center text-xs sm:text-sm border-l-2 border-slate-100/20" title="NPC / Guest Player">
+                        NPC
                       </div>
                     )}
                     {player.healthStatus && player.healthStatus !== 'Khỏe mạnh' && (

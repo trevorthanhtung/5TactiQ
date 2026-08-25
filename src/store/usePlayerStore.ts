@@ -8,7 +8,7 @@ interface PlayerState {
   loading: boolean;
   error: string | null;
   fetchPlayers: () => void;
-  addPlayer: (player: Omit<Player, 'id'>) => Promise<void>;
+  addPlayer: (player: Omit<Player, 'id'>) => Promise<string>;
   updatePlayer: (id: string, player: Partial<Player>) => Promise<void>;
   deletePlayer: (id: string) => Promise<void>;
   setCaptain: (id: string | null) => Promise<void>;
@@ -24,9 +24,11 @@ export const usePlayerStore = create<PlayerState>()(
         // No-op for now, data is loaded from LocalStorage automatically
       },
       addPlayer: async (player) => {
+        const newId = `player-${Date.now()}`;
         set((state) => ({
-          players: [...state.players, { ...player, id: Date.now().toString() } as Player]
+          players: [...state.players, { ...player, id: newId } as Player]
         }));
+        return newId;
       },
       updatePlayer: async (id, player) => {
         set((state) => ({

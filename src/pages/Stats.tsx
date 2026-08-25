@@ -73,7 +73,11 @@ export default function Stats() {
     }
   });
 
-  const playersWithStats = players.map(p => ({
+  const eligiblePlayers = useMemo(() => {
+    return players.filter(p => !p.isNPC || p.includeInStats);
+  }, [players]);
+
+  const playersWithStats = eligiblePlayers.map(p => ({
     ...p,
     goals: playerStatsAgg[p.id]?.goals || 0,
     assists: playerStatsAgg[p.id]?.assists || 0,
