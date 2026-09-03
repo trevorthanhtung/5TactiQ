@@ -21,6 +21,7 @@ export interface Player {
   matchQuota?: number;
   isManuallyHidden?: boolean;
   isNPC?: boolean;
+  matchId?: string;
   includeInStats?: boolean;
   tier?: 'S' | 'A' | 'B' | 'C' | null;
   phone?: string;
@@ -66,6 +67,7 @@ export interface MatchInfo {
   stats?: PlayerMatchStat[];
   pitchFee?: number | null;
   feeTimeSlot?: 'day' | 'night' | null;
+  feePayments?: Record<string, boolean>;
 }
 
 export interface Match {

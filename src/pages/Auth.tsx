@@ -44,9 +44,16 @@ const Auth: React.FC = () => {
   }, []);
   
   const { theme, setTheme } = useThemeStore();
-  const { setGuest } = useAuthStore();
+  const { session, setGuest } = useAuthStore();
   const addToast = useToastStore(state => state.addToast);
   const navigate = useNavigate();
+
+  // Redirect to Home immediately when user is authenticated (e.g. after Google OAuth)
+  useEffect(() => {
+    if (session) {
+      navigate('/', { replace: true });
+    }
+  }, [session, navigate]);
 
   const toggleTheme = () => {
     if (theme === 'dark') setTheme('light');
@@ -190,7 +197,7 @@ const Auth: React.FC = () => {
       const origin = window.location.origin;
       const isCapacitor = origin.includes('capacitor://') || !!(window as any).Capacitor?.isNativePlatform?.();
 
-      let targetDomain = origin + window.location.pathname;
+      let targetDomain = origin;
       if (isCapacitor) {
         targetDomain = 'com.5tactiq.app://google-auth';
       } else if (origin.startsWith('file:') || origin.includes('app://') || origin === 'null') {

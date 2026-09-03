@@ -28,6 +28,8 @@ interface MatchState {
   }) => void;
   updateLiveMatch: (matchId: string, data: Partial<MatchInfo>) => void;
   deleteMatch: (id: string) => void;
+  toggleMatchFeePayment: (matchId: string, playerId: string) => void;
+  setAllMatchFeePayments: (matchId: string, playerIds: string[], isPaid: boolean) => void;
   resetData: () => void;
 }
 
@@ -167,6 +169,39 @@ export const useMatchStore = create<MatchState>()(
             activeMatchId: nextActiveId
           };
         });
+      },
+
+      toggleMatchFeePayment: (matchId: string, playerId: string) => {
+        set((state) => ({
+          matches: state.matches.map((m) => {
+            if (m.id !== matchId) return m;
+            const currentPayments = m.feePayments || {};
+            const isCurrentlyPaid = !!currentPayments[playerId];
+            return {
+              ...m,
+              feePayments: {
+                ...currentPayments,
+                [playerId]: !isCurrentlyPaid
+              }
+            };
+          })
+        }));
+      },
+
+      setAllMatchFeePayments: (matchId: string, playerIds: string[], isPaid: boolean) => {
+        set((state) => ({
+          matches: state.matches.map((m) => {
+            if (m.id !== matchId) return m;
+            const updated = { ...(m.feePayments || {}) };
+            for (const pid of playerIds) {
+              updated[pid] = isPaid;
+            }
+            return {
+              ...m,
+              feePayments: updated
+            };
+          })
+        }));
       },
 
       resetData: () => {

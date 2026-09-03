@@ -25,7 +25,7 @@ import { getCurrentSeasonRange, isMatchInSeason } from '../utils/seasonUtils';
 export default function Matchday() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { players, addPlayer, deletePlayer } = usePlayerStore();
+  const { players, addPlayer, updatePlayer, deletePlayer } = usePlayerStore();
   const { addToast } = useToastStore();
   const { settings } = useSettingsStore();
   const { venues } = useVenueStore();
@@ -97,8 +97,23 @@ export default function Matchday() {
 
   const currentMatch = getMatchInfo();
 
+  // Filter players for this match: regular squad members + NPCs created for this specific match
+  const matchdayPlayers = useMemo(() => {
+    if (!currentMatch) return [];
+    return players.filter(p => {
+      if (!p.isNPC) return true;
+      // For NPC players: only include if they belong to this specific match
+      if (p.matchId) {
+        return p.matchId === currentMatch.id;
+      }
+      // Fallback for legacy NPCs: only include if this match has recorded attendance or team assignment for this NPC
+      return !!(currentMatch.attendance?.[p.id] || currentMatch.teams?.[p.id]);
+    });
+  }, [players, currentMatch]);
+
   const [activeTab, setActiveTab] = useState<'attendance' | 'teams' | 'summary'>('attendance');
   const [filterMode, setFilterMode] = useState<'all_time' | 'current_season'>('current_season');
+  const [matchCategoryFilter, setMatchCategoryFilter] = useState<'all' | 'internal' | 'friendly' | 'live'>('all');
   const [matchSearchQuery, setMatchSearchQuery] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -114,6 +129,7 @@ export default function Matchday() {
 
   // NPC Modal state
   const [showNpcModal, setShowNpcModal] = useState(false);
+  const [editingNpcId, setEditingNpcId] = useState<string | null>(null);
   const [npcTargetTeam, setNpcTargetTeam] = useState<'A' | 'B' | 'C' | 'D' | null>('A');
   const [npcName, setNpcName] = useState('');
   const [npcJersey, setNpcJersey] = useState('');
@@ -121,26 +137,55 @@ export default function Matchday() {
   const [npcToDelete, setNpcToDelete] = useState<{ id: string; name: string } | null>(null);
 
   const openAddNpcModal = (targetTeam: 'A' | 'B' | 'C' | 'D' | null) => {
-    const npcCount = players.filter(p => p.isNPC).length;
-    setNpcName(`NPC ${npcCount + 1}`);
+    setEditingNpcId(null);
+    const currentMatchNpcCount = matchdayPlayers.filter(p => p.isNPC).length;
+    setNpcName(`NPC ${currentMatchNpcCount + 1}`);
     setNpcJersey('');
     setNpcTargetTeam(targetTeam);
     setNpcIncludeInStats(false);
     setShowNpcModal(true);
   };
 
-  const handleAddNpcSubmit = async (e: React.FormEvent) => {
+  const openEditNpcModal = (player: typeof players[0]) => {
+    setEditingNpcId(player.id);
+    setNpcName(player.name);
+    setNpcJersey(player.jersey_number !== null && player.jersey_number !== undefined ? String(player.jersey_number) : '');
+    setNpcTargetTeam(getPlayerTeam(player.id));
+    setNpcIncludeInStats(!!player.includeInStats);
+    setShowNpcModal(true);
+  };
+
+  const handleNpcSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentMatch || !npcName.trim()) return;
 
     const trimmedName = npcName.trim();
     const jerseyNum = npcJersey.trim() ? parseInt(npcJersey.trim()) : null;
+    const validJersey = (jerseyNum !== null && !isNaN(jerseyNum)) ? jerseyNum : null;
+
+    if (editingNpcId) {
+      await updatePlayer(editingNpcId, {
+        name: trimmedName,
+        jersey_number: validJersey,
+        includeInStats: npcIncludeInStats,
+      });
+      updateMatchTeam(currentMatch.id, editingNpcId, npcTargetTeam);
+
+      setShowNpcModal(false);
+      setEditingNpcId(null);
+      addToast({
+        type: 'success',
+        message: t('matchday.toast_npc_updated', { name: trimmedName }) || `Đã cập nhật thông tin ${trimmedName}`
+      });
+      return;
+    }
 
     const newId = await addPlayer({
       name: trimmedName,
-      jersey_number: (jerseyNum !== null && !isNaN(jerseyNum)) ? jerseyNum : null,
+      jersey_number: validJersey,
       positions: [],
       isNPC: true,
+      matchId: currentMatch.id,
       includeInStats: npcIncludeInStats,
       attendance: 'present',
     });
@@ -476,19 +521,19 @@ export default function Matchday() {
   };
 
   const activeSquadPlayers = useMemo(() => {
-    return players.filter(p => !isPlayerHidden(p, matches));
-  }, [players, matches]);
+    return matchdayPlayers.filter(p => !isPlayerHidden(p, matches) && !p.isNPC);
+  }, [matchdayPlayers, matches]);
 
   const presentPlayers = useMemo(() => {
-    return [...players]
+    return [...matchdayPlayers]
       .filter(p => getPlayerAttendance(p.id) === 'present')
       .sort((a, b) => {
-        const aIsGuest = a.isBorrowed || a.isYouth ? 1 : 0;
-        const bIsGuest = b.isBorrowed || b.isYouth ? 1 : 0;
+        const aIsGuest = a.isBorrowed || a.isYouth || a.isNPC ? 1 : 0;
+        const bIsGuest = b.isBorrowed || b.isYouth || b.isNPC ? 1 : 0;
         if (aIsGuest !== bIsGuest) return aIsGuest - bIsGuest;
         return compareVietnameseNames(a.name, b.name);
       });
-  }, [players, currentMatch]);
+  }, [matchdayPlayers, currentMatch]);
 
   const presentCount = presentPlayers.length;
   // Absent and pending only count active squad players, not hidden players
@@ -647,7 +692,8 @@ export default function Matchday() {
                   onChange={val => setNewMatchData({ ...newMatchData, matchType: val as any })}
                   options={[
                     { value: 'internal', label: t('matchday.type_internal') },
-                    { value: 'friendly', label: t('matchday.type_friendly') }
+                    { value: 'friendly', label: t('matchday.type_friendly') },
+                    { value: 'tournament', label: t('matchday.type_tournament') }
                   ]}
                 />
               </div>
@@ -769,10 +815,26 @@ export default function Matchday() {
     const seasonRange = getCurrentSeasonRange(settings);
     const hasSeasonConfig = !!seasonRange?.hasSeasonConfig;
 
-    const filteredMatches = matches.filter(m => {
+    const seasonMatches = matches.filter(m => {
       // Season filter
       if (filterMode === 'current_season' && hasSeasonConfig) {
         if (!isMatchInSeason(m.date, seasonRange)) return false;
+      }
+      return true;
+    });
+
+    const countAll = seasonMatches.length;
+    const countInternal = seasonMatches.filter(m => (m.matchType || 'internal') === 'internal').length;
+    const countFriendly = seasonMatches.filter(m => m.matchType === 'friendly').length;
+    const countLive = seasonMatches.filter(m => m.status === 'live').length;
+
+    const filteredMatches = seasonMatches.filter(m => {
+      // Category / Status filter
+      if (matchCategoryFilter === 'live') {
+        if (m.status !== 'live') return false;
+      } else if (matchCategoryFilter !== 'all') {
+        const type = m.matchType || 'internal';
+        if (type !== matchCategoryFilter) return false;
       }
 
       // Search filter
@@ -801,7 +863,7 @@ export default function Matchday() {
     let seasonGoalsFor = 0;
     let seasonGoalsAgainst = 0;
 
-    filteredMatches.forEach(m => {
+    seasonMatches.forEach(m => {
       if (m.status === 'finished' && m.matchType !== 'internal') {
         const us = m.scoreUs ?? 0;
         const opp = m.scoreOpponent ?? 0;
@@ -1061,18 +1123,78 @@ export default function Matchday() {
           {/* 👈 LEFT COLUMN: Match Lists (8 cols on lg, below stats on mobile) */}
           <div className="lg:col-span-8 flex flex-col gap-6 lg:order-1">
             
-            {/* Search Filter */}
-            <div className="relative w-full">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                <Search size={16} className="text-text-muted" />
+            {/* Search & Category Filter */}
+            <div className="flex flex-col gap-3">
+              {/* Search Filter */}
+              <div className="relative w-full">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <Search size={16} className="text-text-muted" />
+                </div>
+                <input
+                  type="text"
+                  placeholder={t('matchday.search_placeholder', 'Tìm kiếm đối thủ...')}
+                  value={matchSearchQuery}
+                  onChange={(e) => setMatchSearchQuery(e.target.value)}
+                  className="w-full bg-surface border-2 border-border-main text-text-main py-2.5 pl-10 pr-10 outline-none focus:border-primary transition-colors text-sm placeholder:text-text-muted/60 font-medium"
+                />
+                {matchSearchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setMatchSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-main p-1 transition-colors"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
               </div>
-              <input
-                type="text"
-                placeholder={t('matchday.search_placeholder', 'Tìm kiếm đối thủ...')}
-                value={matchSearchQuery}
-                onChange={(e) => setMatchSearchQuery(e.target.value)}
-                className="w-full bg-surface border-2 border-border-main text-text-main py-2.5 pl-10 pr-3 outline-none focus:border-primary transition-colors text-sm placeholder:text-text-muted/60 font-medium"
-              />
+
+              {/* Category Filter Pills */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 hide-scrollbar">
+                <button
+                  type="button"
+                  onClick={() => setMatchCategoryFilter('all')}
+                  className={`px-3.5 py-2 text-xs font-display uppercase tracking-wider font-bold border-2 transition-all shrink-0 active:scale-95 ${
+                    matchCategoryFilter === 'all'
+                      ? 'bg-primary text-white border-primary shadow-sm'
+                      : 'bg-surface text-text-muted border-border-main hover:border-primary/50'
+                  }`}
+                >
+                  {t('roster.filter_all', 'Tất cả')} ({countAll})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMatchCategoryFilter('live')}
+                  className={`px-3.5 py-2 text-xs font-display uppercase tracking-wider font-bold border-2 transition-all shrink-0 active:scale-95 ${
+                    matchCategoryFilter === 'live'
+                      ? 'bg-rose-600 text-white border-rose-600 shadow-sm'
+                      : 'bg-surface text-text-muted border-border-main hover:border-rose-500/50'
+                  }`}
+                >
+                  {t('matchday.live_tab', 'Đang diễn ra')} ({countLive})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMatchCategoryFilter('internal')}
+                  className={`px-3.5 py-2 text-xs font-display uppercase tracking-wider font-bold border-2 transition-all shrink-0 active:scale-95 ${
+                    matchCategoryFilter === 'internal'
+                      ? 'bg-primary text-white border-primary shadow-sm'
+                      : 'bg-surface text-text-muted border-border-main hover:border-primary/50'
+                  }`}
+                >
+                  {t('matchday.type_internal', 'Nội bộ')} ({countInternal})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMatchCategoryFilter('friendly')}
+                  className={`px-3.5 py-2 text-xs font-display uppercase tracking-wider font-bold border-2 transition-all shrink-0 active:scale-95 ${
+                    matchCategoryFilter === 'friendly'
+                      ? 'bg-secondary text-white border-secondary shadow-sm'
+                      : 'bg-surface text-text-muted border-border-main hover:border-secondary/50'
+                  }`}
+                >
+                  {t('matchday.type_friendly', 'Đối đầu')} ({countFriendly})
+                </button>
+              </div>
             </div>
 
             {/* LIVE MATCHES */}
@@ -1115,7 +1237,19 @@ export default function Matchday() {
             {/* Empty Search Result */}
             {liveMatches.length === 0 && upcomingMatches.length === 0 && finishedMatches_list.length === 0 && (
               <div className="p-8 text-center bg-surface border-2 border-border-main text-text-muted text-sm font-medium">
-                {t('matchday.no_matches_found', 'Không tìm thấy trận đấu nào phù hợp')}
+                <p>{t('matchday.no_matches_found', 'Không tìm thấy trận đấu nào phù hợp')}</p>
+                {(matchSearchQuery || matchCategoryFilter !== 'all') && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMatchSearchQuery('');
+                      setMatchCategoryFilter('all');
+                    }}
+                    className="inline-block mt-3 px-3.5 py-1.5 text-xs font-display font-bold uppercase tracking-wider text-primary border border-primary/30 hover:bg-primary/10 transition-colors"
+                  >
+                    {t('matchday.clear_filter', 'Xóa bộ lọc')}
+                  </button>
+                )}
               </div>
             )}
 
@@ -1141,7 +1275,8 @@ export default function Matchday() {
                 onChange={val => setNewMatchData({ ...newMatchData, matchType: val as any })}
                 options={[
                   { value: 'internal', label: t('matchday.type_internal') },
-                  { value: 'friendly', label: t('matchday.type_friendly') }
+                  { value: 'friendly', label: t('matchday.type_friendly') },
+                  { value: 'tournament', label: t('matchday.type_tournament') }
                 ]}
               />
             </div>
@@ -1682,7 +1817,7 @@ export default function Matchday() {
 
           {/* Player List (2 Columns on MD+) */}
           {(() => {
-            const sorted = [...players]
+            const sorted = [...matchdayPlayers]
               .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
               .sort((a, b) => comparePlayers(a, b, matches));
 
@@ -1702,7 +1837,22 @@ export default function Matchday() {
                     </span>
                     <div className="flex flex-col min-w-0 flex-1">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="font-bold text-text-main text-sm sm:text-base uppercase truncate">{p.name}</span>
+                        {p.isNPC && currentMatch.status !== 'finished' ? (
+                          <button
+                            type="button"
+                            onClick={() => openEditNpcModal(p)}
+                            className="font-bold text-text-main hover:text-primary text-sm sm:text-base uppercase truncate flex items-center gap-1.5 group/npc cursor-pointer text-left transition-colors"
+                            title={t('matchday.click_to_edit_npc', 'Nhấn để sửa thông tin NPC')}
+                          >
+                            <span className="truncate group-hover/npc:underline">{p.name}</span>
+                            <span className="text-[10px] font-bold font-display uppercase tracking-wider bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-400/30 px-1.5 py-0.2 shrink-0 group-hover/npc:border-primary/40 group-hover/npc:text-primary transition-colors">
+                              NPC
+                            </span>
+                            <Edit2 size={12} className="opacity-0 group-hover/npc:opacity-100 text-primary transition-opacity shrink-0" />
+                          </button>
+                        ) : (
+                          <span className="font-bold text-text-main text-sm sm:text-base uppercase truncate">{p.name}</span>
+                        )}
                         {isHidden && (
                           <span className="text-[10px] font-bold font-display uppercase tracking-wider px-1.5 py-0.2 bg-slate-700/10 text-slate-600 border border-slate-300 dark:border-slate-700 dark:text-slate-300">
                             {t('roster.hidden_badge', 'ẨN')}
@@ -1910,11 +2060,31 @@ export default function Matchday() {
                         className="flex justify-between items-center py-2 border-b border-border-main last:border-0 hover:bg-surface-2 px-2 -mx-2 transition-colors group cursor-grab active:cursor-grabbing"
                       >
                         <div className="flex items-center gap-1.5 min-w-0 pr-2">
-                          <span className="font-bold text-text-main uppercase text-sm truncate">{p.name}</span>
-                          {p.isNPC && (
-                            <span className="text-[9px] font-bold uppercase tracking-wider bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-400/30 px-1 py-0.2 shrink-0">
-                              NPC
-                            </span>
+                          {p.isNPC && currentMatch.status !== 'finished' ? (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openEditNpcModal(p);
+                              }}
+                              className="font-bold text-text-main hover:text-primary uppercase text-sm truncate flex items-center gap-1.5 group/npc cursor-pointer text-left transition-colors"
+                              title={t('matchday.click_to_edit_npc', 'Nhấn để sửa thông tin NPC')}
+                            >
+                              <span className="truncate group-hover/npc:underline">{p.name}</span>
+                              <span className="text-[9px] font-bold uppercase tracking-wider bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-400/30 px-1 py-0.2 shrink-0 group-hover/npc:border-primary/40 group-hover/npc:text-primary transition-colors">
+                                NPC
+                              </span>
+                              <Edit2 size={11} className="opacity-0 group-hover/npc:opacity-100 text-primary transition-opacity shrink-0" />
+                            </button>
+                          ) : (
+                            <>
+                              <span className="font-bold text-text-main uppercase text-sm truncate">{p.name}</span>
+                              {p.isNPC && (
+                                <span className="text-[9px] font-bold uppercase tracking-wider bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-400/30 px-1 py-0.2 shrink-0">
+                                  NPC
+                                </span>
+                              )}
+                            </>
                           )}
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
@@ -2000,11 +2170,31 @@ export default function Matchday() {
                   className="flex items-center justify-between bg-surface border border-border-main cursor-grab active:cursor-grabbing w-full px-3 py-2"
                 >
                   <div className="flex items-center gap-1.5 min-w-0 pr-2">
-                    <span className="font-bold text-text-main text-sm uppercase truncate">{p.name}</span>
-                    {p.isNPC && (
-                      <span className="text-[9px] font-bold uppercase tracking-wider bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-400/30 px-1 py-0.2 shrink-0">
-                        NPC
-                      </span>
+                    {p.isNPC && currentMatch.status !== 'finished' ? (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openEditNpcModal(p);
+                        }}
+                        className="font-bold text-text-main hover:text-primary text-sm uppercase truncate flex items-center gap-1.5 group/npc cursor-pointer text-left transition-colors"
+                        title={t('matchday.click_to_edit_npc', 'Nhấn để sửa thông tin NPC')}
+                      >
+                        <span className="truncate group-hover/npc:underline">{p.name}</span>
+                        <span className="text-[9px] font-bold uppercase tracking-wider bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-400/30 px-1 py-0.2 shrink-0 group-hover/npc:border-primary/40 group-hover/npc:text-primary transition-colors">
+                          NPC
+                        </span>
+                        <Edit2 size={11} className="opacity-0 group-hover/npc:opacity-100 text-primary transition-opacity shrink-0" />
+                      </button>
+                    ) : (
+                      <>
+                        <span className="font-bold text-text-main text-sm uppercase truncate">{p.name}</span>
+                        {p.isNPC && (
+                          <span className="text-[9px] font-bold uppercase tracking-wider bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-400/30 px-1 py-0.2 shrink-0">
+                            NPC
+                          </span>
+                        )}
+                      </>
                     )}
                   </div>
                   <div className="flex items-center gap-1 shrink-0 ml-auto">
@@ -2917,17 +3107,28 @@ export default function Matchday() {
         </div>
       </BottomSheet>
 
-      {/* ADD NPC MODAL */}
+      {/* ADD / EDIT NPC MODAL */}
       <BottomSheet
         isOpen={showNpcModal}
-        onClose={() => setShowNpcModal(false)}
+        onClose={() => {
+          setShowNpcModal(false);
+          setEditingNpcId(null);
+        }}
         title={
           <span className="flex items-center gap-2">
-            <UserPlus size={24} className="text-text-muted" /> {t('matchday.add_npc_title', 'THÊM CẦU THỦ NPC / KHÁCH')}
+            {editingNpcId ? (
+              <>
+                <Edit2 size={24} className="text-text-muted" /> {t('matchday.edit_npc_title', 'CHỈNH SỬA CẦU THỦ NPC / KHÁCH')}
+              </>
+            ) : (
+              <>
+                <UserPlus size={24} className="text-text-muted" /> {t('matchday.add_npc_title', 'THÊM CẦU THỦ NPC / KHÁCH')}
+              </>
+            )}
           </span>
         }
       >
-        <form onSubmit={handleAddNpcSubmit} className="space-y-4">
+        <form onSubmit={handleNpcSubmit} className="space-y-4">
           {/* NPC Name */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">
@@ -2954,7 +3155,7 @@ export default function Matchday() {
               max="99"
               value={npcJersey}
               onChange={e => setNpcJersey(e.target.value)}
-              placeholder="VD: 99"
+              placeholder={t('matchday.npc_number_placeholder', 'VD: 99')}
               className="w-full bg-surface-2 border-2 border-border-main p-3 text-text-main font-bold outline-none focus:border-primary"
             />
           </div>
@@ -3021,7 +3222,10 @@ export default function Matchday() {
           <div className="pt-2 flex gap-3">
             <button
               type="button"
-              onClick={() => setShowNpcModal(false)}
+              onClick={() => {
+                setShowNpcModal(false);
+                setEditingNpcId(null);
+              }}
               className="flex-1 py-3 bg-surface hover:bg-surface-2 text-text-muted border-2 border-border-main font-display text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
             >
               {t('matchday.cancel', 'HỦY BỎ')}
@@ -3030,7 +3234,9 @@ export default function Matchday() {
               type="submit"
               className="flex-1 py-3 bg-primary text-white hover:brightness-110 border-2 border-primary font-display text-xs font-bold uppercase tracking-wider transition-all shadow-xs cursor-pointer active:scale-98"
             >
-              {t('matchday.add_npc_btn', 'THÊM NPC')}
+              {editingNpcId 
+                ? (t('matchday.save_npc_changes', 'LƯU THAY ĐỔI') || 'LƯU THAY ĐỔI')
+                : (t('matchday.add_npc_btn', 'THÊM NPC') || 'THÊM NPC')}
             </button>
           </div>
         </form>
@@ -3093,7 +3299,7 @@ export default function Matchday() {
         isOpen={showExportModal}
         onClose={() => setShowExportModal(false)}
         match={currentMatch}
-        players={players}
+        players={matchdayPlayers}
       />
 
 

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ArrowLeft, Calculator, Copy, Check, Save, Users, Landmark, Coins, Scale, Trophy, RefreshCw, ChevronDown, ChevronUp, UserCheck, Sun, Moon, MapPin } from 'lucide-react';
+import { ArrowLeft, Calculator, Copy, Check, CheckCheck, RotateCcw, Clock, Save, Users, Landmark, Coins, Scale, Trophy, RefreshCw, ChevronDown, ChevronUp, UserCheck, MapPin } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { usePlayerStore } from '../store/usePlayerStore';
@@ -37,7 +37,7 @@ export default function FeeSplitter() {
   }, []);
 
   const { players } = usePlayerStore();
-  const { matches } = useMatchStore();
+  const { matches, toggleMatchFeePayment, setAllMatchFeePayments } = useMatchStore();
   const { venues } = useVenueStore();
   const { addTransaction } = useFundStore();
   const addToast = useToastStore(state => state.addToast);
@@ -191,18 +191,6 @@ export default function FeeSplitter() {
     }
   }, [selectedMatch, headcountMode, venues]);
 
-  const handleSelectSlot = (slot: 'day' | 'night', venueToUse = currentVenue) => {
-    setActiveTimeSlot(slot);
-    if (venueToUse) {
-      const price = slot === 'day' 
-        ? (venueToUse.priceDay || venueToUse.priceNight) 
-        : (venueToUse.priceNight || venueToUse.priceDay);
-      if (price) {
-        setPitchFee(price);
-      }
-    }
-  };
-
   const handleSelectVenue = (venue: typeof venues[0] | null) => {
     if (!venue) {
       setSelectedVenueId('__none__');
@@ -235,7 +223,7 @@ export default function FeeSplitter() {
 
 
   // Compute present players for selected match
-  const matchPresentPlayerIds = useMemo(() => {
+  const matchPresentPlayers = useMemo(() => {
     if (!selectedMatchId) return [];
     const targetMatch = matches.find(m => m.id === selectedMatchId);
     if (!targetMatch) return [];
@@ -250,16 +238,83 @@ export default function FeeSplitter() {
       ? targetMatch.stats.map(s => s.playerId)
       : [];
 
-    return Array.from(new Set([...presentFromAttendance, ...presentFromStats]));
-  }, [selectedMatchId, matches]);
+    const presentIds = new Set([...presentFromAttendance, ...presentFromStats]);
+    const matched = players.filter(p => presentIds.has(p.id));
+    const foundIds = new Set(matched.map(p => p.id));
+    const missing = Array.from(presentIds).filter(id => !foundIds.has(id)).map(id => ({
+      id,
+      name: id,
+      jersey_number: null,
+      role: 'player'
+    }));
+    return [...matched, ...missing];
+  }, [selectedMatchId, matches, players]);
 
   // Sync selected player headcount
   const effectiveHeadcount = useMemo(() => {
     if (headcountMode === 'match') {
-      return matchPresentPlayerIds.length > 0 ? matchPresentPlayerIds.length : 1;
+      return matchPresentPlayers.length > 0 ? matchPresentPlayers.length : 1;
     }
     return headcountNumber > 0 ? headcountNumber : 1;
-  }, [headcountMode, matchPresentPlayerIds, headcountNumber]);
+  }, [headcountMode, matchPresentPlayers, headcountNumber]);
+
+  // Payment Tracking States & Filters
+  const [paymentFilter, setPaymentFilter] = useState<'all' | 'unpaid' | 'paid'>('all');
+  const [includePaymentStatusInMsg, setIncludePaymentStatusInMsg] = useState<boolean>(true);
+
+  // Derive paid status from selected match feePayments
+  const paidPlayerIds = useMemo(() => {
+    if (!selectedMatch?.feePayments) return new Set<string>();
+    return new Set(
+      Object.entries(selectedMatch.feePayments)
+        .filter(([_, isPaid]) => isPaid === true)
+        .map(([id]) => id)
+    );
+  }, [selectedMatch?.feePayments]);
+
+  const paidCount = useMemo(() => {
+    return matchPresentPlayers.filter(p => paidPlayerIds.has(p.id)).length;
+  }, [matchPresentPlayers, paidPlayerIds]);
+
+  const unpaidCount = Math.max(0, matchPresentPlayers.length - paidCount);
+
+  const filteredPresentPlayers = useMemo(() => {
+    if (paymentFilter === 'paid') {
+      return matchPresentPlayers.filter(p => paidPlayerIds.has(p.id));
+    }
+    if (paymentFilter === 'unpaid') {
+      return matchPresentPlayers.filter(p => !paidPlayerIds.has(p.id));
+    }
+    return matchPresentPlayers;
+  }, [matchPresentPlayers, paymentFilter, paidPlayerIds]);
+
+  const handleTogglePayment = (playerId: string) => {
+    if (selectedMatchId) {
+      toggleMatchFeePayment(selectedMatchId, playerId);
+    }
+  };
+
+  const handleMarkAllPaid = () => {
+    if (selectedMatchId && matchPresentPlayers.length > 0) {
+      const allIds = matchPresentPlayers.map(p => p.id);
+      setAllMatchFeePayments(selectedMatchId, allIds, true);
+      addToast({
+        type: 'success',
+        message: t('fee_splitter.toast_all_paid', 'Đã đánh dấu tất cả cầu thủ đã đóng tiền!')
+      });
+    }
+  };
+
+  const handleResetAllPaid = () => {
+    if (selectedMatchId && matchPresentPlayers.length > 0) {
+      const allIds = matchPresentPlayers.map(p => p.id);
+      setAllMatchFeePayments(selectedMatchId, allIds, false);
+      addToast({
+        type: 'info',
+        message: t('fee_splitter.toast_all_unpaid', 'Đã đặt lại trạng thái chưa đóng tiền!')
+      });
+    }
+  };
 
   // Rounding & Bank Info
   const [roundingMode, setRoundingMode] = useState<RoundingMode>('none');
@@ -408,13 +463,42 @@ export default function FeeSplitter() {
 
     // Include Present Players if selected via match
     if (headcountMode === 'match' && selectedMatchId) {
-      const selectedNames = players
-        .filter(p => matchPresentPlayerIds.includes(p.id))
-        .map(p => p.name)
-        .join(', ');
-      if (selectedNames) {
-        lines.push(`- ${msgAttendanceList} (${matchPresentPlayerIds.length}): ${selectedNames}`);
+      if (includePaymentStatusInMsg && matchPresentPlayers.length > 0) {
+        lines.push(`----------------------------------------`);
+        const percent = Math.round((paidCount / matchPresentPlayers.length) * 100);
+        lines.push(`${t('fee_splitter.collection_progress', 'TIẾN ĐỘ THU TIỀN').toUpperCase()}: ${paidCount}/${matchPresentPlayers.length} (${percent}%)`);
+
+        const paidNames = matchPresentPlayers
+          .filter(p => paidPlayerIds.has(p.id))
+          .map(p => `${p.jersey_number ? `#${p.jersey_number} ` : ''}${p.name}`);
+
+        const unpaidNames = matchPresentPlayers
+          .filter(p => !paidPlayerIds.has(p.id))
+          .map(p => `${p.jersey_number ? `#${p.jersey_number} ` : ''}${p.name}`);
+
+        if (paidNames.length > 0) {
+          lines.push(`[${t('fee_splitter.status_paid', 'ĐÃ ĐÓNG')}] (${paidNames.length}): ${paidNames.join(', ')}`);
+        }
+        if (unpaidNames.length > 0) {
+          lines.push(`[${t('fee_splitter.status_unpaid', 'CHƯA ĐÓNG')}] (${unpaidNames.length}): ${unpaidNames.join(', ')}`);
+        }
+      } else {
+        const selectedNames = matchPresentPlayers
+          .map(p => `${p.jersey_number ? `#${p.jersey_number} ` : ''}${p.name}`)
+          .join(', ');
+        if (selectedNames) {
+          lines.push(`- ${msgAttendanceList} (${matchPresentPlayers.length}): ${selectedNames}`);
+        }
       }
+    }
+
+    if (bankInfo.bankName || bankInfo.accountNumber) {
+      lines.push(`----------------------------------------`);
+      lines.push(`${t('fee_splitter.bank_info_heading', 'THÔNG TIN CHUYỂN KHOẢN').toUpperCase()}:`);
+      if (bankInfo.bankName) lines.push(`- ${t('fee_splitter.bank_name', 'Ngân hàng')}: ${bankInfo.bankName}`);
+      if (bankInfo.accountNumber) lines.push(`- ${t('fee_splitter.bank_account', 'STK')}: ${bankInfo.accountNumber}`);
+      if (bankInfo.accountHolder) lines.push(`- ${t('fee_splitter.account_holder', 'Chủ TK')}: ${bankInfo.accountHolder.toUpperCase()}`);
+      lines.push(`- ${msgPerPerson}: ${formatMoney(calculation.finalPerPerson)}`);
     }
 
     lines.push(`----------------------------------------`);
@@ -529,6 +613,49 @@ export default function FeeSplitter() {
               </div>
             </div>
 
+            {/* Collection Progress & Stats (when match is linked) */}
+            {isLinkedToMatch && matchPresentPlayers.length > 0 && (
+              <div className="bg-surface border-2 border-border-main p-3.5 space-y-2.5 my-2">
+                <div className="flex items-center justify-between text-xs font-bold">
+                  <span className="uppercase tracking-wider text-text-muted">
+                    {t('fee_splitter.collection_progress', 'Tiến độ thu tiền')}
+                  </span>
+                  <span className="font-mono text-primary font-bold">
+                    {paidCount}/{matchPresentPlayers.length} ({Math.round((paidCount / matchPresentPlayers.length) * 100)}%)
+                  </span>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="w-full h-2 bg-surface-2 border border-border-main overflow-hidden">
+                  <div 
+                    className="h-full bg-emerald-600 transition-all duration-300 ease-out"
+                    style={{ width: `${Math.round((paidCount / matchPresentPlayers.length) * 100)}%` }}
+                  />
+                </div>
+
+                {/* Breakdown Mini Cards */}
+                <div className="grid grid-cols-2 gap-2 pt-0.5">
+                  <div className="bg-emerald-500/10 border border-emerald-500/25 p-2 text-left">
+                    <div className="text-[10px] uppercase font-bold text-emerald-700 dark:text-emerald-400 tracking-wider">
+                      {t('fee_splitter.collected_label', 'Đã thu')} ({paidCount})
+                    </div>
+                    <div className="text-sm font-display font-bold text-emerald-700 dark:text-emerald-400 truncate mt-0.5">
+                      {formatMoney(paidCount * calculation.finalPerPerson)}
+                    </div>
+                  </div>
+
+                  <div className="bg-surface-2 border border-border-main p-2 text-left">
+                    <div className="text-[10px] uppercase font-bold text-text-muted tracking-wider">
+                      {t('fee_splitter.remaining_label', 'Còn thiếu')} ({unpaidCount})
+                    </div>
+                    <div className="text-sm font-display font-bold text-text-main truncate mt-0.5">
+                      {formatMoney(unpaidCount * calculation.finalPerPerson)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Financial Breakdown Rows */}
             <div className="text-xs text-text-muted border-t border-border-main pt-3 space-y-2 font-medium">
               <div className="flex justify-between items-center">
@@ -563,6 +690,34 @@ export default function FeeSplitter() {
             <h3 className="font-display text-xl uppercase text-primary border-b border-border-main pb-2">
               {t('fee_splitter.row5_title', '5. TIN NHẮN NHANH')}
             </h3>
+
+            {/* Payment status toggle in message */}
+            {headcountMode === 'match' && matchPresentPlayers.length > 0 && (
+              <div className="flex items-center justify-between py-1">
+                <label 
+                  onClick={() => setIncludePaymentStatusInMsg(!includePaymentStatusInMsg)}
+                  className="text-xs font-bold text-text-muted cursor-pointer select-none"
+                >
+                  {t('fee_splitter.include_payment_in_msg', 'Kèm trạng thái đóng tiền trong tin nhắn')}
+                </label>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={includePaymentStatusInMsg}
+                  onClick={() => setIncludePaymentStatusInMsg(!includePaymentStatusInMsg)}
+                  className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer border-2 transition-colors duration-200 ease-in-out focus:outline-none ${
+                    includePaymentStatusInMsg ? 'bg-primary border-primary' : 'bg-surface border-border-main'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-3.5 w-3.5 transform transition duration-200 ease-in-out my-auto ${
+                      includePaymentStatusInMsg ? 'translate-x-5 bg-white' : 'translate-x-0.5 bg-text-muted'
+                    }`}
+                  />
+                </button>
+              </div>
+            )}
+
             <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
               {t('fee_splitter.preview_msg_label', 'Xem trước văn bản tin nhắn:')}
             </div>
@@ -577,6 +732,61 @@ export default function FeeSplitter() {
               {copied ? <Check size={18} /> : <Copy size={18} />}
               <span>{copied ? t('fee_splitter.copied_btn', 'ĐÃ SAO CHÉP!') : t('fee_splitter.copy_msg_btn', 'SAO CHÉP NỘI DUNG TIN NHẮN')}</span>
             </button>
+
+            {/* Bank Info Accordion (Optional) */}
+            <div className="border-t border-border-main pt-3">
+              <button
+                type="button"
+                onClick={() => setShowBankDetails(!showBankDetails)}
+                className="w-full flex items-center justify-between text-xs font-bold uppercase tracking-wider text-text-muted hover:text-primary transition-colors cursor-pointer py-1"
+              >
+                <span>
+                  {t('fee_splitter.bank_info_heading', 'Thông tin tài khoản nhận tiền')}
+                </span>
+                {showBankDetails ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </button>
+
+              {showBankDetails && (
+                <div className="space-y-2.5 pt-2 text-xs">
+                  <div>
+                    <label className="block text-[11px] font-bold text-text-muted uppercase mb-1">
+                      {t('fee_splitter.bank_name', 'Tên Ngân Hàng')}
+                    </label>
+                    <input
+                      type="text"
+                      value={bankInfo.bankName}
+                      onChange={(e) => handleBankInfoChange('bankName', e.target.value)}
+                      placeholder="MB, VCB, Techcombank, MoMo..."
+                      className="w-full p-2 bg-surface border border-border-main text-text-main focus:border-primary focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-text-muted uppercase mb-1">
+                      {t('fee_splitter.bank_account', 'Số Tài Khoản')}
+                    </label>
+                    <input
+                      type="text"
+                      value={bankInfo.accountNumber}
+                      onChange={(e) => handleBankInfoChange('accountNumber', e.target.value)}
+                      placeholder="0123456789..."
+                      className="w-full p-2 bg-surface border border-border-main text-text-main focus:border-primary focus:outline-none font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-text-muted uppercase mb-1">
+                      {t('fee_splitter.account_holder', 'Chủ Tài Khoản')}
+                    </label>
+                    <input
+                      type="text"
+                      value={bankInfo.accountHolder}
+                      onChange={(e) => handleBankInfoChange('accountHolder', e.target.value)}
+                      placeholder="NGUYEN VAN A"
+                      className="w-full p-2 bg-surface border border-border-main text-text-main focus:border-primary focus:outline-none uppercase"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -640,6 +850,9 @@ export default function FeeSplitter() {
                 +
               </button>
             </div>
+            <p className="text-[11px] text-text-muted italic border-t border-border-main pt-2">
+              {t('fee_splitter.headcount_number_hint', "Chuyển sang 'Chọn từ trận đấu' để theo dõi chi tiết từng cầu thủ đã đóng tiền hay chưa.")}
+            </p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -720,26 +933,134 @@ export default function FeeSplitter() {
               )}
             </div>
 
-            {/* Present Players List */}
+            {/* Present Players List with Interactive Payment Tracking */}
             {selectedMatchId && (
-              <div className="border border-border-main p-3 bg-surface space-y-2">
-                <div className="text-xs font-bold border-b border-border-main pb-2">
-                  <span className="text-primary uppercase tracking-wider">{t('fee_splitter.present_players_label', 'Cầu thủ điểm danh có mặt')}</span>
+              <div className="border-2 border-border-main p-3.5 bg-surface space-y-3">
+                {/* Header with Title & Quick Actions */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border-main pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-primary uppercase tracking-wider">
+                      {t('fee_splitter.present_players_label', 'Cầu thủ điểm danh')}
+                    </span>
+                    <span className="text-xs font-mono font-bold text-text-muted">
+                      ({matchPresentPlayers.length} {t('fee_splitter.players_unit', 'người')})
+                    </span>
+                  </div>
+
+                  {/* Actions: Mark All Paid / Reset */}
+                  {matchPresentPlayers.length > 0 && (
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={handleMarkAllPaid}
+                        className="px-3 py-1.5 text-[11px] font-display font-bold uppercase tracking-wider bg-emerald-600 hover:bg-emerald-700 text-white transition-colors cursor-pointer"
+                        title={t('fee_splitter.mark_all_paid', 'Thu tất cả')}
+                      >
+                        {t('fee_splitter.mark_all_paid', 'Thu tất cả')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleResetAllPaid}
+                        className="px-3 py-1.5 text-[11px] font-display font-bold uppercase tracking-wider bg-surface-2 hover:bg-surface border border-border-main text-text-muted hover:text-text-main transition-colors cursor-pointer"
+                        title={t('fee_splitter.reset_all_paid', 'Đặt lại')}
+                      >
+                        {t('fee_splitter.reset_all_paid', 'Đặt lại')}
+                      </button>
+                    </div>
+                  )}
                 </div>
 
-                {matchPresentPlayerIds.length > 0 ? (
-                  <div className="grid grid-cols-2 @sm:grid-cols-3 gap-1.5 pt-1">
-                    {players
-                      .filter(p => matchPresentPlayerIds.includes(p.id))
-                      .map(p => (
-                        <div key={p.id} className="flex items-center gap-1.5 text-xs bg-primary/5 p-1.5 border border-primary/15 font-semibold text-primary">
-                          <UserCheck size={14} className="text-emerald-600 shrink-0" />
-                          <span className="truncate">
-                            {p.jersey_number ? `#${p.jersey_number} ` : ''}{p.name}
-                          </span>
-                        </div>
-                      ))}
+                {/* Filter Tabs (All / Unpaid / Paid) */}
+                {matchPresentPlayers.length > 0 && (
+                  <div className="flex items-center gap-1 bg-surface-2 p-1 border border-border-main text-xs font-bold">
+                    <button
+                      type="button"
+                      onClick={() => setPaymentFilter('all')}
+                      className={`flex-1 py-1.5 text-center transition-colors cursor-pointer ${
+                        paymentFilter === 'all'
+                          ? 'bg-surface text-primary border border-border-main font-bold shadow-xs'
+                          : 'text-text-muted hover:text-text-main'
+                      }`}
+                    >
+                      {t('fee_splitter.filter_all', 'Tất cả')} ({matchPresentPlayers.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentFilter('unpaid')}
+                      className={`flex-1 py-1.5 text-center transition-colors cursor-pointer ${
+                        paymentFilter === 'unpaid'
+                          ? 'bg-surface text-amber-700 dark:text-amber-400 border border-border-main font-bold shadow-xs'
+                          : 'text-text-muted hover:text-text-main'
+                      }`}
+                    >
+                      {t('fee_splitter.filter_unpaid', 'Chưa đóng')} ({unpaidCount})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentFilter('paid')}
+                      className={`flex-1 py-1.5 text-center transition-colors cursor-pointer ${
+                        paymentFilter === 'paid'
+                          ? 'bg-surface text-emerald-700 dark:text-emerald-400 border border-border-main font-bold shadow-xs'
+                          : 'text-text-muted hover:text-text-main'
+                      }`}
+                    >
+                      {t('fee_splitter.filter_paid', 'Đã đóng')} ({paidCount})
+                    </button>
                   </div>
+                )}
+
+                {/* Player Cards Grid */}
+                {matchPresentPlayers.length > 0 ? (
+                  filteredPresentPlayers.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                      {filteredPresentPlayers.map(p => {
+                        const isPaid = paidPlayerIds.has(p.id);
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => handleTogglePayment(p.id)}
+                            className={`flex items-center justify-between gap-3 p-2.5 border-2 text-left transition-all cursor-pointer ${
+                              isPaid
+                                ? 'bg-emerald-500/10 border-emerald-600 text-primary'
+                                : 'bg-surface border-border-main hover:border-primary/50 text-text-main'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                              <div className={`w-6 h-6 shrink-0 flex items-center justify-center font-mono text-xs font-bold border ${
+                                isPaid
+                                  ? 'bg-emerald-600 text-white border-emerald-600'
+                                  : 'bg-surface-2 text-text-muted border-border-main'
+                              }`}>
+                                {p.jersey_number || '•'}
+                              </div>
+                              <span className={`text-xs font-bold leading-snug break-words ${isPaid ? 'text-primary' : 'text-text-main'}`}>
+                                {p.name}
+                              </span>
+                            </div>
+
+                            <div className="shrink-0">
+                              {isPaid ? (
+                                <span className="px-2.5 py-1 bg-emerald-600 text-white font-display text-[10px] font-bold uppercase tracking-wider">
+                                  {t('fee_splitter.status_paid', 'ĐÃ ĐÓNG')}
+                                </span>
+                              ) : (
+                                <span className="px-2.5 py-1 bg-surface-2 border border-border-main text-text-muted font-display text-[10px] font-bold uppercase tracking-wider hover:text-text-main">
+                                  {t('fee_splitter.status_unpaid', 'CHƯA ĐÓNG')}
+                                </span>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-text-muted italic py-3 text-center border border-dashed border-border-main">
+                      {paymentFilter === 'unpaid'
+                        ? t('fee_splitter.no_unpaid_players', 'Không có cầu thủ nào chưa đóng tiền.')
+                        : t('fee_splitter.no_paid_players', 'Chưa có cầu thủ nào được đánh dấu đã đóng tiền.')}
+                    </p>
+                  )
                 ) : (
                   <p className="text-xs text-text-muted italic py-2 text-center">
                     {t('fee_splitter.no_present_players', "Chưa có cầu thủ nào được điểm danh 'Có mặt' trong trận đấu này.")}
@@ -830,20 +1151,6 @@ export default function FeeSplitter() {
                               {v.address}
                             </span>
                           )}
-                          {(v.priceDay || v.priceNight) && (
-                            <div className="flex items-center gap-3 text-xs font-medium text-text-muted mt-1.5 flex-wrap">
-                              {v.priceDay ? (
-                                <span className="text-amber-600 dark:text-amber-400 font-semibold">
-                                  ☀️ {t('venues.day_slot', 'Sáng')}: {formatMoney(v.priceDay)}
-                                </span>
-                              ) : null}
-                              {v.priceNight ? (
-                                <span className="text-indigo-500 dark:text-indigo-400 font-semibold">
-                                  🌙 {t('venues.night_slot', 'Tối')}: {formatMoney(v.priceNight)}
-                                </span>
-                              ) : null}
-                            </div>
-                          )}
                         </div>
                         {isSelected && <Check size={20} className="text-primary shrink-0 ml-2" />}
                       </button>
@@ -852,45 +1159,6 @@ export default function FeeSplitter() {
                 </div>
               </BottomSheet>
             </div>
-
-            {/* Day / Night Rate Quick Toggles */}
-            {currentVenue && (currentVenue.priceDay || currentVenue.priceNight) && (
-              <div className="flex gap-2 pt-1">
-                {currentVenue.priceDay ? (
-                  <button
-                    type="button"
-                    onClick={() => handleSelectSlot('day', currentVenue)}
-                    className={`flex-1 py-2 px-2.5 text-xs font-bold flex items-center justify-center gap-1.5 border-2 transition-all cursor-pointer ${
-                      activeTimeSlot === 'day'
-                        ? 'bg-amber-500/15 border-amber-500 text-amber-600 dark:text-amber-400 shadow-sm'
-                        : 'bg-surface border-border-main text-text-muted hover:border-amber-500/50'
-                    }`}
-                  >
-                    <Sun size={14} className="text-amber-500 shrink-0" />
-                    <span className="truncate">
-                      {t('venues.day_slot', 'Sáng')}: {formatMoney(currentVenue.priceDay)}
-                    </span>
-                  </button>
-                ) : null}
-
-                {currentVenue.priceNight ? (
-                  <button
-                    type="button"
-                    onClick={() => handleSelectSlot('night', currentVenue)}
-                    className={`flex-1 py-2 px-2.5 text-xs font-bold flex items-center justify-center gap-1.5 border-2 transition-all cursor-pointer ${
-                      activeTimeSlot === 'night'
-                        ? 'bg-indigo-500/15 border-indigo-500 text-indigo-500 dark:text-indigo-300 shadow-sm'
-                        : 'bg-surface border-border-main text-text-muted hover:border-indigo-500/50'
-                    }`}
-                  >
-                    <Moon size={14} className="text-indigo-400 shrink-0" />
-                    <span className="truncate">
-                      {t('venues.night_slot', 'Tối')}: {formatMoney(currentVenue.priceNight)}
-                    </span>
-                  </button>
-                ) : null}
-              </div>
-            )}
           </div>
         )}
 
