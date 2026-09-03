@@ -47,8 +47,9 @@ export const ExportMatchModal: React.FC<ExportMatchModalProps> = ({
     if (!match) return 'Match';
     const datePart = match.date || 'match';
     const opponentPart = match.matchType === 'internal' ? 'Noi_Bo' : (match.opponent ? match.opponent.replace(/[^a-zA-Z0-9]/g, '_') : 'Giao_Huu');
-    return `5TactiQ_Danh_Sach_${opponentPart}_${datePart}`;
-  }, [match]);
+    const teamClean = (settings.teamName || 'KAT_FC').replace(/[^a-zA-Z0-9]/g, '_');
+    return `${teamClean}_Danh_Sach_${opponentPart}_${datePart}`;
+  }, [match, settings.teamName]);
 
   const labels = useMemo(() => ({
     internalMatch: t('matchday.internal_match_caps', 'TRẬN ĐẤU NỘI BỘ'),
@@ -62,32 +63,47 @@ export const ExportMatchModal: React.FC<ExportMatchModalProps> = ({
     teamC: t('matchday.team_c', 'Đội C'),
     teamD: t('matchday.team_d', 'Đội D'),
     noBib: t('matchday.no_bib', 'Không Bib'),
-    jerseyNo: t('roster.number', 'Số áo'),
-    name: t('roster.name', 'Họ và tên'),
-    status: t('matchday.status_label', 'Trạng thái'),
-    team: t('matchday.team_label', 'Đội'),
-    position: t('roster.positions', 'Vị trí'),
-    type: t('roster.type_label', 'Phân loại'),
-    notes: t('roster.notes', 'Ghi chú'),
-    captain: t('roster.captain', 'Đội trưởng'),
-    guest: t('roster.guest', 'Cầu thủ khách'),
-    youth: t('roster.youth', 'Cầu thủ trẻ'),
-    official: t('roster.official', 'Chính thức')
+    csvNo: t('matchday.export_csv_no', 'STT'),
+    jerseyNo: t('matchday.export_csv_jersey', 'Số áo'),
+    name: t('matchday.export_csv_name', 'Họ và tên'),
+    status: t('matchday.export_csv_status', 'Trạng thái'),
+    team: t('matchday.export_csv_team', 'Đội'),
+    position: t('matchday.export_csv_position', 'Vị trí'),
+    type: t('matchday.export_csv_role', 'Phân loại'),
+    notes: t('matchday.export_csv_notes', 'Ghi chú'),
+    captain: t('matchday.export_role_captain', 'Đội trưởng'),
+    guest: t('matchday.export_role_guest', 'Cầu thủ khách'),
+    youth: t('matchday.export_role_youth', 'Cầu thủ trẻ'),
+    official: t('matchday.export_role_official', 'Chính thức'),
+    playersUnit: t('matchday.export_unit_players', 'CẦU THỦ'),
+    guestBadge: t('matchday.export_badge_guest', 'KHÁCH'),
+    youthBadge: t('matchday.export_badge_youth', 'TRẺ'),
+    absentAndReserves: t('matchday.export_absent_reserves', 'VẮNG MẶT & DỰ BỊ'),
+    noPlayersYet: t('matchday.no_players_yet', 'Chưa có cầu thủ'),
+    unknownVenue: t('matchday.unknown_venue', 'Chưa rõ sân')
   }), [t]);
 
   // Generate and render Canvas when options change or modal opens
   useEffect(() => {
     if (!isOpen || !match) return;
 
+    let isMounted = true;
     setIsRendering(true);
-    const timer = setTimeout(() => {
+
+    const render = async () => {
       try {
+        if (typeof document !== 'undefined' && document.fonts?.ready) {
+          await document.fonts.ready;
+        }
+        if (!isMounted) return;
+
         const canvas = renderRosterToCanvas({
           match,
           players,
           onlyPresent,
           groupByTeams: groupByTeams && match.matchType === 'internal',
           teamName: settings.teamName || '5TACTIQ',
+          theme: 'light',
           labels
         });
         canvasRef.current = canvas;
@@ -95,11 +111,17 @@ export const ExportMatchModal: React.FC<ExportMatchModalProps> = ({
       } catch (err) {
         console.error('Render canvas preview error:', err);
       } finally {
-        setIsRendering(false);
+        if (isMounted) {
+          setIsRendering(false);
+        }
       }
-    }, 50);
+    };
 
-    return () => clearTimeout(timer);
+    render();
+
+    return () => {
+      isMounted = false;
+    };
   }, [isOpen, match, players, onlyPresent, groupByTeams, settings.teamName, labels]);
 
   // Generate CSV text
@@ -281,6 +303,7 @@ export const ExportMatchModal: React.FC<ExportMatchModalProps> = ({
               </div>
             </div>
           )}
+
         </div>
 
         {/* 3. Live Preview Section */}
@@ -290,7 +313,7 @@ export const ExportMatchModal: React.FC<ExportMatchModalProps> = ({
               <span>{t('matchday.export_preview_png', 'Bản xem trước hình ảnh')}</span>
             </div>
 
-            <div className="bg-[#121216] border-2 border-border-main p-2 sm:p-3 overflow-hidden flex flex-col items-center justify-center min-h-[220px] max-h-[380px] shadow-inner relative group">
+            <div className="bg-[#e2e8f0] dark:bg-[#181a20] border-2 border-border-main p-2 sm:p-3 overflow-hidden flex flex-col items-center justify-center min-h-[220px] max-h-[380px] shadow-inner relative group">
               {isRendering ? (
                 <div className="flex flex-col items-center gap-2 text-text-muted py-8">
                   <RefreshCw className="animate-spin text-primary" size={28} />

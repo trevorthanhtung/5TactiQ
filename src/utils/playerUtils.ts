@@ -92,3 +92,15 @@ export function comparePlayers(a: Player, b: Player, matches: MatchInfo[] = []):
   // 4. Name
   return compareVietnameseNames(a.name, b.name);
 }
+
+/**
+ * Checks if a player is eligible for club statistics / leaderboards:
+ * - Must NOT be a per-match player (isPerMatch === true / letter 'M')
+ * - Must NOT be an NPC (unless explicitly includeInStats === true)
+ * - Only includes: Official / Main Squad, Loan (isBorrowed), and Youth (isYouth).
+ */
+export function isPlayerEligibleForStats(player: Player): boolean {
+  if (player.isPerMatch) return false;
+  if (player.isNPC && !player.includeInStats) return false;
+  return true;
+}

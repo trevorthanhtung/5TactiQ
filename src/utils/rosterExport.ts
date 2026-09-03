@@ -9,6 +9,7 @@ export interface RosterExportOptions {
   onlyPresent?: boolean;
   groupByTeams?: boolean;
   teamName?: string;
+  theme?: 'dark' | 'light';
   labels?: {
     internalMatch?: string;
     friendlyMatch?: string;
@@ -32,6 +33,13 @@ export interface RosterExportOptions {
     guest?: string;
     youth?: string;
     official?: string;
+    csvNo?: string;
+    playersUnit?: string;
+    guestBadge?: string;
+    youthBadge?: string;
+    absentAndReserves?: string;
+    noPlayersYet?: string;
+    unknownVenue?: string;
   };
 }
 
@@ -54,29 +62,30 @@ export const formatDateString = (dateStr?: string): string => {
 };
 
 /**
- * Safe CSV field escaping
+ * Safe CSV field escaping according to RFC 4180:
+ * - Does not wrap numbers or simple text in quotes unnecessarily
+ * - Wraps in double quotes only if field contains comma, quote, or newline
+ * - Escapes double quotes by doubling them ("")
  */
 const escapeCsvField = (field: string | number | null | undefined): string => {
-  if (field === null || field === undefined) return '""';
-  const str = String(field);
+  if (field === null || field === undefined) return '';
+  const str = String(field).trim();
+  if (str === '') return '';
   if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
     return `"${str.replace(/"/g, '""')}"`;
   }
-  return `"${str}"`;
+  return str;
 };
 
 /**
- * Generate UTF-8 CSV content with BOM for perfect Excel compatibility
+ * Generate standard UTF-8 CSV content with BOM for Microsoft Excel & Google Sheets
  */
 export const generateRosterCsv = (options: RosterExportOptions): string => {
-  const { match, players, onlyPresent = false, teamName = '5TactiQ', labels = {} } = options;
-
-  const matchTitle = match.matchType === 'internal'
-    ? (labels.internalMatch || 'Trận Đấu Nội Bộ')
-    : (match.opponent ? `VS ${match.opponent}` : (labels.friendlyMatch || 'Trận Giao Hữu'));
+  const { match, players, onlyPresent = false, labels = {} } = options;
 
   const attendanceMap = match.attendance || {};
   const teamsMap = match.teams || {};
+  const isInternal = match.matchType === 'internal';
 
   // Filter players
   let targetPlayers = [...players];
@@ -84,13 +93,27 @@ export const generateRosterCsv = (options: RosterExportOptions): string => {
     targetPlayers = targetPlayers.filter(p => attendanceMap[p.id] === 'present');
   }
 
-  // Sort players: present first, then jersey number, then name
+  // Sort players:
+  // 1. Group by Team if internal match: A -> B -> C -> D -> unassigned
+  // 2. Attendance status: present (0) -> pending (1) -> absent (2)
+  // 3. Jersey number: ascending numbers (1, 2, 5, 8...) -> unnumbered at the end
+  // 4. Name: Vietnamese locale string comparison
   targetPlayers.sort((a, b) => {
+    if (isInternal) {
+      const teamA = teamsMap[a.id] || 'Z';
+      const teamB = teamsMap[b.id] || 'Z';
+      if (teamA !== teamB) {
+        return teamA.localeCompare(teamB);
+      }
+    }
+
     const statusA = attendanceMap[a.id] || 'pending';
     const statusB = attendanceMap[b.id] || 'pending';
-    const statusWeight = { present: 0, pending: 1, absent: 2 };
-    if (statusWeight[statusA] !== statusWeight[statusB]) {
-      return statusWeight[statusA] - statusWeight[statusB];
+    const statusWeight: Record<string, number> = { present: 0, pending: 1, absent: 2 };
+    const weightA = statusWeight[statusA] ?? 1;
+    const weightB = statusWeight[statusB] ?? 1;
+    if (weightA !== weightB) {
+      return weightA - weightB;
     }
 
     const numA = (a.jersey_number !== null && a.jersey_number !== undefined && !isNaN(Number(a.jersey_number))) ? Number(a.jersey_number) : null;
@@ -102,36 +125,35 @@ export const generateRosterCsv = (options: RosterExportOptions): string => {
     } else if (numB !== null) {
       return 1;
     }
+
     return a.name.localeCompare(b.name, 'vi');
   });
 
-  const presentCount = players.filter(p => attendanceMap[p.id] === 'present').length;
-  const absentCount = players.filter(p => attendanceMap[p.id] === 'absent').length;
-  const pendingCount = players.filter(p => !attendanceMap[p.id] || attendanceMap[p.id] === 'pending').length;
-
   const lines: string[] = [];
 
-  // Metadata block
-  lines.push(`${escapeCsvField('ĐỘI BÓNG / CLB')},${escapeCsvField(teamName)}`);
-  lines.push(`${escapeCsvField('TRẬN ĐẤU')},${escapeCsvField(matchTitle)}`);
-  lines.push(`${escapeCsvField('THỜI GIAN')},${escapeCsvField(`${formatDateString(match.date)} ${match.time || ''}`.trim())}`);
-  lines.push(`${escapeCsvField('ĐỊA ĐIỂM')},${escapeCsvField(match.location || 'Chưa rõ sân')}`);
-  lines.push(`${escapeCsvField('TỔNG CÓ MẶT')},${escapeCsvField(presentCount)}`);
-  lines.push(`${escapeCsvField('TỔNG VẮNG')},${escapeCsvField(absentCount)}`);
-  lines.push(`${escapeCsvField('TỔNG CHƯA RÕ')},${escapeCsvField(pendingCount)}`);
-  lines.push(''); // Empty line
+  // Header row - Standard Rectangular Table (RFC 4180)
+  const headerFields = isInternal
+    ? [
+        escapeCsvField(labels.csvNo || 'STT'),
+        escapeCsvField(labels.team || 'Đội'),
+        escapeCsvField(labels.jerseyNo || 'Số áo'),
+        escapeCsvField(labels.name || 'Họ và tên'),
+        escapeCsvField(labels.position || 'Vị trí'),
+        escapeCsvField(labels.type || 'Phân loại'),
+        escapeCsvField(labels.status || 'Trạng thái'),
+        escapeCsvField(labels.notes || 'Ghi chú')
+      ]
+    : [
+        escapeCsvField(labels.csvNo || 'STT'),
+        escapeCsvField(labels.jerseyNo || 'Số áo'),
+        escapeCsvField(labels.name || 'Họ và tên'),
+        escapeCsvField(labels.position || 'Vị trí'),
+        escapeCsvField(labels.type || 'Phân loại'),
+        escapeCsvField(labels.status || 'Trạng thái'),
+        escapeCsvField(labels.notes || 'Ghi chú')
+      ];
 
-  // Header row
-  lines.push([
-    escapeCsvField('STT'),
-    escapeCsvField(labels.jerseyNo || 'Số áo'),
-    escapeCsvField(labels.name || 'Họ và tên'),
-    escapeCsvField(labels.status || 'Trạng thái'),
-    escapeCsvField(labels.team || 'Đội'),
-    escapeCsvField(labels.position || 'Vị trí'),
-    escapeCsvField(labels.type || 'Phân loại'),
-    escapeCsvField(labels.notes || 'Ghi chú')
-  ].join(','));
+  lines.push(headerFields.join(','));
 
   // Player rows
   targetPlayers.forEach((p, idx) => {
@@ -143,32 +165,48 @@ export const generateRosterCsv = (options: RosterExportOptions): string => {
       : (labels.pending || 'Chưa rõ');
 
     const rawTeam = teamsMap[p.id];
-    let teamText = '-';
+    let teamText = '';
     if (rawTeam === 'A') teamText = labels.teamA || 'Đội A';
     else if (rawTeam === 'B') teamText = labels.teamB || 'Đội B';
     else if (rawTeam === 'C') teamText = labels.teamC || 'Đội C';
     else if (rawTeam === 'D') teamText = labels.teamD || 'Đội D';
 
-    const posText = p.positions && p.positions.length > 0 ? p.positions.join(', ') : '-';
+    const posText = p.positions && p.positions.length > 0 ? p.positions.join(', ') : '';
 
     let typeText = labels.official || 'Chính thức';
     if (p.isCaptain) typeText = labels.captain || 'Đội trưởng';
     else if (p.isBorrowed) typeText = labels.guest || 'Cầu thủ khách';
     else if (p.isYouth) typeText = labels.youth || 'Cầu thủ trẻ';
 
-    lines.push([
-      escapeCsvField(idx + 1),
-      escapeCsvField(p.jersey_number !== null && p.jersey_number !== undefined ? p.jersey_number : '?'),
-      escapeCsvField(p.name),
-      escapeCsvField(statusText),
-      escapeCsvField(teamText),
-      escapeCsvField(posText),
-      escapeCsvField(typeText),
-      escapeCsvField(p.note || p.healthNote || '')
-    ].join(','));
+    const jerseyNumberStr = (p.jersey_number !== null && p.jersey_number !== undefined && !isNaN(Number(p.jersey_number)))
+      ? p.jersey_number
+      : '';
+
+    const rowFields = isInternal
+      ? [
+          escapeCsvField(idx + 1),
+          escapeCsvField(teamText),
+          escapeCsvField(jerseyNumberStr),
+          escapeCsvField(p.name),
+          escapeCsvField(posText),
+          escapeCsvField(typeText),
+          escapeCsvField(statusText),
+          escapeCsvField(p.note || p.healthNote || '')
+        ]
+      : [
+          escapeCsvField(idx + 1),
+          escapeCsvField(jerseyNumberStr),
+          escapeCsvField(p.name),
+          escapeCsvField(posText),
+          escapeCsvField(typeText),
+          escapeCsvField(statusText),
+          escapeCsvField(p.note || p.healthNote || '')
+        ];
+
+    lines.push(rowFields.join(','));
   });
 
-  // Prepend UTF-8 BOM (\uFEFF) so Excel opens UTF-8 properly without font corruption
+  // Prepend UTF-8 BOM (\uFEFF) so Excel on Windows opens UTF-8 without font corruption
   return '\uFEFF' + lines.join('\r\n');
 };
 
@@ -244,7 +282,7 @@ function drawRoundedRect(
 function drawLucideCalendar(ctx: CanvasRenderingContext2D, x: number, y: number, size: number = 14, color: string = '#94a3b8') {
   ctx.save();
   ctx.strokeStyle = color;
-  ctx.lineWidth = 1.4;
+  ctx.lineWidth = 1.5;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   
@@ -273,7 +311,7 @@ function drawLucideCalendar(ctx: CanvasRenderingContext2D, x: number, y: number,
 function drawLucideClock(ctx: CanvasRenderingContext2D, x: number, y: number, size: number = 14, color: string = '#94a3b8') {
   ctx.save();
   ctx.strokeStyle = color;
-  ctx.lineWidth = 1.4;
+  ctx.lineWidth = 1.5;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   
@@ -300,7 +338,7 @@ function drawLucideClock(ctx: CanvasRenderingContext2D, x: number, y: number, si
 function drawLucideMapPin(ctx: CanvasRenderingContext2D, x: number, y: number, size: number = 14, color: string = '#94a3b8') {
   ctx.save();
   ctx.strokeStyle = color;
-  ctx.lineWidth = 1.4;
+  ctx.lineWidth = 1.5;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   
@@ -322,9 +360,11 @@ function drawLucideMapPin(ctx: CanvasRenderingContext2D, x: number, y: number, s
   ctx.restore();
 }
 
+
+
 /**
  * Render match roster onto a high-definition HTML5 Canvas (1080px wide)
- * DESIGN PHILOSOPHY: Ultra-Clean, Minimalist Swiss/Editorial Football Match Sheet
+ * DESIGN PHILOSOPHY: Swiss Minimalist Editorial Match Sheet (Zero Neon, Zero Emoji AI-Slop)
  */
 export const renderRosterToCanvas = (
   options: RosterExportOptions
@@ -335,8 +375,48 @@ export const renderRosterToCanvas = (
     onlyPresent = false,
     groupByTeams = false,
     teamName = '5TACTIQ',
+    theme = 'light',
     labels = {}
   } = options;
+
+  const isDark = theme !== 'light';
+
+  // Strict Swiss Monochrome Palette (No neon, no candy colors)
+  const colors = isDark ? {
+    bg: '#0a0b0e',
+    cardBg: '#121318',
+    cardBorder: '#1f222a',
+    headerBg: '#161820',
+    headerBorder: '#262a34',
+    textPrimary: '#f8fafc',
+    textSecondary: '#a1a1aa',
+    textMuted: '#71717a',
+    outerBorder: '#262a34',
+    divider: '#1c1f26',
+    statBarBg: '#111318',
+    statBarBorder: '#1e2129',
+    numColor: '#f4f4f5',
+    numMuted: '#52525b',
+    tagColor: '#a1a1aa',
+    tagBorder: '#2e323d',
+  } : {
+    bg: '#ffffff',
+    cardBg: '#f8fafc',
+    cardBorder: '#e2e8f0',
+    headerBg: '#f1f5f9',
+    headerBorder: '#cbd5e1',
+    textPrimary: '#09090b',
+    textSecondary: '#52525b',
+    textMuted: '#71717a',
+    outerBorder: '#e4e4e7',
+    divider: '#e4e4e7',
+    statBarBg: '#f8fafc',
+    statBarBorder: '#e2e8f0',
+    numColor: '#09090b',
+    numMuted: '#94a3b8',
+    tagColor: '#52525b',
+    tagBorder: '#cbd5e1',
+  };
 
   const attendanceMap = match.attendance || {};
   const teamsMap = match.teams || {};
@@ -357,55 +437,57 @@ export const renderRosterToCanvas = (
   const contentWidth = canvasWidth - paddingX * 2; // 976px
 
   const ROW_HEIGHT = 44;
-  const TEAM_HEADER_HEIGHT = 38;
+  const ROW_GAP = 6;
+  const TEAM_HEADER_HEIGHT = 40;
 
   // Calculate layout structure
   const isInternalSplit = groupByTeams && match.matchType === 'internal';
   const activeTeams = (['A', 'B', 'C', 'D'] as const).slice(0, match.teamCount || 2);
-  
-  // Calculate dynamic canvas height
-  let estimatedHeight = 230; // Header area + stats bar + divider
+
+  // Exact Dynamic Height Calculation (No dead void)
+  // Header: padding top (48) + Club bar (24) + 14 + Main title (42) + 14 + Meta bar (20) + 18 + Divider (1) + 18 + Stats bar (38) + 24
+  const HEADER_HEIGHT = 48 + 24 + 14 + 42 + 14 + 20 + 18 + 1 + 18 + 38 + 24; // ~261px
+  let rosterContentHeight = 0;
 
   if (isInternalSplit) {
     if (activeTeams.length === 2) {
-      // 2 columns
       const countA = targetPlayers.filter(p => teamsMap[p.id] === 'A').length;
       const countB = targetPlayers.filter(p => teamsMap[p.id] === 'B').length;
       const maxRows = Math.max(countA, countB, 1);
-      estimatedHeight += TEAM_HEADER_HEIGHT + maxRows * ROW_HEIGHT + 36;
+      rosterContentHeight = TEAM_HEADER_HEIGHT + 8 + maxRows * (ROW_HEIGHT + ROW_GAP);
     } else if (activeTeams.length === 3) {
-      // 3 columns
       const countA = targetPlayers.filter(p => teamsMap[p.id] === 'A').length;
       const countB = targetPlayers.filter(p => teamsMap[p.id] === 'B').length;
       const countC = targetPlayers.filter(p => teamsMap[p.id] === 'C').length;
       const maxRows = Math.max(countA, countB, countC, 1);
-      estimatedHeight += TEAM_HEADER_HEIGHT + maxRows * ROW_HEIGHT + 36;
+      rosterContentHeight = TEAM_HEADER_HEIGHT + 8 + maxRows * (ROW_HEIGHT + ROW_GAP);
     } else {
-      // 4 teams: 2x2 grid
       const countA = targetPlayers.filter(p => teamsMap[p.id] === 'A').length;
       const countB = targetPlayers.filter(p => teamsMap[p.id] === 'B').length;
       const countC = targetPlayers.filter(p => teamsMap[p.id] === 'C').length;
       const countD = targetPlayers.filter(p => teamsMap[p.id] === 'D').length;
       const row1Max = Math.max(countA, countB, 1);
       const row2Max = Math.max(countC, countD, 1);
-      estimatedHeight += (TEAM_HEADER_HEIGHT + row1Max * ROW_HEIGHT + 24) + (TEAM_HEADER_HEIGHT + row2Max * ROW_HEIGHT + 36);
+      rosterContentHeight = (TEAM_HEADER_HEIGHT + 8 + row1Max * (ROW_HEIGHT + ROW_GAP)) + 14 + (TEAM_HEADER_HEIGHT + 8 + row2Max * (ROW_HEIGHT + ROW_GAP));
     }
   } else {
-    // 2-column standard list
-    const rows = Math.ceil(targetPlayers.length / 2);
-    estimatedHeight += rows * ROW_HEIGHT + 40;
+    const totalRows = Math.ceil(targetPlayers.length / 2);
+    rosterContentHeight = Math.max(totalRows, 1) * (ROW_HEIGHT + ROW_GAP);
   }
 
-  // Absent & Pending summary list (if not onlyPresent and any exist)
-  if (!onlyPresent && (absentPlayers.length > 0 || pendingPlayers.length > 0)) {
+  // Absent & Pending section
+  let otherSectionHeight = 0;
+  const hasOtherPlayers = !onlyPresent && (absentPlayers.length > 0 || pendingPlayers.length > 0);
+  if (hasOtherPlayers) {
     const otherCount = absentPlayers.length + pendingPlayers.length;
     const otherRows = Math.ceil(otherCount / 2);
-    estimatedHeight += 32 + otherRows * 36 + 24;
+    otherSectionHeight = 16 + 22 + 10 + otherRows * 32 + 10;
   }
 
-  estimatedHeight += 36; // Clean bottom padding
+  // Bottom padding
+  const BOTTOM_PADDING = 36;
 
-  const canvasHeight = Math.max(760, estimatedHeight);
+  const canvasHeight = Math.max(460, Math.ceil(HEADER_HEIGHT + rosterContentHeight + otherSectionHeight + BOTTOM_PADDING));
 
   const canvas = document.createElement('canvas');
   canvas.width = canvasWidth;
@@ -413,42 +495,32 @@ export const renderRosterToCanvas = (
   const ctx = canvas.getContext('2d');
   if (!ctx) return canvas;
 
-  // 1. Sleek, Minimalist Matte Dark Canvas Background
-  ctx.fillStyle = '#0f1013';
+  // 1. Pure Minimalist Canvas Background
+  ctx.fillStyle = colors.bg;
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-  // Subtle outer border
-  ctx.strokeStyle = '#1e2128';
-  ctx.lineWidth = 2;
+  // Outer Hairline Border
+  ctx.strokeStyle = colors.outerBorder;
+  ctx.lineWidth = 1;
   ctx.strokeRect(1, 1, canvasWidth - 2, canvasHeight - 2);
 
   // 2. Minimalist Header
-  let currentY = 46;
+  let currentY = 48;
 
-  // Club Name & Match Type in elegant single row
-  ctx.fillStyle = '#94a3b8';
-  ctx.font = 'bold 15px "Inter", sans-serif';
-  ctx.letterSpacing = '1.5px';
-  const clubName = (teamName || '5TACTIQ').toUpperCase();
-  ctx.fillText(clubName, paddingX, currentY);
-
-  const matchTypeStr = match.matchType === 'internal'
-    ? (labels.internalMatch || 'TRẬN ĐẤU NỘI BỘ').toUpperCase()
-    : match.matchType === 'tournament'
-    ? (labels.tournamentMatch || 'GIẢI ĐẤU').toUpperCase()
-    : (labels.friendlyMatch || 'TRẬN GIAO HỮU').toUpperCase();
-
-  ctx.textAlign = 'right';
-  ctx.fillStyle = '#64748b';
-  ctx.font = '600 13px "Inter", sans-serif';
-  ctx.fillText(matchTypeStr, canvasWidth - paddingX, currentY);
+  // Club Name
+  const clubName = (teamName || 'KAT FC').toUpperCase();
+  ctx.fillStyle = colors.textSecondary;
+  ctx.font = '700 13px "Inter", sans-serif';
+  ctx.letterSpacing = '2.5px';
   ctx.textAlign = 'left';
+  ctx.fillText(clubName, paddingX, currentY);
 
   currentY += 36;
 
-  // Main Match Title
-  ctx.fillStyle = '#f8fafc';
-  ctx.font = 'bold 36px "Oswald", "Inter", sans-serif';
+  // Main Match Title (Clean, Confident Swiss Typography)
+  ctx.letterSpacing = '0px';
+  ctx.fillStyle = colors.textPrimary;
+  ctx.font = '800 36px "Barlow Condensed", "Oswald", "Inter", sans-serif';
   const mainTitleText = match.matchType === 'internal'
     ? (labels.internalMatch || 'TRẬN ĐẤU NỘI BỘ').toUpperCase()
     : match.opponent
@@ -456,153 +528,215 @@ export const renderRosterToCanvas = (
     : 'DANH SÁCH THI ĐẤU';
   ctx.fillText(mainTitleText, paddingX, currentY);
 
-  currentY += 30;
-
-  // Match Meta Bar with Vector Lucide Icons (Date, Time, Venue, Weather)
-  ctx.font = '500 14px "Inter", sans-serif';
-  ctx.fillStyle = '#94a3b8';
-  let curMetaX = paddingX;
-  const metaY = currentY;
-  const iconY = metaY - 12;
-
-  // 1. Date with Lucide Calendar
-  drawLucideCalendar(ctx, curMetaX, iconY, 15, '#94a3b8');
-  curMetaX += 20;
-  const dateText = formatDateString(match.date);
-  ctx.fillText(dateText, curMetaX, metaY);
-  curMetaX += ctx.measureText(dateText).width + 14;
-
-  // 2. Time with Lucide Clock (if present)
-  if (match.time) {
-    drawLucideClock(ctx, curMetaX, iconY, 15, '#94a3b8');
-    curMetaX += 20;
-    ctx.fillText(match.time, curMetaX, metaY);
-    curMetaX += ctx.measureText(match.time).width + 14;
-  }
-
-  // Dot separator
-  ctx.fillStyle = '#475569';
-  ctx.fillText('•', curMetaX, metaY);
-  curMetaX += 14;
-
-  // 3. Venue with Lucide MapPin
-  const venueStr = match.location || 'Chưa rõ sân';
-  drawLucideMapPin(ctx, curMetaX, iconY, 15, '#94a3b8');
-  curMetaX += 20;
-  ctx.fillStyle = '#94a3b8';
-  ctx.fillText(venueStr, curMetaX, metaY);
-  curMetaX += ctx.measureText(venueStr).width + 14;
-
   currentY += 28;
 
-  // Minimalist Summary Strip (Counters with subtle color dots)
-  drawRoundedRect(ctx, paddingX, currentY, contentWidth, 38, 6, '#15171d', '#222631', 1);
+  // Match Meta Bar: Kickoff & Venue
+  ctx.font = '500 13px "Inter", sans-serif';
+  ctx.fillStyle = colors.textSecondary;
+  let curMetaX = paddingX;
+  const metaY = currentY;
+  const iconY = metaY - 11;
+
+  // Date
+  drawLucideCalendar(ctx, curMetaX, iconY, 14, colors.textSecondary);
+  curMetaX += 19;
+  const dateText = formatDateString(match.date);
+  ctx.fillText(dateText, curMetaX, metaY);
+  curMetaX += ctx.measureText(dateText).width + 12;
+
+  // Time
+  if (match.time) {
+    drawLucideClock(ctx, curMetaX, iconY, 14, colors.textSecondary);
+    curMetaX += 19;
+    ctx.fillText(match.time, curMetaX, metaY);
+    curMetaX += ctx.measureText(match.time).width + 12;
+  }
+
+  // Separator Dot
+  ctx.fillStyle = colors.textMuted;
+  ctx.fillText('•', curMetaX, metaY);
+  curMetaX += 12;
+
+  // Venue
+  const venueStr = match.location || labels.unknownVenue || 'Chưa rõ sân';
+  drawLucideMapPin(ctx, curMetaX, iconY, 14, colors.textSecondary);
+  curMetaX += 19;
+  ctx.fillStyle = colors.textSecondary;
+  ctx.fillText(venueStr, curMetaX, metaY);
+
+  currentY += 20;
+
+  // Hairline Divider below Header
+  ctx.strokeStyle = colors.divider;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(paddingX, currentY);
+  ctx.lineTo(canvasWidth - paddingX, currentY);
+  ctx.stroke();
+
+  currentY += 16;
+
+  // 3. Minimalist Attendance Stats Strip (Zero Emojis, Pure Tabular Typography)
+  drawRoundedRect(ctx, paddingX, currentY, contentWidth, 38, 4, colors.statBarBg, colors.statBarBorder, 1);
+
+  ctx.font = '600 12px "Inter", sans-serif';
+  ctx.letterSpacing = '0.5px';
+  ctx.textAlign = 'left';
+
+  let statX = paddingX + 20;
+  const statY = currentY + 24;
 
   // Present
-  ctx.fillStyle = '#22c55e';
-  ctx.beginPath();
-  ctx.arc(paddingX + 22, currentY + 19, 4.5, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.fillStyle = colors.textMuted;
+  ctx.fillText((labels.present || 'CÓ MẶT').toUpperCase(), statX, statY);
+  statX += ctx.measureText((labels.present || 'CÓ MẶT').toUpperCase()).width + 8;
+  ctx.fillStyle = colors.textPrimary;
+  ctx.font = '800 14px "Inter", sans-serif';
+  ctx.fillText(`${presentPlayers.length}`, statX, statY);
+  statX += ctx.measureText(`${presentPlayers.length}`).width + 28;
 
-  ctx.fillStyle = '#f8fafc';
-  ctx.font = 'bold 14px "Inter", sans-serif';
-  ctx.fillText(`${presentPlayers.length}`, paddingX + 34, currentY + 24);
-  ctx.fillStyle = '#94a3b8';
-  ctx.font = '500 13px "Inter", sans-serif';
-  ctx.fillText((labels.present || 'Có mặt').toUpperCase(), paddingX + 54, currentY + 24);
+  // Divider dot
+  ctx.fillStyle = colors.textMuted;
+  ctx.fillText('•', statX - 14, statY);
 
   // Absent
-  const absentX = paddingX + 180;
-  ctx.fillStyle = '#ef4444';
-  ctx.beginPath();
-  ctx.arc(absentX, currentY + 19, 4.5, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.font = '600 12px "Inter", sans-serif';
+  ctx.fillStyle = colors.textMuted;
+  ctx.fillText((labels.absent || 'VẮNG').toUpperCase(), statX, statY);
+  statX += ctx.measureText((labels.absent || 'VẮNG').toUpperCase()).width + 8;
+  ctx.fillStyle = colors.textPrimary;
+  ctx.font = '800 14px "Inter", sans-serif';
+  ctx.fillText(`${absentPlayers.length}`, statX, statY);
+  statX += ctx.measureText(`${absentPlayers.length}`).width + 28;
 
-  ctx.fillStyle = '#f8fafc';
-  ctx.font = 'bold 14px "Inter", sans-serif';
-  ctx.fillText(`${absentPlayers.length}`, absentX + 12, currentY + 24);
-  ctx.fillStyle = '#94a3b8';
-  ctx.font = '500 13px "Inter", sans-serif';
-  ctx.fillText((labels.absent || 'Vắng').toUpperCase(), absentX + 32, currentY + 24);
+  // Divider dot
+  ctx.fillStyle = colors.textMuted;
+  ctx.fillText('•', statX - 14, statY);
 
   // Pending
-  const pendingX = absentX + 160;
-  ctx.fillStyle = '#64748b';
-  ctx.beginPath();
-  ctx.arc(pendingX, currentY + 19, 4.5, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = '#f8fafc';
-  ctx.font = 'bold 14px "Inter", sans-serif';
-  ctx.fillText(`${pendingPlayers.length}`, pendingX + 12, currentY + 24);
-  ctx.fillStyle = '#94a3b8';
-  ctx.font = '500 13px "Inter", sans-serif';
-  ctx.fillText((labels.pending || 'Chưa rõ').toUpperCase(), pendingX + 32, currentY + 24);
+  ctx.font = '600 12px "Inter", sans-serif';
+  ctx.fillStyle = colors.textMuted;
+  ctx.fillText((labels.pending || 'CHƯA RÕ').toUpperCase(), statX, statY);
+  statX += ctx.measureText((labels.pending || 'CHƯA RÕ').toUpperCase()).width + 8;
+  ctx.fillStyle = colors.textPrimary;
+  ctx.font = '800 14px "Inter", sans-serif';
+  ctx.fillText(`${pendingPlayers.length}`, statX, statY);
 
   currentY += 56;
 
-  // 3. Minimalist Player Row Renderer (ONLY Jersey number + Full Player Name)
-  const drawMinimalPlayerRow = (p: Player, x: number, y: number, w: number, h: number) => {
-    // Row container background
-    drawRoundedRect(ctx, x, y, w, h - 4, 4, '#14161c', '#1e222b', 1);
+  // 4. Swiss Minimalist Player Row Renderer (Clean tabular numbers, quiet role tags)
+  const drawMinimalPlayerCard = (
+    p: Player,
+    x: number,
+    y: number,
+    w: number,
+    h: number
+  ) => {
+    // Card container
+    drawRoundedRect(ctx, x, y, w, h - 2, 4, colors.cardBg, colors.cardBorder, 1);
 
-    // Jersey Number
+    // Jersey Number (Tabular typography, no candy colored box!)
     const jNum = (p.jersey_number !== null && p.jersey_number !== undefined && !isNaN(Number(p.jersey_number)))
       ? String(p.jersey_number).padStart(2, '0')
       : '—';
 
-    drawRoundedRect(ctx, x + 8, y + 6, 32, h - 16, 4, '#1c1f28');
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = 'bold 13px "Oswald", "Inter", monospace';
     ctx.textAlign = 'center';
-    ctx.fillText(jNum, x + 24, y + 23);
+    ctx.fillStyle = jNum === '—' ? colors.numMuted : colors.numColor;
+    ctx.font = '700 14px "Barlow Condensed", "Oswald", monospace';
+    ctx.fillText(jNum, x + 24, y + 26);
 
-    // Player Full Name - Clean, bold, full available width!
+    // Role tags on the right (Quiet text, zero emoji neon!)
+    let rightOffset = x + w - 12;
+    ctx.textAlign = 'right';
+
+    // 1. Captain (C)
+    if (p.isCaptain) {
+      ctx.fillStyle = colors.textSecondary;
+      ctx.font = '700 11px "Inter", sans-serif';
+      ctx.fillText('(C)', rightOffset, y + 26);
+      rightOffset -= 24;
+    }
+
+    // 2. Goalkeeper (GK)
+    if (p.positions && p.positions.includes('GK')) {
+      ctx.fillStyle = colors.textMuted;
+      ctx.font = '700 11px "Inter", sans-serif';
+      ctx.fillText('GK', rightOffset, y + 26);
+      rightOffset -= 24;
+    }
+
+    // 3. Guest / Borrowed
+    if (p.isBorrowed) {
+      const guestBadgeText = (labels.guestBadge || labels.guest || 'KHÁCH').toUpperCase();
+      ctx.fillStyle = colors.textMuted;
+      ctx.font = '600 10px "Inter", sans-serif';
+      const badgeW = ctx.measureText(guestBadgeText).width;
+      ctx.fillText(guestBadgeText, rightOffset, y + 26);
+      rightOffset -= badgeW + 8;
+    }
+
+    // 4. Youth
+    if (p.isYouth) {
+      const youthBadgeText = (labels.youthBadge || labels.youth || 'TRẺ').toUpperCase();
+      ctx.fillStyle = colors.textMuted;
+      ctx.font = '600 10px "Inter", sans-serif';
+      const badgeW = ctx.measureText(youthBadgeText).width;
+      ctx.fillText(youthBadgeText, rightOffset, y + 26);
+      rightOffset -= badgeW + 8;
+    }
+
+    // Player Full Name
     ctx.textAlign = 'left';
-    ctx.fillStyle = '#f8fafc';
-    ctx.font = '600 14px "Inter", sans-serif';
-    
+    ctx.fillStyle = colors.textPrimary;
+    ctx.font = '600 13px "Inter", sans-serif';
+    ctx.letterSpacing = '0.2px';
+
+    const nameStartX = x + 44;
+    const maxNameWidth = Math.max(rightOffset - nameStartX - 8, 60);
+
     let nameStr = p.name.toUpperCase();
-    const nameX = x + 48;
-    const maxTextW = w - 58; // Full width dedicated to the player's name
-    while (ctx.measureText(nameStr).width > maxTextW && nameStr.length > 3) {
+    while (ctx.measureText(nameStr).width > maxNameWidth && nameStr.length > 3) {
       nameStr = nameStr.slice(0, -1);
     }
     if (nameStr.length < p.name.length) nameStr += '..';
-    ctx.fillText(nameStr, nameX, y + 24);
+    ctx.fillText(nameStr, nameStartX, y + 26);
   };
 
-  // 4. Roster Render Logic
+  // 5. Roster Grid Rendering
   if (isInternalSplit) {
     const drawTeamBlock = (teamKey: 'A' | 'B' | 'C' | 'D', x: number, y: number, w: number): number => {
       const teamPlayers = targetPlayers.filter(p => teamsMap[p.id] === teamKey);
+      const teamLabel = (labels as Record<string, string | undefined>)[`team${teamKey}`] || `ĐỘI ${teamKey}`;
 
-      // Clean Uniform Minimalist Team Header
-      drawRoundedRect(ctx, x, y, w, TEAM_HEADER_HEIGHT, 4, '#15171e', '#1f232e', 1);
+      // Minimalist Team Header
+      drawRoundedRect(ctx, x, y, w, TEAM_HEADER_HEIGHT, 4, colors.headerBg, colors.headerBorder, 1);
 
       // Team Title
-      ctx.fillStyle = '#f8fafc';
-      ctx.font = 'bold 14px "Oswald", "Inter", sans-serif';
+      ctx.fillStyle = colors.textPrimary;
+      ctx.font = '700 13px "Inter", sans-serif';
+      ctx.letterSpacing = '1px';
       ctx.textAlign = 'left';
-      ctx.fillText(`ĐỘI ${teamKey}`, x + 14, y + 23);
+      ctx.fillText(teamLabel.toUpperCase(), x + 14, y + 25);
 
       // Player Count
+      const unitPlayers = (labels.playersUnit || 'CẦU THỦ').toUpperCase();
       ctx.textAlign = 'right';
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = '500 12px "Inter", sans-serif';
-      ctx.fillText(`${teamPlayers.length} CẦU THỦ`, x + w - 12, y + 23);
+      ctx.fillStyle = colors.textSecondary;
+      ctx.font = '500 11px "Inter", sans-serif';
+      ctx.letterSpacing = '0.5px';
+      ctx.fillText(`${teamPlayers.length} ${unitPlayers}`, x + w - 14, y + 25);
       ctx.textAlign = 'left';
 
       let rowY = y + TEAM_HEADER_HEIGHT + 8;
       if (teamPlayers.length === 0) {
-        ctx.fillStyle = '#475569';
-        ctx.font = 'italic 13px "Inter", sans-serif';
-        ctx.fillText('Chưa có cầu thủ trong đội', x + 12, rowY + 18);
-        rowY += 36;
+        ctx.fillStyle = colors.textMuted;
+        ctx.font = 'italic 12px "Inter", sans-serif';
+        ctx.fillText(labels.noPlayersYet || 'Chưa có cầu thủ', x + 12, rowY + 20);
+        rowY += ROW_HEIGHT;
       } else {
         teamPlayers.forEach(p => {
-          drawMinimalPlayerRow(p, x, rowY, w, ROW_HEIGHT);
-          rowY += ROW_HEIGHT;
+          drawMinimalPlayerCard(p, x, rowY, w, ROW_HEIGHT);
+          rowY += ROW_HEIGHT + ROW_GAP;
         });
       }
 
@@ -610,14 +744,12 @@ export const renderRosterToCanvas = (
     };
 
     if (activeTeams.length === 2) {
-      // 2 columns
       const colGap = 20;
       const colW = (contentWidth - colGap) / 2;
       const bottomA = drawTeamBlock('A', paddingX, currentY, colW);
       const bottomB = drawTeamBlock('B', paddingX + colW + colGap, currentY, colW);
       currentY = Math.max(bottomA, bottomB) + 16;
     } else if (activeTeams.length === 3) {
-      // 3 columns
       const colGap = 16;
       const colW = (contentWidth - colGap * 2) / 3;
       const bottomA = drawTeamBlock('A', paddingX, currentY, colW);
@@ -630,14 +762,14 @@ export const renderRosterToCanvas = (
       const colW = (contentWidth - colGap) / 2;
       const bottomA = drawTeamBlock('A', paddingX, currentY, colW);
       const bottomB = drawTeamBlock('B', paddingX + colW + colGap, currentY, colW);
-      const row1Bottom = Math.max(bottomA, bottomB) + 16;
+      const row1Bottom = Math.max(bottomA, bottomB) + 14;
 
       const bottomC = drawTeamBlock('C', paddingX, row1Bottom, colW);
       const bottomD = drawTeamBlock('D', paddingX + colW + colGap, row1Bottom, colW);
       currentY = Math.max(bottomC, bottomD) + 16;
     }
   } else {
-    // 2-COLUMN STANDARD LIST
+    // 2-Column Standard Roster List
     const colGap = 20;
     const colW = (contentWidth - colGap) / 2;
 
@@ -645,18 +777,17 @@ export const renderRosterToCanvas = (
       const col = idx % 2;
       const row = Math.floor(idx / 2);
       const cardX = paddingX + col * (colW + colGap);
-      const cardY = currentY + row * ROW_HEIGHT;
-      drawMinimalPlayerRow(p, cardX, cardY, colW, ROW_HEIGHT);
+      const cardY = currentY + row * (ROW_HEIGHT + ROW_GAP);
+      drawMinimalPlayerCard(p, cardX, cardY, colW, ROW_HEIGHT);
     });
 
     const totalRows = Math.ceil(targetPlayers.length / 2);
-    currentY += totalRows * ROW_HEIGHT + 16;
+    currentY += totalRows * (ROW_HEIGHT + ROW_GAP) + 16;
   }
 
-  // 5. Absent / Pending List (if not onlyPresent and any exist)
-  if (!onlyPresent && (absentPlayers.length > 0 || pendingPlayers.length > 0)) {
-    currentY += 8;
-    ctx.strokeStyle = '#1e2128';
+  // 6. Absent / Pending Section (Quiet, Compact)
+  if (hasOtherPlayers) {
+    ctx.strokeStyle = colors.divider;
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(paddingX, currentY);
@@ -665,14 +796,13 @@ export const renderRosterToCanvas = (
     currentY += 18;
 
     const otherPlayers = [
-      ...absentPlayers.map(p => ({ ...p, statusDisplay: (labels.absent || 'Vắng').toUpperCase(), statusColor: '#ef4444' })),
-      ...pendingPlayers.map(p => ({ ...p, statusDisplay: (labels.pending || 'Chưa rõ').toUpperCase(), statusColor: '#64748b' }))
+      ...absentPlayers.map(p => ({ ...p, statusDisplay: (labels.absent || 'VẮNG').toUpperCase() })),
+      ...pendingPlayers.map(p => ({ ...p, statusDisplay: (labels.pending || 'CHƯA RÕ').toUpperCase() }))
     ];
 
-    ctx.fillStyle = '#64748b';
-    ctx.font = 'bold 12px "Inter", sans-serif';
-    ctx.fillText(`VẮNG MẶT & CHƯA XÁC NHẬN (${otherPlayers.length})`, paddingX, currentY);
-    currentY += 14;
+    const absentTitle = (labels.absentAndReserves || 'VẮNG MẶT & DỰ BỊ').toUpperCase();
+    ctx.fillText(`${absentTitle} (${otherPlayers.length})`, paddingX, currentY);
+    currentY += 12;
 
     const colGap = 20;
     const colW = (contentWidth - colGap) / 2;
@@ -681,27 +811,24 @@ export const renderRosterToCanvas = (
       const cIdx = idx % 2;
       const rIdx = Math.floor(idx / 2);
       const cardX = paddingX + cIdx * (colW + colGap);
-      const cardY = currentY + rIdx * 34;
+      const cardY = currentY + rIdx * 30;
 
-      drawRoundedRect(ctx, cardX, cardY, colW, 28, 4, '#121318', '#1c1f26', 1);
+      drawRoundedRect(ctx, cardX, cardY, colW, 26, 3, colors.cardBg, colors.cardBorder, 1);
 
-      ctx.fillStyle = p.statusColor;
-      ctx.beginPath();
-      ctx.arc(cardX + 12, cardY + 14, 3.5, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = '#94a3b8';
+      ctx.fillStyle = colors.textSecondary;
       ctx.font = '500 12px "Inter", sans-serif';
-      ctx.fillText(p.name.toUpperCase(), cardX + 24, cardY + 18);
+      ctx.letterSpacing = '0px';
+      ctx.textAlign = 'left';
+      ctx.fillText(p.name.toUpperCase(), cardX + 12, cardY + 17);
 
       ctx.textAlign = 'right';
-      ctx.fillStyle = p.statusColor;
-      ctx.font = '600 11px "Inter", sans-serif';
-      ctx.fillText(p.statusDisplay, cardX + colW - 10, cardY + 18);
+      ctx.fillStyle = colors.textMuted;
+      ctx.font = '600 10px "Inter", sans-serif';
+      ctx.fillText(p.statusDisplay, cardX + colW - 10, cardY + 17);
       ctx.textAlign = 'left';
     });
 
-    currentY += Math.ceil(otherPlayers.length / 2) * 34 + 16;
+    currentY += Math.ceil(otherPlayers.length / 2) * 30 + 14;
   }
 
   return canvas;

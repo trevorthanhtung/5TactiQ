@@ -127,6 +127,25 @@ export default function Matchday() {
   // Attendance hidden list accordion state
   const [showHiddenInAttendance, setShowHiddenInAttendance] = useState(false);
 
+  // Renew matches state for hidden players in attendance
+  const [renewPlayer, setRenewPlayer] = useState<typeof players[0] | null>(null);
+  const [renewCount, setRenewCount] = useState('1');
+
+  const handleQuickRenewPlayer = async (p: typeof players[0], additionalMatches: number) => {
+    const currentQuota = p.matchQuota || 1;
+    const newQuota = currentQuota + additionalMatches;
+    await updatePlayer(p.id, {
+      isPerMatch: true,
+      matchQuota: newQuota,
+      isManuallyHidden: false,
+    });
+    addToast({
+      type: 'success',
+      message: t('roster.renew_success', 'Đã gia hạn thêm {{count}} trận cho {{name}}', { count: additionalMatches, name: p.name }),
+    });
+    setRenewPlayer(null);
+  };
+
   // NPC Modal state
   const [showNpcModal, setShowNpcModal] = useState(false);
   const [editingNpcId, setEditingNpcId] = useState<string | null>(null);
@@ -247,7 +266,15 @@ export default function Matchday() {
 
       const diffDays = Math.round((mDate.getTime() - now.getTime()) / (1000 * 3600 * 24));
 
-      if (diffDays < 0 || diffDays > 14) {
+      // If match is in the past, it has already finished/ended, never show weather or unavailable warning
+      if (diffDays < 0) {
+        setLiveWeather(null);
+        setIsWeatherUnavailable(false);
+        return;
+      }
+
+      // If match is further than 14 days in the future, weather API cannot forecast that far
+      if (diffDays > 14) {
         setLiveWeather(null);
         setIsWeatherUnavailable(true);
         return;
@@ -284,6 +311,16 @@ export default function Matchday() {
       setIsWeatherUnavailable(false);
     }
   }, [currentMatch?.id, currentMatch?.status, currentMatch?.date, currentMatch?.time]);
+
+  // Check if current match date has passed
+  const isMatchPast = useMemo(() => {
+    if (!currentMatch?.date) return false;
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const mDate = new Date(currentMatch.date);
+    mDate.setHours(0, 0, 0, 0);
+    return mDate.getTime() < now.getTime();
+  }, [currentMatch?.date]);
 
   // Live Update Form State
   const [liveData, setLiveData] = useState({ scoreUs: 0, scoreOpponent: 0, scoreTeamA: 0, scoreTeamB: 0, scoreTeamC: 0, scoreTeamD: 0 });
@@ -1662,8 +1699,8 @@ export default function Matchday() {
 
       </div>
 
-      {/* 3. Weather Alert / Status */}
-      {currentMatch.status !== 'finished' && (
+      {/* 3. Weather Alert / Status - Only for live or upcoming matches, never for finished or past matches */}
+      {currentMatch.status !== 'finished' && !isMatchPast && (
         liveWeather ? (
           <div className={`border-2 p-3.5 flex items-center gap-3 shrink-0 ${liveWeather.condition === 'rain' || liveWeather.condition === 'thunderstorm'
               ? 'border-secondary/40 bg-amber-500/10'
@@ -1830,67 +1867,104 @@ export default function Matchday() {
               const isHidden = isHiddenPlayer || isPlayerHidden(p, matches);
 
               return (
-                <div key={p.id} className="bg-surface border-2 border-border-main p-3 sm:p-3.5 flex items-center justify-between gap-3 shadow-sm hover:border-primary/50 transition-colors">
-                  <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-                    <span className="w-8 h-8 shrink-0 flex items-center justify-center bg-surface-2 text-text-muted font-display text-sm font-bold border border-border-main">
-                      {p.jersey_number || '?'}
-                    </span>
-                    <div className="flex flex-col min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {p.isNPC && currentMatch.status !== 'finished' ? (
-                          <button
-                            type="button"
-                            onClick={() => openEditNpcModal(p)}
-                            className="font-bold text-text-main hover:text-primary text-sm sm:text-base uppercase truncate flex items-center gap-1.5 group/npc cursor-pointer text-left transition-colors"
-                            title={t('matchday.click_to_edit_npc', 'Nhấn để sửa thông tin NPC')}
-                          >
-                            <span className="truncate group-hover/npc:underline">{p.name}</span>
-                            <span className="text-[10px] font-bold font-display uppercase tracking-wider bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-400/30 px-1.5 py-0.2 shrink-0 group-hover/npc:border-primary/40 group-hover/npc:text-primary transition-colors">
-                              NPC
+                <div 
+                  key={p.id} 
+                  onClick={() => {
+                    if (isHiddenPlayer) {
+                      setRenewPlayer(p);
+                      setRenewCount('1');
+                    }
+                  }}
+                  className={`bg-surface border-2 border-border-main p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 shadow-sm hover:border-primary/50 transition-colors ${
+                    isHiddenPlayer ? 'cursor-pointer hover:bg-surface-2/60' : ''
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2.5 sm:gap-3 min-w-0 flex-1">
+                    <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+                      <span className="w-8 h-8 shrink-0 flex items-center justify-center bg-surface-2 text-text-muted font-display text-sm font-bold border border-border-main">
+                        {p.jersey_number || '?'}
+                      </span>
+                      <div className="flex flex-col min-w-0 flex-1 justify-center">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          {p.isNPC && currentMatch.status !== 'finished' ? (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openEditNpcModal(p);
+                              }}
+                              className="font-bold text-text-main hover:text-primary text-sm sm:text-base uppercase truncate flex items-center gap-1.5 group/npc cursor-pointer text-left transition-colors"
+                              title={t('matchday.click_to_edit_npc', 'Nhấn để sửa thông tin NPC')}
+                            >
+                              <span className="truncate group-hover/npc:underline leading-normal py-0.5">{p.name}</span>
+                              <span className="text-[10px] font-bold font-display uppercase tracking-wider bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-400/30 px-1 py-0.2 shrink-0 group-hover/npc:border-primary/40 group-hover/npc:text-primary transition-colors">
+                                NPC
+                              </span>
+                              <Edit2 size={12} className="opacity-0 group-hover/npc:opacity-100 text-primary transition-opacity shrink-0" />
+                            </button>
+                          ) : (
+                            <span className="font-bold text-text-main text-sm sm:text-base uppercase truncate leading-normal py-0.5">{p.name}</span>
+                          )}
+                          {!isHiddenPlayer && isHidden && (
+                            <span className="text-[10px] font-bold font-display uppercase tracking-wider px-1.5 py-0.2 bg-slate-700/10 text-slate-600 border border-slate-300 dark:border-slate-700 dark:text-slate-300 shrink-0">
+                              {t('roster.hidden_badge', 'ẨN')}
                             </span>
-                            <Edit2 size={12} className="opacity-0 group-hover/npc:opacity-100 text-primary transition-opacity shrink-0" />
-                          </button>
-                        ) : (
-                          <span className="font-bold text-text-main text-sm sm:text-base uppercase truncate">{p.name}</span>
-                        )}
-                        {isHidden && (
-                          <span className="text-[10px] font-bold font-display uppercase tracking-wider px-1.5 py-0.2 bg-slate-700/10 text-slate-600 border border-slate-300 dark:border-slate-700 dark:text-slate-300">
-                            {t('roster.hidden_badge', 'ẨN')}
-                          </span>
-                        )}
+                          )}
+                        </div>
+
                         {perMatch && (
-                          <span className={`text-[10px] font-bold font-display uppercase tracking-wider px-1.5 py-0.2 border ${
-                            perMatch.isCompleted 
-                              ? 'bg-slate-700/10 text-slate-600 border-slate-300' 
-                              : 'bg-amber-500/10 text-amber-700 border-amber-500/40'
-                          }`}>
-                            {perMatch.attended}/{perMatch.quota} {t('roster.match_unit', 'Trận')}
-                          </span>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className={`text-[10px] font-bold font-display uppercase tracking-wider px-1.5 py-0.2 border shrink-0 ${
+                              perMatch.isCompleted 
+                                ? 'bg-slate-700/10 text-slate-600 border-slate-300' 
+                                : 'bg-amber-500/10 text-amber-700 border-amber-500/40'
+                            }`}>
+                              {perMatch.attended}/{perMatch.quota} {t('roster.match_unit', 'Trận')}
+                            </span>
+                          </div>
                         )}
                       </div>
                     </div>
+
+                    {isHiddenPlayer && (
+                      <div className="flex items-center shrink-0">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setRenewPlayer(p);
+                            setRenewCount('1');
+                          }}
+                          className="h-8 sm:h-9 px-2.5 sm:px-3 bg-surface-2 hover:bg-surface text-text-main border border-border-main font-display text-xs font-bold uppercase tracking-wider transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer hover:border-amber-500"
+                          title={t('roster.renew_matches_title', 'Gia hạn thêm số trận')}
+                        >
+                          <Calendar size={13} className="text-amber-500 shrink-0" />
+                          <span>{t('roster.renew_label', 'Gia hạn')}</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {!isHiddenPlayer && (
-                    <div className={`flex items-center gap-1 bg-surface-2 p-1 border border-border-main shrink-0 ${currentMatch.status === 'finished' ? 'opacity-60 grayscale cursor-not-allowed' : ''}`}>
+                    <div className={`grid grid-cols-3 sm:flex sm:items-center gap-1 bg-surface-2 p-1 border border-border-main w-full sm:w-auto shrink-0 ${currentMatch.status === 'finished' ? 'opacity-60 grayscale cursor-not-allowed' : ''}`}>
                       <button
                         disabled={currentMatch.status === 'finished'}
                         onClick={() => handleAttendance(p.id, 'present')}
-                        className={`px-3 py-1.5 text-xs font-display font-bold uppercase tracking-wider transition-colors ${status === 'present' ? 'bg-primary text-white shadow-sm' : 'text-text-muted hover:text-text-main'} ${currentMatch.status === 'finished' ? 'pointer-events-none' : ''}`}
+                        className={`py-2 sm:py-1.5 sm:px-3 text-xs font-display font-bold uppercase tracking-wider transition-colors flex items-center justify-center ${status === 'present' ? 'bg-primary text-white shadow-sm' : 'text-text-muted hover:text-text-main'} ${currentMatch.status === 'finished' ? 'pointer-events-none' : ''}`}
                       >
                         {t('matchday.yes', 'CÓ')}
                       </button>
                       <button
                         disabled={currentMatch.status === 'finished'}
                         onClick={() => handleAttendance(p.id, 'absent')}
-                        className={`px-3 py-1.5 text-xs font-display font-bold uppercase tracking-wider transition-colors ${status === 'absent' ? 'bg-secondary text-white shadow-sm' : 'text-text-muted hover:text-text-main'} ${currentMatch.status === 'finished' ? 'pointer-events-none' : ''}`}
+                        className={`py-2 sm:py-1.5 sm:px-3 text-xs font-display font-bold uppercase tracking-wider transition-colors flex items-center justify-center ${status === 'absent' ? 'bg-secondary text-white shadow-sm' : 'text-text-muted hover:text-text-main'} ${currentMatch.status === 'finished' ? 'pointer-events-none' : ''}`}
                       >
                         {t('matchday.no', 'VẮNG')}
                       </button>
                       <button
                         disabled={currentMatch.status === 'finished'}
                         onClick={() => handleAttendance(p.id, 'pending')}
-                        className={`px-3 py-1.5 text-xs font-display font-bold uppercase tracking-wider transition-colors ${status === 'pending' ? 'bg-slate-700 text-white shadow-sm' : 'text-text-muted hover:text-text-main'} ${currentMatch.status === 'finished' ? 'pointer-events-none' : ''}`}
+                        className={`py-2 sm:py-1.5 sm:px-3 text-xs font-display font-bold uppercase tracking-wider transition-colors flex items-center justify-center ${status === 'pending' ? 'bg-slate-700 text-white shadow-sm' : 'text-text-muted hover:text-text-main'} ${currentMatch.status === 'finished' ? 'pointer-events-none' : ''}`}
                       >
                         ?
                       </button>
@@ -3292,6 +3366,101 @@ export default function Matchday() {
             {t('matchday.delete_npc', 'XÓA NPC')}
           </button>
         </div>
+      </BottomSheet>
+
+      {/* RENEW MATCHES MODAL FOR ATTENDANCE HIDDEN PLAYERS */}
+      <BottomSheet
+        isOpen={!!renewPlayer}
+        onClose={() => setRenewPlayer(null)}
+        title={
+          <span className="flex items-center gap-2">
+            <Calendar size={20} className="text-amber-500" /> 
+            {t('roster.renew_matches_title', 'GIA HẠN THÊM SỐ TRẬN THI ĐẤU')}
+          </span>
+        }
+      >
+        {renewPlayer && (
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            const count = Math.max(1, parseInt(renewCount) || 1);
+            handleQuickRenewPlayer(renewPlayer, count);
+          }} className="space-y-5">
+            <div>
+              <p className="text-sm text-text-muted mb-4 leading-relaxed">
+                {t('roster.renew_modal_desc', 'Cộng thêm số trận vào hạn mức thi đấu hiện tại của {{name}}. Cầu thủ sẽ tự động được chuyển ra khỏi mục ẩn nếu số trận mới lớn hơn số trận đã đá.', { name: renewPlayer.name })}
+              </p>
+              
+              <div className="p-3.5 bg-surface-2 border-2 border-border-main flex flex-col gap-2.5">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-xs font-bold uppercase tracking-widest text-text-muted">
+                    {t('roster.renew_add_matches', 'Số trận cộng thêm')}
+                  </span>
+
+                  {/* Stepper Input */}
+                  <div className="flex items-center border-2 border-border-main bg-surface shadow-sm overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setRenewCount(q => String(Math.max(1, (parseInt(q) || 1) - 1)))}
+                      className="w-8 h-8 flex items-center justify-center font-bold text-base hover:bg-surface-2 active:bg-border-main transition-colors text-text-muted hover:text-text-main cursor-pointer"
+                    >
+                      -
+                    </button>
+                    <input
+                      type="number"
+                      min="1"
+                      max="50"
+                      inputMode="numeric"
+                      className="w-12 h-8 text-center bg-transparent font-display font-bold text-base text-primary outline-none"
+                      value={renewCount}
+                      onChange={e => setRenewCount(e.target.value.replace(/[^0-9]/g, ''))}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setRenewCount(q => String((parseInt(q) || 1) + 1))}
+                      className="w-8 h-8 flex items-center justify-center font-bold text-base hover:bg-surface-2 active:bg-border-main transition-colors text-text-muted hover:text-text-main cursor-pointer"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {/* Quick Presets */}
+                <div className="grid grid-cols-4 gap-1.5">
+                  {[1, 2, 3, 5].map(num => (
+                    <button
+                      key={num}
+                      type="button"
+                      onClick={() => setRenewCount(String(num))}
+                      className={`py-1 text-xs font-display font-bold uppercase tracking-wider border-2 transition-all active:scale-95 cursor-pointer ${
+                        Number(renewCount) === num
+                          ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
+                          : 'bg-surface text-text-muted border-border-main hover:border-amber-500/50'
+                      }`}
+                    >
+                      +{num} {t('roster.match_unit', 'Trận')}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2 flex gap-3">
+              <button 
+                type="button" 
+                onClick={() => setRenewPlayer(null)} 
+                className="flex-1 bg-transparent text-text-muted font-display uppercase tracking-wider py-3 border-2 border-border-main hover:bg-surface transition-colors active:scale-95 cursor-pointer"
+              >
+                {t('roster.cancel', 'HỦY')}
+              </button>
+              <button 
+                type="submit" 
+                className="flex-1 bg-amber-600 text-white font-display uppercase tracking-wider py-3 border-2 border-amber-600 hover:bg-amber-700 transition-colors active:scale-95 cursor-pointer"
+              >
+                {t('roster.confirm_renew', 'XÁC NHẬN GIA HẠN')}
+              </button>
+            </div>
+          </form>
+        )}
       </BottomSheet>
 
       {/* EXPORT MATCH ROSTER MODAL */}

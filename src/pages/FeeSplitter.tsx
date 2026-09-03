@@ -942,18 +942,15 @@ export default function FeeSplitter() {
                     <span className="text-xs font-bold text-primary uppercase tracking-wider">
                       {t('fee_splitter.present_players_label', 'Cầu thủ điểm danh')}
                     </span>
-                    <span className="text-xs font-mono font-bold text-text-muted">
-                      ({matchPresentPlayers.length} {t('fee_splitter.players_unit', 'người')})
-                    </span>
                   </div>
 
                   {/* Actions: Mark All Paid / Reset */}
                   {matchPresentPlayers.length > 0 && (
-                    <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="flex items-center gap-1.5 shrink-0 w-full sm:w-auto">
                       <button
                         type="button"
                         onClick={handleMarkAllPaid}
-                        className="px-3 py-1.5 text-[11px] font-display font-bold uppercase tracking-wider bg-emerald-600 hover:bg-emerald-700 text-white transition-colors cursor-pointer"
+                        className="flex-1 sm:flex-initial px-3 py-1.5 text-[11px] font-display font-bold uppercase tracking-wider bg-emerald-600 hover:bg-emerald-700 text-white transition-colors cursor-pointer text-center"
                         title={t('fee_splitter.mark_all_paid', 'Thu tất cả')}
                       >
                         {t('fee_splitter.mark_all_paid', 'Thu tất cả')}
@@ -961,7 +958,7 @@ export default function FeeSplitter() {
                       <button
                         type="button"
                         onClick={handleResetAllPaid}
-                        className="px-3 py-1.5 text-[11px] font-display font-bold uppercase tracking-wider bg-surface-2 hover:bg-surface border border-border-main text-text-muted hover:text-text-main transition-colors cursor-pointer"
+                        className="flex-1 sm:flex-initial px-3 py-1.5 text-[11px] font-display font-bold uppercase tracking-wider bg-surface-2 hover:bg-surface border border-border-main text-text-muted hover:text-text-main transition-colors cursor-pointer text-center"
                         title={t('fee_splitter.reset_all_paid', 'Đặt lại')}
                       >
                         {t('fee_splitter.reset_all_paid', 'Đặt lại')}
@@ -970,41 +967,41 @@ export default function FeeSplitter() {
                   )}
                 </div>
 
-                {/* Filter Tabs (All / Unpaid / Paid) */}
+                {/* Filter Tabs (All / Unpaid / Paid) - Clean without counts */}
                 {matchPresentPlayers.length > 0 && (
-                  <div className="flex items-center gap-1 bg-surface-2 p-1 border border-border-main text-xs font-bold">
+                  <div className="flex items-center gap-1 bg-surface-2 p-1 border border-border-main font-bold">
                     <button
                       type="button"
                       onClick={() => setPaymentFilter('all')}
-                      className={`flex-1 py-1.5 text-center transition-colors cursor-pointer ${
+                      className={`flex-1 py-2 px-2 text-center transition-colors cursor-pointer text-xs sm:text-sm whitespace-nowrap ${
                         paymentFilter === 'all'
                           ? 'bg-surface text-primary border border-border-main font-bold shadow-xs'
                           : 'text-text-muted hover:text-text-main'
                       }`}
                     >
-                      {t('fee_splitter.filter_all', 'Tất cả')} ({matchPresentPlayers.length})
+                      {t('fee_splitter.filter_all', 'Tất cả')}
                     </button>
                     <button
                       type="button"
                       onClick={() => setPaymentFilter('unpaid')}
-                      className={`flex-1 py-1.5 text-center transition-colors cursor-pointer ${
+                      className={`flex-1 py-2 px-2 text-center transition-colors cursor-pointer text-xs sm:text-sm whitespace-nowrap ${
                         paymentFilter === 'unpaid'
                           ? 'bg-surface text-amber-700 dark:text-amber-400 border border-border-main font-bold shadow-xs'
                           : 'text-text-muted hover:text-text-main'
                       }`}
                     >
-                      {t('fee_splitter.filter_unpaid', 'Chưa đóng')} ({unpaidCount})
+                      {t('fee_splitter.filter_unpaid', 'Chưa đóng')}
                     </button>
                     <button
                       type="button"
                       onClick={() => setPaymentFilter('paid')}
-                      className={`flex-1 py-1.5 text-center transition-colors cursor-pointer ${
+                      className={`flex-1 py-2 px-2 text-center transition-colors cursor-pointer text-xs sm:text-sm whitespace-nowrap ${
                         paymentFilter === 'paid'
                           ? 'bg-surface text-emerald-700 dark:text-emerald-400 border border-border-main font-bold shadow-xs'
                           : 'text-text-muted hover:text-text-main'
                       }`}
                     >
-                      {t('fee_splitter.filter_paid', 'Đã đóng')} ({paidCount})
+                      {t('fee_splitter.filter_paid', 'Đã đóng')}
                     </button>
                   </div>
                 )}

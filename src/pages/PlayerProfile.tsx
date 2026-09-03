@@ -6,7 +6,7 @@ import { useSettingsStore } from '../store/useSettingsStore';
 import { useToastStore } from '../store/useToastStore';
 import { 
   ArrowLeft, Edit2, Activity, Phone, Hash, FileText, 
-  Calendar, Check, ShieldCheck, Zap, Trophy, TrendingUp, EyeOff
+  Calendar, Check, ShieldCheck, Zap, Trophy, TrendingUp, EyeOff, RotateCcw
 } from 'lucide-react';
 import { useHardwareBack } from '../hooks/useHardwareBack';
 import { PlayerProfileSkeleton } from '../components/ui/PlayerProfileSkeleton';
@@ -229,9 +229,8 @@ export default function PlayerProfile() {
                   </h1>
                   
                   {/* Jersey Pill */}
-                  <div className="flex items-center gap-1 bg-surface-2 px-2.5 py-1 border border-border-main text-xs font-bold uppercase tracking-wider text-text-muted">
-                    <Hash size={13} className="text-secondary" />
-                    <span>{t('roster.jersey_number')}:</span>
+                  <div className="flex items-center gap-1.5 bg-surface-2 px-2.5 py-1 border border-border-main text-xs font-bold uppercase tracking-wider text-text-muted">
+                    <span>{t('roster.jersey_number')}</span>
                     <span className="text-text-main font-display text-sm font-bold">
                       {player.jersey_number !== null && player.jersey_number !== undefined ? `#${player.jersey_number}` : t('roster.no_jersey')}
                     </span>
@@ -314,27 +313,24 @@ export default function PlayerProfile() {
               <span className="text-xs font-display font-bold uppercase tracking-wider text-text-muted">
                 {t('fitness.status', 'Tình trạng thể lực')}
               </span>
-              <button
-                type="button"
-                onClick={openHealthModal}
-                className="text-xs font-display font-bold uppercase tracking-wider text-secondary hover:underline"
-              >
-                {t('roster.edit_health', 'Cập nhật')}
-              </button>
             </div>
 
-            {/* Visual Status Indicator Banner */}
-            <div className={`p-2.5 sm:p-3 border-2 flex items-center justify-between gap-3 ${
-              !player.healthStatus || player.healthStatus === 'Khỏe mạnh'
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
-                : player.healthStatus === 'Chấn thương nặng'
-                ? 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-400'
-                : player.healthStatus === 'Chấn thương nhẹ'
-                ? 'bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-400'
-                : 'bg-blue-500/10 border-blue-500/30 text-blue-700 dark:text-blue-400'
-            }`}>
+            {/* Clickable Visual Status Indicator Card - Opens Health Modal Box */}
+            <button
+              type="button"
+              onClick={openHealthModal}
+              className={`w-full p-2.5 sm:p-3 border-2 flex items-center justify-between gap-3 text-left transition-all active:scale-[0.98] cursor-pointer hover:shadow-sm ${
+                !player.healthStatus || player.healthStatus === 'Khỏe mạnh'
+                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:border-emerald-500/60'
+                  : player.healthStatus === 'Chấn thương nặng'
+                  ? 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-400 hover:border-rose-500/60'
+                  : player.healthStatus === 'Chấn thương nhẹ'
+                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-400 hover:border-amber-500/60'
+                  : 'bg-blue-500/10 border-blue-500/30 text-blue-700 dark:text-blue-400 hover:border-blue-500/60'
+              }`}
+            >
               <div className="flex items-center gap-2">
-                <div className={`w-2.5 h-2.5 rounded-full ${
+                <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${
                   !player.healthStatus || player.healthStatus === 'Khỏe mạnh'
                     ? 'bg-emerald-500'
                     : player.healthStatus === 'Chấn thương nặng'
@@ -350,11 +346,16 @@ export default function PlayerProfile() {
                    t('health.healthy', 'Khỏe mạnh (Sẵn sàng thi đấu)')}
                 </span>
               </div>
-            </div>
+            </button>
 
             {player.healthNote && (
-              <div className="text-xs text-text-muted italic bg-surface-2 p-2 border border-border-main">
-                <span className="font-bold not-italic">{t('fitness.note', 'Ghi chú')}:</span> {player.healthNote}
+              <div 
+                onClick={openHealthModal}
+                className="text-xs text-text-muted italic bg-surface-2 p-2 border border-border-main flex items-center justify-between cursor-pointer hover:border-primary/50 transition-colors"
+              >
+                <div>
+                  <span className="font-bold not-italic">{t('fitness.note', 'Ghi chú')}:</span> {player.healthNote}
+                </div>
               </div>
             )}
           </div>
@@ -519,6 +520,14 @@ export default function PlayerProfile() {
         {/* 👉 RIGHT COLUMN: Performance Stats & Match Log (7 cols on lg, 8 cols on 2xl) */}
         <div className="lg:col-span-7 2xl:col-span-8 flex flex-col gap-4 sm:gap-6">
           
+          {/* Per-match stats exclusion banner */}
+          {player.isPerMatch && (
+            <div className="bg-amber-500/10 border border-amber-500/30 p-2.5 sm:p-3 text-xs text-amber-700 dark:text-amber-400 font-medium flex items-center gap-2.5">
+              <span className="font-display font-bold uppercase tracking-wider bg-amber-600 text-white px-2 py-0.5 text-xs shadow-sm">M</span>
+              <span>{t('roster.per_match_stats_excluded', 'Cầu thủ đá theo trận (M) không tính vào Bảng xếp hạng / Thống kê mùa giải của CLB.')}</span>
+            </div>
+          )}
+
           {/* 📊 Performance KPI Grid (4 Cards) */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
             <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">

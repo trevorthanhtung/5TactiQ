@@ -9,6 +9,7 @@ import { CustomSelect } from '../components/CustomSelect';
 import { useTranslation } from 'react-i18next';
 import { compareVietnameseNames } from '../utils/sortUtils';
 import { getCurrentSeasonRange, isMatchInSeason } from '../utils/seasonUtils';
+import { isPlayerEligibleForStats } from '../utils/playerUtils';
 
 export default function Stats() {
   const { t } = useTranslation();
@@ -74,7 +75,7 @@ export default function Stats() {
   });
 
   const eligiblePlayers = useMemo(() => {
-    return players.filter(p => !p.isNPC || p.includeInStats);
+    return players.filter(isPlayerEligibleForStats);
   }, [players]);
 
   const playersWithStats = eligiblePlayers.map(p => ({

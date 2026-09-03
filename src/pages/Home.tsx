@@ -20,6 +20,7 @@ import { useTranslation } from 'react-i18next';
 import { HomeSkeleton } from '../components/ui/HomeSkeleton';
 import { compareVietnameseNames } from '../utils/sortUtils';
 import { getCurrentSeasonRange, isMatchInSeason } from '../utils/seasonUtils';
+import { isPlayerEligibleForStats } from '../utils/playerUtils';
 
 export default function Home() {
   const { t } = useTranslation();
@@ -68,7 +69,7 @@ export default function Home() {
 
   const topScorers = useMemo(() => {
     return players
-      .filter(p => !p.isNPC || p.includeInStats)
+      .filter(isPlayerEligibleForStats)
       .map(p => ({ ...p, goals: goalCounts[p.id] || 0 }))
       .sort((a, b) => {
         const diff = b.goals - a.goals;
@@ -97,7 +98,7 @@ export default function Home() {
   // Position breakdown
   const positionStats = useMemo(() => {
     const counts = { GK: 0, Fixo: 0, Ala: 0, Pivô: 0 };
-    players.filter(p => !p.isNPC).forEach(p => {
+    players.filter(isPlayerEligibleForStats).forEach(p => {
       p.positions?.forEach(pos => {
         if (pos in counts) counts[pos as keyof typeof counts]++;
       });

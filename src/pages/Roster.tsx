@@ -123,6 +123,10 @@ export default function Roster() {
     return true;
   });
 
+  if (isLoading) {
+    return <RosterSkeleton />;
+  }
+
   return (
     <div className="p-3.5 sm:p-6 lg:p-8 flex flex-col max-w-7xl 2xl:max-w-[1520px] mx-auto w-full animate-fade-in-up">
       <div className="flex justify-between items-end mb-6 pt-2">
