@@ -192,11 +192,11 @@ export default function HeadToHead() {
               <div className="text-2xl md:text-3xl font-display font-bold text-secondary">{stats.totalMatches}</div>
               <div className="text-[10px] uppercase font-bold tracking-wider text-text-muted mt-0.5">{t('h2h.matches_played', 'Trận đã đấu')}</div>
             </div>
-            <div className="bg-surface p-3.5 border-2 border-emerald-600/30 text-center bg-emerald-50/60 dark:bg-emerald-950/20 shadow-xs">
+            <div className="bg-surface p-3.5 border-2 border-border-main text-center shadow-xs">
               <div className="text-2xl md:text-3xl font-display font-bold text-emerald-600">{stats.totalWins}</div>
               <div className="text-[10px] uppercase font-bold tracking-wider text-text-muted mt-0.5">{t('h2h.wins', 'Trận thắng')}</div>
             </div>
-            <div className="bg-surface p-3.5 border-2 border-rose-600/30 text-center bg-rose-50/60 dark:bg-rose-950/20 shadow-xs">
+            <div className="bg-surface p-3.5 border-2 border-border-main text-center shadow-xs">
               <div className="text-2xl md:text-3xl font-display font-bold text-rose-600">{stats.totalLosses}</div>
               <div className="text-[10px] uppercase font-bold tracking-wider text-text-muted mt-0.5">{t('h2h.losses', 'Trận thua')}</div>
             </div>

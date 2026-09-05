@@ -52,10 +52,13 @@ export const useMatchStore = create<MatchState>()(
         const newMatch: MatchInfo = {
           id: newId,
           date: info.date || new Date().toISOString().split('T')[0],
-          opponent: info.opponent || '',
+          opponent: info.matchType === 'tournament' ? '' : (info.opponent || ''),
           location: info.location || '',
           time: info.time || '19:00',
           matchType: info.matchType || 'internal',
+          tournamentId: info.tournamentId,
+          tournamentName: info.tournamentName,
+          round: info.round,
           status: 'upcoming',
           weather: info.weather,
           teamCount: info.teamCount || 2,
@@ -215,6 +218,16 @@ export const useMatchStore = create<MatchState>()(
       name: 'katfc-match-storage-v5',
       storage: createJSONStorage(() => capacitorStorage),
       partialize: (state) => ({ matches: state.matches }),
+      onRehydrateStorage: () => (state) => {
+        if (state?.matches) {
+          state.matches = state.matches.map((m) => {
+            if (m.matchType === 'tournament' && m.opponent) {
+              return { ...m, opponent: '' };
+            }
+            return m;
+          });
+        }
+      },
     }
   )
 );

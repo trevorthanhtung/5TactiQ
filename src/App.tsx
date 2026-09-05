@@ -203,11 +203,11 @@ function App() {
   useEffect(() => {
     // Determine which screens to show
     const isInstalled = isInstalledApp();
-    const { session, isGuest } = useAuthStore.getState();
     const isLandingPage = window.location.pathname.includes('landing') || window.location.hash.includes('landing');
+    const isSharePage = window.location.pathname.includes('share') || window.location.hash.includes('share');
 
-    // On Web Landing Page, skip Onboarding and Splash completely
-    if (!isInstalled && (!session && !isGuest || isLandingPage)) {
+    // On Web Landing Page or Share Page, skip Onboarding and Splash completely
+    if (!isInstalled && (!session && !isGuest || isLandingPage || isSharePage)) {
       setShowSplash(false);
       setShowOnboarding(false);
       return;
@@ -243,7 +243,11 @@ function App() {
     setShowInstallPrompt(false);
   };
 
-  const isWebLanding = !isInstalledApp() && !session && !isGuest;
+  const isSharePage = typeof window !== 'undefined' && (
+    window.location.pathname.includes('share') || 
+    window.location.hash.includes('share')
+  );
+  const isWebLanding = (!isInstalledApp() && !session && !isGuest) || isSharePage;
 
   return (
     <div style={{ paddingBottom: `max(env(safe-area-inset-bottom), ${keyboardHeight}px)` }} className={`w-full h-[100dvh] relative ${isWebLanding ? 'overflow-y-auto landing-scrollbar' : 'overflow-hidden'} transition-all duration-300 bg-background text-text-main`}>

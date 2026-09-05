@@ -21,13 +21,15 @@ interface ExportMatchModalProps {
   onClose: () => void;
   match: MatchInfo | null;
   players: Player[];
+  teamSlotNames?: { A?: string; B?: string; C?: string; D?: string };
 }
 
 export const ExportMatchModal: React.FC<ExportMatchModalProps> = ({
   isOpen,
   onClose,
   match,
-  players
+  players,
+  teamSlotNames
 }) => {
   const { t } = useTranslation();
   const { addToast } = useToastStore();
@@ -46,7 +48,11 @@ export const ExportMatchModal: React.FC<ExportMatchModalProps> = ({
   const matchTitleClean = useMemo(() => {
     if (!match) return 'Match';
     const datePart = match.date || 'match';
-    const opponentPart = match.matchType === 'internal' ? 'Noi_Bo' : (match.opponent ? match.opponent.replace(/[^a-zA-Z0-9]/g, '_') : 'Giao_Huu');
+    const opponentPart = match.matchType === 'internal' 
+      ? 'Noi_Bo' 
+      : match.matchType === 'tournament' 
+      ? (match.tournamentName || 'Giai_Dau').replace(/[^a-zA-Z0-9]/g, '_')
+      : (match.opponent ? match.opponent.replace(/[^a-zA-Z0-9]/g, '_') : 'Giao_Huu');
     const teamClean = (settings.teamName || 'KAT_FC').replace(/[^a-zA-Z0-9]/g, '_');
     return `${teamClean}_Danh_Sach_${opponentPart}_${datePart}`;
   }, [match, settings.teamName]);
@@ -58,10 +64,10 @@ export const ExportMatchModal: React.FC<ExportMatchModalProps> = ({
     present: t('matchday.present', 'Có mặt'),
     absent: t('matchday.absent', 'Vắng'),
     pending: t('matchday.pending', 'Chưa rõ'),
-    teamA: t('matchday.team_a', 'Đội A'),
-    teamB: t('matchday.team_b', 'Đội B'),
-    teamC: t('matchday.team_c', 'Đội C'),
-    teamD: t('matchday.team_d', 'Đội D'),
+    teamA: teamSlotNames?.A || t('matchday.team_a', 'Đội A'),
+    teamB: teamSlotNames?.B || t('matchday.team_b', 'Đội B'),
+    teamC: teamSlotNames?.C || t('matchday.team_c', 'Đội C'),
+    teamD: teamSlotNames?.D || t('matchday.team_d', 'Đội D'),
     noBib: t('matchday.no_bib', 'Không Bib'),
     csvNo: t('matchday.export_csv_no', 'STT'),
     jerseyNo: t('matchday.export_csv_jersey', 'Số áo'),

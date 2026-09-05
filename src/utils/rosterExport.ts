@@ -441,8 +441,12 @@ export const renderRosterToCanvas = (
   const TEAM_HEADER_HEIGHT = 40;
 
   // Calculate layout structure
-  const isInternalSplit = groupByTeams && match.matchType === 'internal';
-  const activeTeams = (['A', 'B', 'C', 'D'] as const).slice(0, match.teamCount || 2);
+  const hasTeamsAssigned = groupByTeams && targetPlayers.some(p => !!teamsMap[p.id]);
+  const isInternalSplit = groupByTeams && (match.matchType === 'internal' || hasTeamsAssigned);
+  const maxAssignedTeamIndex = targetPlayers.some(p => teamsMap[p.id] === 'D') ? 4 :
+    targetPlayers.some(p => teamsMap[p.id] === 'C') ? 3 : 2;
+  const numActiveTeams = Math.max(match.teamCount || 2, maxAssignedTeamIndex);
+  const activeTeams = (['A', 'B', 'C', 'D'] as const).slice(0, numActiveTeams);
 
   // Exact Dynamic Height Calculation (No dead void)
   // Header: padding top (48) + Club bar (24) + 14 + Main title (42) + 14 + Meta bar (20) + 18 + Divider (1) + 18 + Stats bar (38) + 24
@@ -520,9 +524,11 @@ export const renderRosterToCanvas = (
   // Main Match Title (Clean, Confident Swiss Typography)
   ctx.letterSpacing = '0px';
   ctx.fillStyle = colors.textPrimary;
-  ctx.font = '800 36px "Barlow Condensed", "Oswald", "Inter", sans-serif';
+  ctx.font = '800 36px "Montserrat", "Inter", sans-serif';
   const mainTitleText = match.matchType === 'internal'
     ? (labels.internalMatch || 'TRẬN ĐẤU NỘI BỘ').toUpperCase()
+    : match.matchType === 'tournament'
+    ? (match.tournamentName || labels.tournamentMatch || 'GIẢI ĐẤU').toUpperCase()
     : match.opponent
     ? `${clubName}  VS  ${match.opponent.toUpperCase()}`
     : 'DANH SÁCH THI ĐẤU';
@@ -642,7 +648,7 @@ export const renderRosterToCanvas = (
 
     ctx.textAlign = 'center';
     ctx.fillStyle = jNum === '—' ? colors.numMuted : colors.numColor;
-    ctx.font = '700 14px "Barlow Condensed", "Oswald", monospace';
+    ctx.font = '700 14px "Montserrat", sans-serif';
     ctx.fillText(jNum, x + 24, y + 26);
 
     // Role tags on the right (Quiet text, zero emoji neon!)

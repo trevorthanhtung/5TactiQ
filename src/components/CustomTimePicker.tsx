@@ -6,12 +6,13 @@ import { BottomSheet } from './ui/BottomSheet';
 interface CustomTimePickerProps {
   value: string; // HH:mm in 24h format e.g. "19:00"
   onChange: (time: string) => void;
-  label?: string;
+  label?: string | null;
+  hideLabel?: boolean;
 }
 
-export function CustomTimePicker({ value, onChange, label }: CustomTimePickerProps) {
+export function CustomTimePicker({ value, onChange, label, hideLabel = false }: CustomTimePickerProps) {
   const { t } = useTranslation();
-  const displayLabel = label || t('common.match_time');
+  const displayLabel = label === null ? null : (label !== undefined ? label : t('common.match_time'));
   const [isOpen, setIsOpen] = useState(false);
 
   // Helper 24h -> 12h AM/PM
@@ -66,7 +67,11 @@ export function CustomTimePicker({ value, onChange, label }: CustomTimePickerPro
 
   return (
     <div className="w-full">
-      {displayLabel && <label className="block text-xs font-bold text-text-muted uppercase tracking-widest mb-1.5">{displayLabel}</label>}
+      {!hideLabel && displayLabel && (
+        <label className="block text-xs font-bold text-text-muted uppercase tracking-widest mb-1.5">
+          {displayLabel}
+        </label>
+      )}
       
       {/* Trigger Button */}
       <button
@@ -86,7 +91,7 @@ export function CustomTimePicker({ value, onChange, label }: CustomTimePickerPro
         onClose={() => setIsOpen(false)}
         title={
           <span className="flex items-center gap-2">
-            <Clock size={20} /> {t('common.select_match_time')}
+            <Clock size={20} /> {displayLabel || t('common.select_match_time')}
           </span>
         }
       >

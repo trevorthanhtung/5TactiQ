@@ -6,12 +6,13 @@ import { BottomSheet } from './ui/BottomSheet';
 interface CustomDatePickerProps {
   value: string; // YYYY-MM-DD
   onChange: (date: string) => void;
-  label?: string;
+  label?: string | null;
+  hideLabel?: boolean;
 }
 
-export function CustomDatePicker({ value, onChange, label }: CustomDatePickerProps) {
+export function CustomDatePicker({ value, onChange, label, hideLabel = false }: CustomDatePickerProps) {
   const { t } = useTranslation();
-  const displayLabel = label || t('common.match_date');
+  const displayLabel = label === null ? null : (label !== undefined ? label : t('common.match_date'));
   const [isOpen, setIsOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(value || new Date().toISOString().split('T')[0]);
 
@@ -97,7 +98,11 @@ export function CustomDatePicker({ value, onChange, label }: CustomDatePickerPro
 
   return (
     <div className="w-full">
-      {displayLabel && <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">{displayLabel}</label>}
+      {!hideLabel && displayLabel && (
+        <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">
+          {displayLabel}
+        </label>
+      )}
       
       {/* Trigger Button */}
       <button
@@ -115,7 +120,7 @@ export function CustomDatePicker({ value, onChange, label }: CustomDatePickerPro
         onClose={() => setIsOpen(false)}
         title={
           <span className="flex items-center gap-2">
-            <CalendarIcon size={20} /> {t('common.select_match_date')}
+            <CalendarIcon size={20} /> {displayLabel || t('common.select_date')}
           </span>
         }
       >

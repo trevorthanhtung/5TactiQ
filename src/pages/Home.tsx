@@ -20,7 +20,7 @@ import { useTranslation } from 'react-i18next';
 import { HomeSkeleton } from '../components/ui/HomeSkeleton';
 import { compareVietnameseNames } from '../utils/sortUtils';
 import { getCurrentSeasonRange, isMatchInSeason } from '../utils/seasonUtils';
-import { isPlayerEligibleForStats } from '../utils/playerUtils';
+import { isPlayerEligibleForStats, isCoreSquadPlayer } from '../utils/playerUtils';
 
 export default function Home() {
   const { t } = useTranslation();
@@ -95,16 +95,21 @@ export default function Home() {
     });
   }, [finishedMatches]);
 
+  // Core squad players (Official, Loan, Youth - excluding per-match and NPCs)
+  const coreSquadPlayers = useMemo(() => {
+    return players.filter(p => isCoreSquadPlayer(p, matches));
+  }, [players, matches]);
+
   // Position breakdown
   const positionStats = useMemo(() => {
     const counts = { GK: 0, Fixo: 0, Ala: 0, Pivô: 0 };
-    players.filter(isPlayerEligibleForStats).forEach(p => {
+    coreSquadPlayers.forEach(p => {
       p.positions?.forEach(pos => {
         if (pos in counts) counts[pos as keyof typeof counts]++;
       });
     });
     return counts;
-  }, [players]);
+  }, [coreSquadPlayers]);
 
   if (isLoading) {
     return <HomeSkeleton />;
@@ -129,7 +134,7 @@ export default function Home() {
             <div className="flex flex-col">
               <span className="text-[11px] sm:text-xs uppercase tracking-wider text-text-muted font-bold leading-normal pt-0.5">{t('home.roster_title')}</span>
               <div className="flex items-baseline gap-1 mt-0.5">
-                <span className="text-2xl sm:text-3xl lg:text-4xl font-display font-bold text-primary">{players.filter(p => !p.isNPC).length}</span>
+                <span className="text-2xl sm:text-3xl lg:text-4xl font-display font-bold text-primary">{coreSquadPlayers.length}</span>
                 <span className="text-[11px] sm:text-xs text-text-muted font-medium">{t('home.players_unit', 'cầu thủ')}</span>
               </div>
             </div>
@@ -260,7 +265,7 @@ export default function Home() {
             </div>
 
             <div className="flex items-baseline gap-2 mb-3 sm:mb-4">
-              <div className="text-4xl sm:text-5xl font-display font-bold text-primary">{players.length}</div>
+              <div className="text-4xl sm:text-5xl font-display font-bold text-primary">{coreSquadPlayers.length}</div>
               <div className="text-xs sm:text-sm text-text-muted font-medium uppercase tracking-wider">{t('home.players_ready')}</div>
             </div>
 

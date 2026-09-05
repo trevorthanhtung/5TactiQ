@@ -1,11 +1,13 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import type { MatchInfo } from '../types';
 import { Plus, CloudRain, Sun, Cloud, CloudOff, Save, Navigation2, Activity, Edit2, Shuffle, MapPin, CalendarClock, Bell, Play, CheckCircle2, Trophy, Flame, Trash2, ChevronDown, Check, X, RotateCcw, Users, CloudLightning, CloudFog, CloudDrizzle, ArrowLeft, Eye, EyeOff, Calendar, Search, Download, Coins, Calculator, UserPlus } from 'lucide-react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useMatchStore } from '../store/useMatchStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useVenueStore } from '../store/useVenueStore';
 import { useToastStore } from '../store/useToastStore';
+import { useTournamentStore } from '../store/useTournamentStore';
 import { CustomDatePicker } from '../components/CustomDatePicker';
 import { CustomTimePicker } from '../components/CustomTimePicker';
 import { Autocomplete } from '../components/Autocomplete';
@@ -18,17 +20,20 @@ import { fetchWeatherForecast, type WeatherData } from '../lib/weather';
 import { normalizeOpponentName } from './HeadToHead';
 import { useTranslation } from 'react-i18next';
 import { compareVietnameseNames } from '../utils/sortUtils';
-import { isPlayerHidden, getPlayerPerMatchStatus, comparePlayers } from '../utils/playerUtils';
+import { isPlayerHidden, getPlayerPerMatchStatus, comparePlayers, getCleanupNpcIds } from '../utils/playerUtils';
 import { formatCurrencyAmount, LANGUAGE_DEFAULT_CURRENCY } from '../utils/currencyUtils';
 import { getCurrentSeasonRange, isMatchInSeason } from '../utils/seasonUtils';
+import { getTournamentRounds } from '../utils/tournamentUtils';
 
 export default function Matchday() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { players, addPlayer, updatePlayer, deletePlayer } = usePlayerStore();
+  const { players, addPlayer, updatePlayer, deletePlayer, deletePlayers } = usePlayerStore();
   const { addToast } = useToastStore();
   const { settings } = useSettingsStore();
+  const ourTeamName = settings.teamName || 'Đội nhà';
   const { venues } = useVenueStore();
+  const { tournaments, activeTournamentId } = useTournamentStore();
   const activeCurrency = settings.currency || LANGUAGE_DEFAULT_CURRENCY[i18n.language] || 'VND';
   const {
     matches,
@@ -88,6 +93,16 @@ export default function Matchday() {
     return () => selectMatch('');
   }, [selectMatch]);
 
+  // Auto-cleanup stale NPCs belonging to finished/deleted matches
+  useEffect(() => {
+    if (matches && matches.length > 0) {
+      const staleNpcIds = getCleanupNpcIds(players, matches);
+      if (staleNpcIds.length > 0) {
+        deletePlayers(staleNpcIds);
+      }
+    }
+  }, [matches, players, deletePlayers]);
+
   const formatDateDDMMYYYY = (dateStr: string) => {
     if (!dateStr) return '';
     const [y, m, d] = dateStr.split('-');
@@ -113,7 +128,7 @@ export default function Matchday() {
 
   const [activeTab, setActiveTab] = useState<'attendance' | 'teams' | 'summary'>('attendance');
   const [filterMode, setFilterMode] = useState<'all_time' | 'current_season'>('current_season');
-  const [matchCategoryFilter, setMatchCategoryFilter] = useState<'all' | 'internal' | 'friendly' | 'live'>('all');
+  const [matchCategoryFilter, setMatchCategoryFilter] = useState<'all' | 'internal' | 'friendly' | 'tournament' | 'live'>('all');
   const [matchSearchQuery, setMatchSearchQuery] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -123,6 +138,153 @@ export default function Matchday() {
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [bibColorSelection, setBibColorSelection] = useState<'A' | 'B' | 'C' | 'D' | null>(null);
+
+  // Tournament for the currently active match
+  const currentTournament = useMemo(() => {
+    if (currentMatch?.matchType !== 'tournament') {
+      if (activeTournamentId) {
+        return tournaments.find(t => t.id === activeTournamentId) || null;
+      }
+      return null;
+    }
+    if (currentMatch?.tournamentId) {
+      const byId = tournaments.find(t => t.id === currentMatch.tournamentId);
+      if (byId) return byId;
+    }
+    const tourName = (currentMatch?.tournamentName || '').trim().toLowerCase();
+    if (tourName) {
+      const byName = tournaments.find(t => t.name.trim().toLowerCase() === tourName);
+      if (byName) return byName;
+    }
+    const opp = (currentMatch?.opponent || '').trim().toLowerCase();
+    if (opp) {
+      const byOpp = tournaments.find(t => t.name.trim().toLowerCase() === opp);
+      if (byOpp) return byOpp;
+    }
+    if (activeTournamentId) {
+      const byActive = tournaments.find(t => t.id === activeTournamentId);
+      if (byActive) return byActive;
+    }
+    const tourWithTeams = tournaments.find(t => t.teams && t.teams.length >= 2);
+    if (tourWithTeams) return tourWithTeams;
+
+    return tournaments[0] || null;
+  }, [currentMatch?.matchType, currentMatch?.tournamentId, currentMatch?.tournamentName, currentMatch?.opponent, tournaments, activeTournamentId]);
+
+  // Auto-heal tournament match linkage & ensure opponent is a real team, not tournament name
+  useEffect(() => {
+    if (!currentMatch || currentMatch.matchType !== 'tournament') return;
+    const tour = currentTournament || (activeTournamentId ? tournaments.find(t => t.id === activeTournamentId) : null) || (currentMatch.tournamentId ? tournaments.find(t => t.id === currentMatch.tournamentId) : null) || tournaments[0];
+    if (!tour) return;
+
+    const tourIdNeedsFix = !currentMatch.tournamentId && !!tour.id;
+    const tourNameNeedsFix = !currentMatch.tournamentName || currentMatch.tournamentName !== tour.name;
+    const oppNeedsFix = currentMatch.opponent !== '';
+
+    if (tourIdNeedsFix || tourNameNeedsFix || oppNeedsFix) {
+      updateMatchInfo({
+        ...currentMatch,
+        tournamentId: tour.id,
+        tournamentName: tour.name,
+        opponent: '' // Tournaments feature all teams, never a single 1v1 opponent
+      });
+    }
+  }, [currentMatch?.id, currentMatch?.matchType, currentMatch?.opponent, currentMatch?.tournamentId, currentMatch?.tournamentName, currentTournament, activeTournamentId, tournaments]);
+
+  // Clean any existing tournament match that has opponent set in store
+  useEffect(() => {
+    const dirtyTourMatches = matches.filter(m => m.matchType === 'tournament' && m.opponent);
+    if (dirtyTourMatches.length > 0) {
+      dirtyTourMatches.forEach(m => {
+        updateLiveMatch(m.id, { opponent: '' });
+      });
+    }
+  }, [matches, updateLiveMatch]);
+
+  // Helper to get clean list of tournament teams for any match
+  const getMatchTournamentTeams = useCallback((m: MatchInfo | null | undefined): { id: string; name: string; isOurTeam?: boolean }[] => {
+    if (!m || m.matchType !== 'tournament') return [];
+    const tour = (m.tournamentId ? tournaments.find(t => t.id === m.tournamentId) : null)
+      || tournaments.find(t => t.name.trim().toLowerCase() === (m.tournamentName || m.opponent || '').trim().toLowerCase())
+      || (activeTournamentId ? tournaments.find(t => t.id === activeTournamentId) : null)
+      || tournaments[0];
+    if (!tour) return [];
+
+    const tourNameLower = tour.name.trim().toLowerCase();
+    const ourNameLower = (ourTeamName || 'kat fc').trim().toLowerCase();
+    
+    let ourTeam = tour.teams.find(t => t.isOurTeam || t.name.trim().toLowerCase() === ourNameLower);
+    if (!ourTeam) {
+      ourTeam = {
+        id: 'our_team_default',
+        name: ourTeamName || 'KAT FC',
+        isOurTeam: true
+      };
+    } else {
+      ourTeam = { ...ourTeam, isOurTeam: true };
+    }
+
+    const otherTeams = tour.teams.filter(t => 
+      t.id !== ourTeam?.id &&
+      !t.isOurTeam && 
+      t.name.trim().toLowerCase() !== ourNameLower &&
+      t.name.trim().toLowerCase() !== tourNameLower && 
+      t.name.trim().toLowerCase() !== 'đối thủ'
+    );
+    return [ourTeam, ...otherTeams].slice(0, 4);
+  }, [tournaments, activeTournamentId, ourTeamName]);
+
+  // Clean list of tournament teams (our team first, followed by others, excluding tournament name itself and placeholder)
+  const currentTournamentTeams = useMemo(() => {
+    return getMatchTournamentTeams(currentMatch);
+  }, [getMatchTournamentTeams, currentMatch]);
+
+  // Total team count in tournament / chia doi (defaults to tournament teams if >= 2)
+  const effectiveTeamCount = useMemo(() => {
+    if (currentMatch?.matchType === 'tournament') {
+      if (currentTournamentTeams.length >= 2) {
+        return Math.min(4, currentTournamentTeams.length);
+      }
+      return 4;
+    }
+    if (currentTournamentTeams.length >= 2 && currentMatch?.matchType !== 'friendly') {
+      return Math.min(4, currentTournamentTeams.length);
+    }
+    return currentMatch?.teamCount || 2;
+  }, [currentMatch?.matchType, currentMatch?.teamCount, currentTournamentTeams.length]);
+
+  // Helper to get real team name for a slot ('A', 'B', 'C', 'D')
+  const getTeamSlotName = (team: 'A' | 'B' | 'C' | 'D') => {
+    const tourName = (currentTournament?.name || currentMatch?.tournamentName || '').trim().toLowerCase();
+
+    if (currentTournamentTeams.length > 0 && currentMatch?.matchType !== 'friendly') {
+      const idx = team === 'A' ? 0 : team === 'B' ? 1 : team === 'C' ? 2 : 3;
+      if (idx < currentTournamentTeams.length) {
+        const candidate = currentTournamentTeams[idx].name;
+        if (candidate.trim().toLowerCase() !== tourName && candidate.trim().toLowerCase() !== 'đối thủ') {
+          return candidate;
+        }
+      }
+    }
+
+    if (currentMatch?.matchType === 'internal') {
+      return t(`matchday.team_${team.toLowerCase()}`) || `TEAM ${team}`;
+    }
+
+    if (team === 'A') return ourTeamName || 'ĐỘI NHÀ';
+    if (team === 'B') {
+      const opp = currentMatch?.opponent;
+      if (opp && opp.trim().toLowerCase() !== tourName && opp.trim().toLowerCase() !== 'đối thủ') {
+        return opp;
+      }
+      const firstOpp = currentTournamentTeams.find((t: { id: string; name: string; isOurTeam?: boolean }) => !t.isOurTeam && t.name.trim().toLowerCase() !== tourName && t.name.trim().toLowerCase() !== 'đối thủ');
+      if (firstOpp) {
+        return firstOpp.name;
+      }
+      return 'ĐỐI THỦ';
+    }
+    return `TEAM ${team}`;
+  };
 
   // Attendance hidden list accordion state
   const [showHiddenInAttendance, setShowHiddenInAttendance] = useState(false);
@@ -215,7 +377,7 @@ export default function Matchday() {
     }
 
     setShowNpcModal(false);
-    const teamLabel = npcTargetTeam ? (t(`matchday.team_${npcTargetTeam.toLowerCase()}`) || `Đội ${npcTargetTeam}`) : (t('matchday.unassigned') || 'Chưa chia');
+    const teamLabel = npcTargetTeam ? getTeamSlotName(npcTargetTeam) : (t('matchday.unassigned') || 'Chưa chia');
     addToast({
       type: 'success',
       message: t('matchday.toast_npc_added', { name: trimmedName, team: teamLabel })
@@ -242,11 +404,11 @@ export default function Matchday() {
   const [liveWeather, setLiveWeather] = useState<WeatherData | null>(null);
   const [isWeatherUnavailable, setIsWeatherUnavailable] = useState(false);
 
-  // Derive unique past opponent names for autocomplete
+  // Derive unique past opponent names for autocomplete (friendly matches)
   const pastOpponents = useMemo(() => {
     const map = new Map<string, string>(); // normalized -> original
     matches.forEach(m => {
-      if (m.matchType !== 'internal' && m.opponent) {
+      if (m.matchType === 'friendly' && m.opponent) {
         const normalized = normalizeOpponentName(m.opponent);
         if (!map.has(normalized)) {
           map.set(normalized, m.opponent.trim());
@@ -255,6 +417,26 @@ export default function Matchday() {
     });
     return Array.from(map.values()).sort();
   }, [matches]);
+
+  // Derive tournament names for autocomplete (from tournament store + any past tournament matches)
+  const tournamentOptions = useMemo(() => {
+    const list: string[] = [];
+    tournaments.forEach(t => {
+      const name = t.name?.trim();
+      if (name && !list.includes(name)) {
+        list.push(name);
+      }
+    });
+    matches.forEach(m => {
+      if (m.matchType === 'tournament') {
+        const name = (m.tournamentName || m.opponent)?.trim();
+        if (name && !list.includes(name)) {
+          list.push(name);
+        }
+      }
+    });
+    return list;
+  }, [tournaments, matches]);
 
   useEffect(() => {
     if (currentMatch && currentMatch.status !== 'finished' && currentMatch.date && currentMatch.time) {
@@ -331,10 +513,10 @@ export default function Matchday() {
     const match = getMatchInfo();
     if (!match) return;
     setLiveData({
-      scoreUs: match.scoreUs ?? 0,
-      scoreOpponent: match.scoreOpponent ?? 0,
-      scoreTeamA: match.scoreTeamA ?? 0,
-      scoreTeamB: match.scoreTeamB ?? 0,
+      scoreUs: match.scoreUs ?? match.scoreTeamA ?? 0,
+      scoreOpponent: match.scoreOpponent ?? match.scoreTeamB ?? 0,
+      scoreTeamA: match.scoreTeamA ?? match.scoreUs ?? 0,
+      scoreTeamB: match.scoreTeamB ?? match.scoreOpponent ?? 0,
       scoreTeamC: match.scoreTeamC ?? 0,
       scoreTeamD: match.scoreTeamD ?? 0,
     });
@@ -356,13 +538,15 @@ export default function Matchday() {
       .filter(([_, stat]) => stat.goals > 0 || stat.assists > 0)
       .map(([playerId, stat]) => ({
         playerId,
+        playerName: players.find(p => p.id === playerId)?.name,
         goals: stat.goals,
         assists: stat.assists
       }));
 
+    const isMultiTeam = currentMatch.matchType === 'internal' || currentMatch.matchType === 'tournament';
     updateLiveMatch(currentMatch.id, {
-      scoreUs: liveData.scoreUs,
-      scoreOpponent: liveData.scoreOpponent,
+      scoreUs: isMultiTeam ? liveData.scoreTeamA : liveData.scoreUs,
+      scoreOpponent: isMultiTeam ? liveData.scoreTeamB : liveData.scoreOpponent,
       scoreTeamA: liveData.scoreTeamA,
       scoreTeamB: liveData.scoreTeamB,
       scoreTeamC: liveData.scoreTeamC,
@@ -385,19 +569,25 @@ export default function Matchday() {
     }));
 
     if (currentMatch) {
-      if (currentMatch.matchType === 'internal') {
-        const team = currentMatch.teams?.[p.id] || p.team;
-        if (team === 'A') {
+      const isMultiTeam = currentMatch.matchType === 'internal' || currentMatch.matchType === 'tournament';
+      const playerTeam = currentMatch.teams?.[p.id] || p.team;
+
+      if (isMultiTeam) {
+        if (playerTeam === 'A') {
           setLiveData(prev => ({ ...prev, scoreTeamA: Math.max(0, prev.scoreTeamA + (increment ? 1 : -1)) }));
-        } else if (team === 'B') {
+        } else if (playerTeam === 'B') {
           setLiveData(prev => ({ ...prev, scoreTeamB: Math.max(0, prev.scoreTeamB + (increment ? 1 : -1)) }));
-        } else if (team === 'C') {
+        } else if (playerTeam === 'C') {
           setLiveData(prev => ({ ...prev, scoreTeamC: Math.max(0, (prev.scoreTeamC || 0) + (increment ? 1 : -1)) }));
-        } else if (team === 'D') {
+        } else if (playerTeam === 'D') {
           setLiveData(prev => ({ ...prev, scoreTeamD: Math.max(0, (prev.scoreTeamD || 0) + (increment ? 1 : -1)) }));
         }
       } else {
-        setLiveData(prev => ({ ...prev, scoreUs: Math.max(0, prev.scoreUs + (increment ? 1 : -1)) }));
+        if (playerTeam === 'B') {
+          setLiveData(prev => ({ ...prev, scoreOpponent: Math.max(0, prev.scoreOpponent + (increment ? 1 : -1)) }));
+        } else {
+          setLiveData(prev => ({ ...prev, scoreUs: Math.max(0, prev.scoreUs + (increment ? 1 : -1)) }));
+        }
       }
     }
   };
@@ -408,6 +598,8 @@ export default function Matchday() {
     teamCount: 2 as 2 | 3 | 4,
     trackStats: false,
     opponent: '',
+    tournamentName: '',
+    round: 'Vòng 1',
     location: '',
     time: '19:00',
     date: new Date().toISOString().split('T')[0],
@@ -417,6 +609,60 @@ export default function Matchday() {
 
   // Edit Form state
   const [editInfo, setEditInfo] = useState(currentMatch || {} as any);
+
+  // Selected tournament for creating match
+  const selectedTourForNewMatch = useMemo(() => {
+    if (newMatchData.matchType !== 'tournament') return null;
+    const tourName = (newMatchData.tournamentName || newMatchData.opponent || '').trim().toLowerCase();
+    if (!tourName) return tournaments[0] || null;
+    return tournaments.find(t => t.name.trim().toLowerCase() === tourName) || tournaments[0] || null;
+  }, [newMatchData.matchType, newMatchData.tournamentName, newMatchData.opponent, tournaments]);
+
+  // Derive rounds based specifically on this tournament's format & teams
+  const newMatchRoundOptions = useMemo(() => {
+    return getTournamentRounds(selectedTourForNewMatch, matches);
+  }, [selectedTourForNewMatch, matches]);
+
+  const newMatchTournamentOpponentOptions = useMemo(() => {
+    if (!selectedTourForNewMatch) return pastOpponents;
+    const tourOpponents = selectedTourForNewMatch.teams.filter(t => !t.isOurTeam).map(t => t.name);
+    const combined = [...tourOpponents];
+    pastOpponents.forEach(o => {
+      if (!combined.some(c => c.toLowerCase() === o.toLowerCase())) {
+        combined.push(o);
+      }
+    });
+    return combined;
+  }, [selectedTourForNewMatch, pastOpponents]);
+
+  // Selected tournament for editing match
+  const selectedTourForEditMatch = useMemo(() => {
+    if (editInfo.matchType !== 'tournament') return null;
+    if (editInfo.tournamentId) {
+      const byId = tournaments.find(t => t.id === editInfo.tournamentId);
+      if (byId) return byId;
+    }
+    const tourName = (editInfo.tournamentName || editInfo.opponent || '').trim().toLowerCase();
+    if (!tourName) return tournaments[0] || null;
+    return tournaments.find(t => t.name.trim().toLowerCase() === tourName) || tournaments[0] || null;
+  }, [editInfo.matchType, editInfo.tournamentId, editInfo.tournamentName, editInfo.opponent, tournaments]);
+
+  // Derive rounds based specifically on edit tournament's format & teams
+  const editMatchRoundOptions = useMemo(() => {
+    return getTournamentRounds(selectedTourForEditMatch, matches);
+  }, [selectedTourForEditMatch, matches]);
+
+  const editMatchTournamentOpponentOptions = useMemo(() => {
+    if (!selectedTourForEditMatch) return pastOpponents;
+    const tourOpponents = selectedTourForEditMatch.teams.filter(t => !t.isOurTeam).map(t => t.name);
+    const combined = [...tourOpponents];
+    pastOpponents.forEach(o => {
+      if (!combined.some(c => c.toLowerCase() === o.toLowerCase())) {
+        combined.push(o);
+      }
+    });
+    return combined;
+  }, [selectedTourForEditMatch, pastOpponents]);
 
   // End Match Form state
   const [endMatchScore, setEndMatchScore] = useState({
@@ -431,12 +677,36 @@ export default function Matchday() {
   const [playerStatsMap, setPlayerStatsMap] = useState<Record<string, { goals: number; assists: number }>>({});
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Helper to open Create Modal with clean defaults
+  const openCreateModal = () => {
+    const firstTour = tournaments[0];
+    const initialRounds = getTournamentRounds(firstTour, matches);
+    setNewMatchData({
+      matchType: 'internal',
+      teamCount: 2,
+      trackStats: false,
+      opponent: '',
+      tournamentName: firstTour?.name || '',
+      round: initialRounds[0] || 'Vòng 1',
+      location: '',
+      time: '19:00',
+      date: new Date().toISOString().split('T')[0],
+      teamAColor: 'Đỏ',
+      teamBColor: 'Xanh'
+    });
+    setShowCreateModal(true);
+  };
+
   // Helper to open Edit Modal initialized with currentMatch
   const openEditModal = () => {
     const match = getMatchInfo();
     if (match) {
+      const tourName = match.tournamentName || (match.matchType === 'tournament' ? '' : match.opponent);
+      const oppName = match.matchType === 'tournament' ? '' : (match.opponent || '');
       setEditInfo({
         ...match,
+        tournamentName: tourName,
+        opponent: oppName,
         trackStats: match.trackStats ?? (match.matchType !== 'internal'),
       });
       setShowEditModal(true);
@@ -503,11 +773,16 @@ export default function Matchday() {
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const rate = getVenueRateForTime(newMatchData.location, newMatchData.time);
+    const targetTourName = newMatchData.matchType === 'tournament' ? (newMatchData.tournamentName || (selectedTourForNewMatch?.name || '')) : undefined;
+    const matchingTour = tournaments.find(t => t.name.toLowerCase() === (targetTourName || '').trim().toLowerCase()) || selectedTourForNewMatch;
     createMatch({
       matchType: newMatchData.matchType,
-      teamCount: newMatchData.matchType === 'internal' ? newMatchData.teamCount : undefined,
+      teamCount: newMatchData.teamCount || 2,
       trackStats: newMatchData.matchType === 'internal' ? newMatchData.trackStats : true,
-      opponent: newMatchData.opponent,
+      opponent: newMatchData.matchType === 'tournament' ? '' : (newMatchData.opponent || ''),
+      tournamentName: newMatchData.matchType === 'tournament' ? (matchingTour?.name || targetTourName) : undefined,
+      tournamentId: newMatchData.matchType === 'tournament' ? matchingTour?.id : undefined,
+      round: newMatchData.matchType === 'tournament' ? (newMatchData.round || 'Vòng 1') : undefined,
       location: newMatchData.location,
       time: newMatchData.time,
       date: newMatchData.date,
@@ -521,8 +796,15 @@ export default function Matchday() {
 
   const handleEditSave = () => {
     const rate = getVenueRateForTime(editInfo.location, editInfo.time);
+    const targetTourName = editInfo.matchType === 'tournament' ? (editInfo.tournamentName || (selectedTourForEditMatch?.name || '')) : undefined;
+    const matchingTour = tournaments.find(t => t.name.toLowerCase() === (targetTourName || '').trim().toLowerCase()) || selectedTourForEditMatch;
     updateMatchInfo({
       ...editInfo,
+      teamCount: editInfo.teamCount || 2,
+      opponent: editInfo.matchType === 'tournament' ? '' : (editInfo.opponent || ''),
+      tournamentName: editInfo.matchType === 'tournament' ? (matchingTour?.name || targetTourName) : undefined,
+      tournamentId: editInfo.matchType === 'tournament' ? (matchingTour?.id || editInfo.tournamentId) : undefined,
+      round: editInfo.matchType === 'tournament' ? (editInfo.round || 'Vòng 1') : undefined,
       pitchFee: editInfo.pitchFee !== undefined ? editInfo.pitchFee : (rate?.price || null),
       feeTimeSlot: editInfo.feeTimeSlot || rate?.slotName || null,
     });
@@ -619,10 +901,10 @@ export default function Matchday() {
       orderedPlayers.push(...shuffledGroup);
     });
 
-    const numTeams = currentMatch.teamCount || 2;
+    const numTeams = effectiveTeamCount;
     const teamsList = ['A', 'B', 'C', 'D'].slice(0, numTeams) as ('A'|'B'|'C'|'D')[];
     
-    const MAX_PLAYERS_PER_TEAM = 5;
+    const MAX_PLAYERS_PER_TEAM = Math.max(5, Math.ceil(orderedPlayers.length / numTeams));
     const maxTotalPlayers = numTeams * MAX_PLAYERS_PER_TEAM;
     
     // Snake draft distribution for better balance
@@ -704,7 +986,7 @@ export default function Matchday() {
               {t('matchday.no_match_desc')}
             </p>
             <button
-              onClick={() => setShowCreateModal(true)}
+              onClick={openCreateModal}
               className="hallmark-btn w-full py-4 text-lg font-bold bg-primary text-white flex items-center justify-center gap-2"
             >
               <Plus size={20} /> <span>{t('matchday.create_new_caps')}</span>
@@ -726,7 +1008,14 @@ export default function Matchday() {
                 <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">{t('matchday.match_type_label')}</label>
                 <CustomSelect
                   value={newMatchData.matchType}
-                  onChange={val => setNewMatchData({ ...newMatchData, matchType: val as any })}
+                  onChange={val => {
+                    const nextType = val as any;
+                    setNewMatchData(prev => ({
+                      ...prev,
+                      matchType: nextType,
+                      opponent: prev.matchType !== nextType ? '' : prev.opponent
+                    }));
+                  }}
                   options={[
                     { value: 'internal', label: t('matchday.type_internal') },
                     { value: 'friendly', label: t('matchday.type_friendly') },
@@ -788,17 +1077,55 @@ export default function Matchday() {
                 </div>
               )}
 
-              {newMatchData.matchType !== 'internal' && (
+              {newMatchData.matchType === 'tournament' ? (
+                <>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">
+                      {t('matchday.tournament_label', 'CHỌN GIẢI ĐẤU')}
+                    </label>
+                    <Autocomplete
+                      value={newMatchData.tournamentName || (tournaments[0]?.name || '')}
+                      onChange={(val) => {
+                        const matching = tournaments.find(t => t.name.trim().toLowerCase() === val.trim().toLowerCase());
+                        const roundsForTour = getTournamentRounds(matching, matches);
+                        setNewMatchData(prev => ({
+                          ...prev,
+                          tournamentName: val,
+                          round: roundsForTour[0] || 'Vòng 1'
+                        }));
+                      }}
+                      options={tournamentOptions}
+                      placeholder={t('matchday.tournament_placeholder', 'CHỌN GIẢI ĐẤU')}
+                      allowNew={true}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">
+                      {t('matchday.round_label', 'VÒNG ĐẤU')}
+                    </label>
+                    <Autocomplete
+                      value={newMatchData.round || (newMatchRoundOptions[0] || 'Vòng 1')}
+                      onChange={(val) => setNewMatchData({ ...newMatchData, round: val })}
+                      options={newMatchRoundOptions}
+                      placeholder={t('matchday.round_placeholder', 'Chọn vòng đấu...')}
+                      allowNew={true}
+                    />
+                  </div>
+                </>
+              ) : newMatchData.matchType === 'friendly' ? (
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">{t('matchday.opponent_label')}</label>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">
+                    {t('matchday.opponent_label', 'Tên Đối thủ')}
+                  </label>
                   <Autocomplete
                     value={newMatchData.opponent}
                     onChange={(val) => setNewMatchData({ ...newMatchData, opponent: val })}
                     options={pastOpponents}
                     placeholder={t('matchday.opponent_input_placeholder')}
+                    allowNew={true}
                   />
                 </div>
-              )}
+              ) : null}
 
               <div className="grid grid-cols-2 gap-4">
                 <CustomDatePicker
@@ -863,6 +1190,7 @@ export default function Matchday() {
     const countAll = seasonMatches.length;
     const countInternal = seasonMatches.filter(m => (m.matchType || 'internal') === 'internal').length;
     const countFriendly = seasonMatches.filter(m => m.matchType === 'friendly').length;
+    const countTournament = seasonMatches.filter(m => m.matchType === 'tournament').length;
     const countLive = seasonMatches.filter(m => m.status === 'live').length;
 
     const filteredMatches = seasonMatches.filter(m => {
@@ -877,12 +1205,16 @@ export default function Matchday() {
       // Search filter
       if (matchSearchQuery.trim()) {
         const query = matchSearchQuery.toLowerCase();
-        const opponentName = m.opponent?.toLowerCase() || '';
+        const opponentName = (m.tournamentName || m.opponent || '').toLowerCase();
         const isInternalMatch = m.matchType === 'internal';
+        const isTourMatch = m.matchType === 'tournament';
         
-        // If it's an internal match, we might want to let them search by "internal" or translation
-        // For simplicity, just check opponent or fallback
-        if (!opponentName.includes(query) && !(isInternalMatch && 'nội bộ internal'.includes(query))) {
+        // Match opponent/tournament name, or keywords
+        if (
+          !opponentName.includes(query) && 
+          !(isInternalMatch && 'nội bộ internal'.includes(query)) &&
+          !(isTourMatch && 'giải đấu tournament'.includes(query))
+        ) {
           return false;
         }
       }
@@ -937,7 +1269,7 @@ export default function Matchday() {
       };
 
       let resultBadge = null;
-      if (match.status === 'finished' && match.matchType !== 'internal' && typeof match.scoreUs === 'number' && typeof match.scoreOpponent === 'number') {
+      if (match.status === 'finished' && match.matchType === 'friendly' && typeof match.scoreUs === 'number' && typeof match.scoreOpponent === 'number') {
         if (match.scoreUs > match.scoreOpponent) {
           resultBadge = <span className="px-2 py-0.5 text-[10px] font-display uppercase font-bold bg-emerald-500 text-white">THẮNG</span>;
         } else if (match.scoreUs < match.scoreOpponent) {
@@ -962,6 +1294,26 @@ export default function Matchday() {
                 <span className="text-[10px] font-display uppercase tracking-widest font-bold text-text-muted">
                   {match.matchType === 'internal' ? t('matchday.type_internal') : match.matchType === 'friendly' ? t('matchday.type_friendly') : t('matchday.type_tournament')}
                 </span>
+                {match.matchType === 'tournament' && match.round && (
+                  <span className="px-1.5 py-0.5 text-[9px] font-display font-bold uppercase tracking-wider bg-primary/10 text-primary border border-primary/30">
+                    {match.round}
+                  </span>
+                )}
+                {match.matchType === 'tournament' && match.status === 'finished' && (
+                  <span className={`px-1.5 py-0.5 text-[9px] font-display font-bold uppercase tracking-wider ${
+                    (match.scoreUs ?? 0) > (match.scoreOpponent ?? 0)
+                      ? 'bg-emerald-500/15 text-emerald-600 border border-emerald-500/30'
+                      : (match.scoreUs ?? 0) === (match.scoreOpponent ?? 0)
+                        ? 'bg-amber-500/15 text-amber-600 border border-amber-500/30'
+                        : 'bg-rose-500/15 text-rose-600 border border-rose-500/30'
+                  }`}>
+                    {(match.scoreUs ?? 0) > (match.scoreOpponent ?? 0)
+                      ? '+3 ĐIỂM'
+                      : (match.scoreUs ?? 0) === (match.scoreOpponent ?? 0)
+                        ? '+1 ĐIỂM'
+                        : '0 ĐIỂM'}
+                  </span>
+                )}
                 {match.matchType === 'internal' && match.status === 'finished' && (
                   <span className={`px-1.5 py-0.5 text-[9px] font-display font-bold uppercase tracking-wider ${
                     match.trackStats 
@@ -995,7 +1347,11 @@ export default function Matchday() {
 
             {/* Match Title */}
             <h3 className="font-display text-xl sm:text-2xl uppercase text-primary leading-tight group-hover:text-secondary transition-colors font-bold">
-              {match.matchType === 'internal' ? t('matchday.internal_match') : `VS ${match.opponent || t('matchday.opponent_placeholder')}`}
+              {match.matchType === 'internal' 
+                ? t('matchday.internal_match') 
+                : match.matchType === 'tournament'
+                  ? (match.tournamentName || match.opponent || t('matchday.type_tournament'))
+                  : `VS ${match.opponent || t('matchday.opponent_placeholder')}`}
             </h3>
 
             {/* Score (if live or finished) */}
@@ -1005,7 +1361,7 @@ export default function Matchday() {
                   <div className={`grid gap-2 w-full ${
                     (match.teamCount || 2) === 2 ? 'grid-cols-2' : 
                     (match.teamCount || 2) === 3 ? 'grid-cols-3' : 
-                    'grid-cols-2'
+                    'grid-cols-2 min-[400px]:grid-cols-4'
                   }`}>
                     {(['A', 'B', 'C', 'D'] as const).slice(0, match.teamCount || 2).map((team) => {
                       const scoreField = `scoreTeam${team}` as keyof typeof match;
@@ -1021,7 +1377,41 @@ export default function Matchday() {
                       );
                     })}
                   </div>
-                ) : (
+                ) : match.matchType === 'tournament' ? (() => {
+                  const tourTeams = getMatchTournamentTeams(match);
+                  const count = Math.min(4, Math.max(2, tourTeams.length || 4));
+                  const teamsToRender = tourTeams.length >= 2 
+                    ? tourTeams.slice(0, count) 
+                    : (['A', 'B', 'C', 'D'] as const).slice(0, count).map((slot) => ({
+                        id: `slot_${slot}`,
+                        name: slot === 'A' ? (ourTeamName || 'KAT FC') : `ĐỘI ${slot}`,
+                        isOurTeam: slot === 'A'
+                      }));
+
+                  return (
+                    <div className={`grid gap-1.5 w-full ${
+                      count === 2 ? 'grid-cols-2' : 
+                      count === 3 ? 'grid-cols-3' : 
+                      'grid-cols-2 min-[400px]:grid-cols-4'
+                    }`}>
+                      {teamsToRender.map((tTeam: { id: string; name: string; isOurTeam?: boolean }, idx: number) => {
+                        const slot = (['A', 'B', 'C', 'D'] as const)[idx];
+                        const scoreField = `scoreTeam${slot}` as keyof typeof match;
+                        const scoreVal = match[scoreField] ?? (slot === 'A' ? match.scoreUs : slot === 'B' ? match.scoreOpponent : 0) ?? 0;
+                        return (
+                          <div key={slot} className="bg-surface border border-border-main p-1.5 flex flex-col items-center justify-center text-center">
+                            <span className="text-[9px] uppercase font-bold text-text-muted truncate max-w-full font-display">
+                              {tTeam.name}
+                            </span>
+                            <span className={`text-lg sm:text-xl font-display font-bold ${slot === 'A' ? 'text-primary' : 'text-text-main'}`}>
+                              {Number(scoreVal)}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })() : (
                   <div className="flex items-center justify-center gap-6 sm:gap-8 w-full">
                     <div className="text-center flex-1">
                       <div className="text-[10px] uppercase font-bold text-text-muted mb-0.5 font-display truncate">{settings.teamName || '5TactiQ'}</div>
@@ -1029,7 +1419,9 @@ export default function Matchday() {
                     </div>
                     <span className="text-2xl font-display text-text-muted font-bold opacity-40">-</span>
                     <div className="text-center flex-1">
-                      <div className="text-[10px] uppercase font-bold text-text-muted mb-0.5 font-display truncate">{match.opponent || t('matchday.opponent_placeholder')}</div>
+                      <div className="text-[10px] uppercase font-bold text-text-muted mb-0.5 font-display truncate">
+                        {match.opponent || t('matchday.opponent_placeholder')}
+                      </div>
                       <div className="text-3xl sm:text-4xl font-display font-bold text-text-main">{match.scoreOpponent ?? 0}</div>
                     </div>
                   </div>
@@ -1041,7 +1433,7 @@ export default function Matchday() {
             <div className="space-y-1 text-xs text-text-muted font-medium mt-auto pt-2 border-t border-border-main/50">
               <div className="flex items-center gap-1.5">
                 <CalendarClock size={13} className="text-secondary shrink-0" />
-                <span>{formatDateDDMMYYYY(match.date)} • {match.time}</span>
+                <span>{formatDateDDMMYYYY(match.date)} - {match.time}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <MapPin size={13} className="text-secondary shrink-0" />
@@ -1079,7 +1471,7 @@ export default function Matchday() {
               />
             )}
             <button
-              onClick={() => setShowCreateModal(true)}
+              onClick={openCreateModal}
               className="hallmark-btn flex items-center justify-center bg-secondary text-white shrink-0 h-[38px] sm:h-[40px] px-4 sm:px-6 font-display text-xs uppercase tracking-wider font-bold"
             >
               <span>+ {t('matchday.create_new', 'TẠO TRẬN MỚI')}</span>
@@ -1231,6 +1623,17 @@ export default function Matchday() {
                 >
                   {t('matchday.type_friendly', 'Đối đầu')} ({countFriendly})
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setMatchCategoryFilter('tournament')}
+                  className={`px-3.5 py-2 text-xs font-display uppercase tracking-wider font-bold border-2 transition-all shrink-0 active:scale-95 ${
+                    matchCategoryFilter === 'tournament'
+                      ? 'bg-primary text-white border-primary shadow-sm'
+                      : 'bg-surface text-text-muted border-border-main hover:border-primary/50'
+                  }`}
+                >
+                  {t('matchday.type_tournament', 'Giải đấu')} ({countTournament})
+                </button>
               </div>
             </div>
 
@@ -1309,7 +1712,14 @@ export default function Matchday() {
               <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">{t('matchday.match_type_label') || 'Loại trận đấu'}</label>
               <CustomSelect
                 value={newMatchData.matchType}
-                onChange={val => setNewMatchData({ ...newMatchData, matchType: val as any })}
+                onChange={val => {
+                  const nextType = val as any;
+                  setNewMatchData(prev => ({
+                    ...prev,
+                    matchType: nextType,
+                    opponent: prev.matchType !== nextType ? '' : prev.opponent
+                  }));
+                }}
                 options={[
                   { value: 'internal', label: t('matchday.type_internal') },
                   { value: 'friendly', label: t('matchday.type_friendly') },
@@ -1371,17 +1781,55 @@ export default function Matchday() {
               </div>
             )}
 
-            {newMatchData.matchType !== 'internal' && (
+            {newMatchData.matchType === 'tournament' ? (
+              <>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">
+                    {t('matchday.tournament_label', 'CHỌN GIẢI ĐẤU')}
+                  </label>
+                  <Autocomplete
+                    value={newMatchData.tournamentName || (tournaments[0]?.name || '')}
+                    onChange={(val) => {
+                      const matching = tournaments.find(t => t.name.trim().toLowerCase() === val.trim().toLowerCase());
+                      const roundsForTour = getTournamentRounds(matching, matches);
+                      setNewMatchData(prev => ({
+                        ...prev,
+                        tournamentName: val,
+                        round: roundsForTour[0] || 'Vòng 1'
+                      }));
+                    }}
+                    options={tournamentOptions}
+                    placeholder={t('matchday.tournament_placeholder', 'CHỌN GIẢI ĐẤU')}
+                    allowNew={true}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">
+                    {t('matchday.round_label', 'VÒNG ĐẤU')}
+                  </label>
+                  <Autocomplete
+                    value={newMatchData.round || (newMatchRoundOptions[0] || 'Vòng 1')}
+                    onChange={(val) => setNewMatchData({ ...newMatchData, round: val })}
+                    options={newMatchRoundOptions}
+                    placeholder={t('matchday.round_placeholder', 'Chọn vòng đấu...')}
+                    allowNew={true}
+                  />
+                </div>
+              </>
+            ) : newMatchData.matchType === 'friendly' ? (
               <div>
-                <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">{t('matchday.opponent_label') || 'Tên Đối thủ'}</label>
+                <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">
+                  {t('matchday.opponent_label', 'Tên Đối thủ')}
+                </label>
                 <Autocomplete
                   value={newMatchData.opponent}
                   onChange={(val) => setNewMatchData({ ...newMatchData, opponent: val })}
                   options={pastOpponents}
                   placeholder={t('matchday.opponent_placeholder')}
+                  allowNew={true}
                 />
               </div>
-            )}
+            ) : null}
 
             <div className="grid grid-cols-2 gap-4">
               <CustomDatePicker
@@ -1435,7 +1883,7 @@ export default function Matchday() {
     .filter(s => (s.goals || 0) > 0)
     .map(s => {
       const p = players.find(player => player.id === s.playerId);
-      return { name: p?.name || 'Cầu thủ', goals: s.goals || 0 };
+      return { name: p?.name || s.playerName || 'Cầu thủ', goals: s.goals || 0 };
     })
     .sort((a, b) => b.goals - a.goals);
 
@@ -1443,7 +1891,7 @@ export default function Matchday() {
     .filter(s => (s.assists || 0) > 0)
     .map(s => {
       const p = players.find(player => player.id === s.playerId);
-      return { name: p?.name || 'Cầu thủ', assists: s.assists || 0 };
+      return { name: p?.name || s.playerName || 'Cầu thủ', assists: s.assists || 0 };
     })
     .sort((a, b) => b.assists - a.assists);
 
@@ -1473,7 +1921,11 @@ export default function Matchday() {
               className={`w-full ${isMatchDropdownOpen ? 'bg-surface-2 border-primary text-primary' : 'bg-surface border-border-main hover:border-primary text-text-main'} border-2 font-display uppercase tracking-wider text-sm md:text-base font-bold py-2 px-2 md:px-3.5 flex items-center justify-between transition-all cursor-pointer shadow-sm`}
             >
               <span className="truncate">
-                {currentMatch.matchType === 'internal' ? t('matchday.internal_dropdown') : `VS ${currentMatch.opponent || t('matchday.opponent_placeholder')}`} ({formatDateDDMMYYYY(currentMatch.date)})
+                {currentMatch.matchType === 'internal' 
+                  ? t('matchday.internal_dropdown') 
+                  : currentMatch.matchType === 'tournament'
+                    ? (currentMatch.tournamentName || t('matchday.type_tournament'))
+                    : `VS ${currentMatch.opponent || t('matchday.opponent_placeholder')}`} ({formatDateDDMMYYYY(currentMatch.date)})
               </span>
               <ChevronDown size={18} className={`${isMatchDropdownOpen ? 'text-primary' : 'text-text-muted'} transition-transform duration-200 shrink-0 ml-2 ${isMatchDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -1503,10 +1955,14 @@ export default function Matchday() {
                       >
                         <div className="flex flex-col">
                           <span className="font-display uppercase text-base tracking-wider leading-tight">
-                            {m.matchType === 'internal' ? t('matchday.internal_match').toUpperCase() : `VS ${m.opponent || t('matchday.opponent_placeholder').toUpperCase()}`}
+                            {m.matchType === 'internal' 
+                              ? t('matchday.internal_match').toUpperCase() 
+                              : m.matchType === 'tournament'
+                                ? (m.tournamentName || t('matchday.type_tournament')).toUpperCase()
+                                : `VS ${m.opponent || t('matchday.opponent_placeholder')}`.toUpperCase()}
                           </span>
                           <span className={`text-xs ${isSelected ? 'text-white/80' : 'text-text-muted'} font-sans`}>
-                            {formatDateDDMMYYYY(m.date)} • {m.time}
+                            {formatDateDDMMYYYY(m.date)} - {m.time}{m.matchType === 'tournament' && m.round ? ` • ${m.round}` : ''}
                           </span>
                         </div>
 
@@ -1549,7 +2005,7 @@ export default function Matchday() {
         {/* Right: Actions */}
         <div className="flex flex-wrap items-center gap-2 justify-between sm:justify-end">
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={openCreateModal}
             className="hallmark-btn-outline px-3 py-2 text-xs md:text-sm border-border-main text-text-main hover:bg-surface-2 hover:text-text-main hover:border-border-main flex items-center justify-center flex-1 sm:flex-none whitespace-nowrap"
           >
             {t('matchday.create_short')}
@@ -1618,8 +2074,23 @@ export default function Matchday() {
               ? `${t('matchday.internal_match_caps')} • ${currentMatch.teamCount || 2} ${t('matchday.team_count_unit').toUpperCase()}`
               : currentMatch.matchType === 'friendly' 
               ? t('matchday.friendly_match_caps') 
-              : t('matchday.tournament_match_caps')}
+              : `${t('matchday.tournament_match_caps')}${currentMatch.round ? ` • ${currentMatch.round.toUpperCase()}` : ''}`}
           </span>
+          {currentMatch.matchType === 'tournament' && currentMatch.status === 'finished' && (
+            <span className={`inline-flex items-center px-2 py-0.5 text-[10px] font-display font-bold uppercase tracking-wider ${
+              (currentMatch.scoreUs ?? 0) > (currentMatch.scoreOpponent ?? 0)
+                ? 'bg-emerald-500/15 text-emerald-600 border border-emerald-500/30'
+                : (currentMatch.scoreUs ?? 0) === (currentMatch.scoreOpponent ?? 0)
+                  ? 'bg-amber-500/15 text-amber-600 border border-amber-500/30'
+                  : 'bg-rose-500/15 text-rose-600 border border-rose-500/30'
+            }`}>
+              {(currentMatch.scoreUs ?? 0) > (currentMatch.scoreOpponent ?? 0)
+                ? '+3 ĐIỂM'
+                : (currentMatch.scoreUs ?? 0) === (currentMatch.scoreOpponent ?? 0)
+                  ? '+1 ĐIỂM'
+                  : '0 ĐIỂM'}
+            </span>
+          )}
           {currentMatch.matchType === 'internal' && currentMatch.status === 'finished' && (
             <span className={`inline-flex items-center px-2 py-0.5 text-[10px] font-display font-bold uppercase tracking-wider ${
               currentMatch.trackStats 
@@ -1634,27 +2105,30 @@ export default function Matchday() {
         <h1 className="text-3xl md:text-5xl font-display uppercase text-primary leading-none my-1 font-bold">
           {currentMatch.matchType === 'internal' 
             ? t('matchday.internal_match_caps') 
-            : (currentMatch.opponent ? `VS ${currentMatch.opponent}` : t('matchday.friendly_match_caps'))}
+            : currentMatch.matchType === 'tournament'
+              ? (currentMatch.tournamentName || t('matchday.tournament_match_caps')).toUpperCase()
+              : (currentMatch.opponent ? `VS ${currentMatch.opponent}` : t('matchday.friendly_match_caps'))}
         </h1>
 
         {/* Live / Finished Scoreboard */}
         {(currentMatch.status === 'live' || currentMatch.status === 'finished') && (
           <div className="w-full max-w-2xl my-4">
-            {currentMatch.matchType === 'internal' ? (
+            {(currentMatch.matchType === 'internal' || currentMatch.matchType === 'tournament') ? (
               <div className={`grid gap-2.5 sm:gap-3.5 w-full ${
-                (currentMatch.teamCount || 2) === 2 ? 'grid-cols-2 max-w-md mx-auto' : 
-                (currentMatch.teamCount || 2) === 3 ? 'grid-cols-3 max-w-lg mx-auto' : 
+                effectiveTeamCount === 2 ? 'grid-cols-2 max-w-md mx-auto' : 
+                effectiveTeamCount === 3 ? 'grid-cols-3 max-w-lg mx-auto' : 
                 'grid-cols-2 sm:grid-cols-4 max-w-2xl mx-auto'
               }`}>
-                {(['A', 'B', 'C', 'D'] as const).slice(0, currentMatch.teamCount || 2).map((team) => {
+                {(['A', 'B', 'C', 'D'] as const).slice(0, effectiveTeamCount).map((team) => {
                   const scoreField = `scoreTeam${team}` as keyof typeof currentMatch;
+                  const scoreVal = currentMatch[scoreField] ?? (team === 'A' ? currentMatch.scoreUs : team === 'B' ? currentMatch.scoreOpponent : 0) ?? 0;
                   return (
                     <div key={team} className="bg-surface-2 border-2 border-border-main p-3 sm:p-4 flex flex-col items-center justify-center shadow-sm relative group hover:border-primary/50 transition-colors">
                       <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-text-muted mb-1 truncate max-w-full font-display">
-                        {t(`matchday.team_${team.toLowerCase()}`)}
+                        {getTeamSlotName(team)}
                       </span>
                       <span className={`text-3xl sm:text-5xl font-display font-bold ${team === 'A' ? 'text-primary' : 'text-text-main'}`}>
-                        {Number(currentMatch[scoreField] ?? 0)}
+                        {Number(scoreVal)}
                       </span>
                     </div>
                   );
@@ -1668,7 +2142,9 @@ export default function Matchday() {
                 </div>
                 <div className="text-3xl font-display text-text-muted font-bold opacity-40">-</div>
                 <div className="text-center flex-1">
-                  <div className="text-xs uppercase font-bold text-text-muted font-display truncate">{currentMatch.opponent || t('matchday.opponent_placeholder')}</div>
+                  <div className="text-xs uppercase font-bold text-text-muted font-display truncate">
+                    {currentMatch.opponent || t('matchday.opponent')}
+                  </div>
                   <div className="text-4xl sm:text-5xl font-display text-text-main font-bold">{currentMatch.scoreOpponent ?? 0}</div>
                 </div>
               </div>
@@ -1739,14 +2215,12 @@ export default function Matchday() {
         >
           {t('matchday.attendance_list')}
         </button>
-        {currentMatch.matchType === 'internal' && (
-          <button
-            onClick={() => setActiveTab('teams')}
-            className={`flex-1 py-2 text-sm md:text-base md:py-2.5 font-display uppercase tracking-wider transition-all ${activeTab === 'teams' ? 'bg-primary text-white font-bold shadow-sm' : 'text-text-muted hover:text-primary font-bold'}`}
-          >
-            {t('matchday.split_teams')}
-          </button>
-        )}
+        <button
+          onClick={() => setActiveTab('teams')}
+          className={`flex-1 py-2 text-sm md:text-base md:py-2.5 font-display uppercase tracking-wider transition-all ${activeTab === 'teams' ? 'bg-primary text-white font-bold shadow-sm' : 'text-text-muted hover:text-primary font-bold'}`}
+        >
+          {t('matchday.split_teams')}
+        </button>
       </div>
 
       {/* 5. Tab Content: Attendance */}
@@ -1818,12 +2292,22 @@ export default function Matchday() {
               <button
                 type="button"
                 onClick={() => setShowExportModal(true)}
-                className="hallmark-btn px-3 py-2 text-[11px] sm:text-xs font-display font-bold uppercase tracking-wider bg-surface hover:bg-surface-2 text-text-main border-2 border-border-main hover:border-primary/50 flex items-center justify-center gap-1.5 shadow-sm active:scale-95 whitespace-nowrap"
+                className="hallmark-btn px-3 py-2 text-[11px] sm:text-xs font-display font-bold uppercase tracking-wider bg-surface hover:bg-surface-2 text-text-main border-2 border-border-main hover:border-primary/50 flex items-center justify-center shadow-sm active:scale-95 whitespace-nowrap"
                 title={t('matchday.export_roster_title') || 'Xuất danh sách thi đấu'}
               >
-                <Download size={15} className="text-secondary" />
                 <span>{t('matchday.export_btn') || 'Xuất DS'}</span>
               </button>
+
+              {currentMatch.status !== 'finished' && (
+                <button
+                  type="button"
+                  onClick={() => openAddNpcModal(null)}
+                  className="hallmark-btn px-3 py-2 text-[11px] sm:text-xs font-display font-bold uppercase tracking-wider bg-surface hover:bg-surface-2 text-text-main border-2 border-border-main hover:border-primary/50 flex items-center justify-center shadow-sm active:scale-95 whitespace-nowrap"
+                  title={t('matchday.add_npc_title', 'Thêm NPC / Khách')}
+                >
+                  <span>{t('matchday.add_npc_btn', 'Thêm NPC')}</span>
+                </button>
+              )}
             </div>
             {currentMatch.status !== 'finished' && (
               <div className="flex gap-2 w-full md:w-auto">
@@ -1887,21 +2371,22 @@ export default function Matchday() {
                       <div className="flex flex-col min-w-0 flex-1 justify-center">
                         <div className="flex items-center gap-1.5 min-w-0">
                           {p.isNPC && currentMatch.status !== 'finished' ? (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                openEditNpcModal(p);
-                              }}
-                              className="font-bold text-text-main hover:text-primary text-sm sm:text-base uppercase truncate flex items-center gap-1.5 group/npc cursor-pointer text-left transition-colors"
-                              title={t('matchday.click_to_edit_npc', 'Nhấn để sửa thông tin NPC')}
-                            >
-                              <span className="truncate group-hover/npc:underline leading-normal py-0.5">{p.name}</span>
-                              <span className="text-[10px] font-bold font-display uppercase tracking-wider bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-400/30 px-1 py-0.2 shrink-0 group-hover/npc:border-primary/40 group-hover/npc:text-primary transition-colors">
-                                NPC
-                              </span>
-                              <Edit2 size={12} className="opacity-0 group-hover/npc:opacity-100 text-primary transition-opacity shrink-0" />
-                            </button>
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openEditNpcModal(p);
+                                }}
+                                className="font-bold text-text-main hover:text-primary text-sm sm:text-base uppercase truncate flex items-center gap-1.5 group/npc cursor-pointer text-left transition-colors"
+                                title={t('matchday.click_to_edit_npc', 'Nhấn để sửa thông tin NPC')}
+                              >
+                                <span className="truncate group-hover/npc:underline leading-normal py-0.5">{p.name}</span>
+                                <span className="text-[10px] font-bold font-display uppercase tracking-wider bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-400/30 px-1 py-0.2 shrink-0 group-hover/npc:border-primary/40 group-hover/npc:text-primary transition-colors">
+                                  NPC
+                                </span>
+                              </button>
+                            </div>
                           ) : (
                             <span className="font-bold text-text-main text-sm sm:text-base uppercase truncate leading-normal py-0.5">{p.name}</span>
                           )}
@@ -2022,7 +2507,7 @@ export default function Matchday() {
         </div>
       )}
 
-      {activeTab === 'teams' && currentMatch.matchType === 'internal' && (
+      {activeTab === 'teams' && (
         <div className="flex flex-col gap-4">
           <div className="bg-surface p-3.5 sm:p-4 border-2 border-border-main flex justify-between items-center gap-3">
             <h3 className="font-display text-lg sm:text-2xl text-primary uppercase font-bold tracking-wide">
@@ -2081,8 +2566,8 @@ export default function Matchday() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Team Cards */}
             {(['A', 'B', 'C', 'D'] as const).map(team => {
-              if (team === 'C' && (currentMatch.teamCount || 2) < 3) return null;
-              if (team === 'D' && (currentMatch.teamCount || 2) < 4) return null;
+              if (team === 'C' && effectiveTeamCount < 3) return null;
+              if (team === 'D' && effectiveTeamCount < 4) return null;
 
               const teamColors = {
                 A: 'bg-primary',
@@ -2095,8 +2580,8 @@ export default function Matchday() {
               
               const otherTeams = (['A', 'B', 'C', 'D'] as const).filter(t => {
                 if (t === team) return false;
-                if (t === 'C' && (currentMatch.teamCount || 2) < 3) return false;
-                if (t === 'D' && (currentMatch.teamCount || 2) < 4) return false;
+                if (t === 'C' && effectiveTeamCount < 3) return false;
+                if (t === 'D' && effectiveTeamCount < 4) return false;
                 return true;
               });
 
@@ -2113,11 +2598,15 @@ export default function Matchday() {
                   }}
                 >
                   <div className={`${teamColors[team]} text-white p-3 flex justify-between items-center`}>
-                    <h4 className="font-display text-xl uppercase">{t(`matchday.team_${team.toLowerCase()}`) || `TEAM ${team}`}</h4>
+                    <div className="flex items-center gap-2 truncate pr-2">
+                      <h4 className="font-display text-xl uppercase truncate">
+                        {getTeamSlotName(team)}
+                      </h4>
+                    </div>
                     <button
                       disabled={currentMatch.status === 'finished'}
                       onClick={() => setBibColorSelection(team)}
-                      className="bg-transparent text-white font-bold outline-none text-sm uppercase text-right disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-1"
+                      className="bg-transparent text-white font-bold outline-none text-sm uppercase text-right disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-1 shrink-0"
                     >
                       {getBibColorLabel(currentMatch[teamColorField] as string)} <ChevronDown size={14} />
                     </button>
@@ -2148,7 +2637,6 @@ export default function Matchday() {
                               <span className="text-[9px] font-bold uppercase tracking-wider bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-400/30 px-1 py-0.2 shrink-0 group-hover/npc:border-primary/40 group-hover/npc:text-primary transition-colors">
                                 NPC
                               </span>
-                              <Edit2 size={11} className="opacity-0 group-hover/npc:opacity-100 text-primary transition-opacity shrink-0" />
                             </button>
                           ) : (
                             <>
@@ -2162,29 +2650,16 @@ export default function Matchday() {
                           )}
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
-                          {p.isNPC && currentMatch.status !== 'finished' && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setNpcToDelete({ id: p.id, name: p.name });
-                              }}
-                              className="text-text-muted hover:text-red-500 p-1 transition-colors cursor-pointer"
-                              title={t('matchday.delete_npc', 'Xóa NPC')}
-                            >
-                              <Trash2 size={13} />
-                            </button>
-                          )}
-                          <div className="flex gap-1 shrink-0 @md:hidden">
+                          <div className="flex gap-1 shrink-0 md:hidden">
                             {otherTeams.map(targetTeam => (
                               <button
                                 key={targetTeam}
                                 disabled={currentMatch.status === 'finished'}
                                 onClick={() => handleMoveTeam(p.id, targetTeam)}
-                                className={`text-[10px] font-bold text-text-muted uppercase tracking-widest border border-border-main px-2 py-1 ${currentMatch.status === 'finished' ? 'opacity-50 cursor-not-allowed' : 'hover:text-primary hover:bg-primary/10 hover:border-primary/30'}`}
-                                title={`${t('matchday.move_to')} ${targetTeam}`}
+                                className={`text-[10px] font-bold text-text-muted uppercase tracking-wider border border-border-main px-2 py-1 max-w-[90px] truncate ${currentMatch.status === 'finished' ? 'opacity-50 cursor-not-allowed' : 'hover:text-primary hover:bg-primary/10 hover:border-primary/30'}`}
+                                title={`${t('matchday.move_to')} ${getTeamSlotName(targetTeam)}`}
                               >
-                                {targetTeam}
+                                {getTeamSlotName(targetTeam)}
                               </button>
                             ))}
                           </div>
@@ -2258,7 +2733,6 @@ export default function Matchday() {
                         <span className="text-[9px] font-bold uppercase tracking-wider bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-400/30 px-1 py-0.2 shrink-0 group-hover/npc:border-primary/40 group-hover/npc:text-primary transition-colors">
                           NPC
                         </span>
-                        <Edit2 size={11} className="opacity-0 group-hover/npc:opacity-100 text-primary transition-opacity shrink-0" />
                       </button>
                     ) : (
                       <>
@@ -2272,32 +2746,17 @@ export default function Matchday() {
                     )}
                   </div>
                   <div className="flex items-center gap-1 shrink-0 ml-auto">
-                    {p.isNPC && currentMatch.status !== 'finished' && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setNpcToDelete({ id: p.id, name: p.name });
-                        }}
-                        className="text-text-muted hover:text-red-500 p-1 mr-1 transition-colors cursor-pointer"
-                        title={t('matchday.delete_npc', 'Xóa NPC')}
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    )}
-                    <div className="flex shrink-0 @md:hidden">
-                      {(['A', 'B', 'C', 'D'] as const).map(team => {
-                        if (team === 'C' && (currentMatch.teamCount || 2) < 3) return null;
-                        if (team === 'D' && (currentMatch.teamCount || 2) < 4) return null;
-                        
+                    <div className="flex shrink-0 md:hidden">
+                      {(['A', 'B', 'C', 'D'] as const).slice(0, effectiveTeamCount).map(team => {
                         return (
                           <button 
                             key={team}
                             disabled={currentMatch.status === 'finished'} 
                             onClick={() => handleMoveTeam(p.id, team)} 
-                            className={`text-xs font-bold text-text-muted hover:text-primary px-3 py-1 border-l border-border-main transition-colors ${currentMatch.status === 'finished' ? 'opacity-50 cursor-not-allowed' : 'hover:bg-primary/10'}`}
+                            className={`text-xs font-bold text-text-muted hover:text-primary px-2.5 py-1 border-l border-border-main transition-colors max-w-[100px] truncate ${currentMatch.status === 'finished' ? 'opacity-50 cursor-not-allowed' : 'hover:bg-primary/10'}`}
+                            title={`${t('matchday.move_to')} ${getTeamSlotName(team)}`}
                           >
-                            {team}
+                            {getTeamSlotName(team)}
                           </button>
                         );
                       })}
@@ -2325,10 +2784,18 @@ export default function Matchday() {
             <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">{t('matchday.match_type_label') || 'Loại trận đấu'}</label>
             <CustomSelect
               value={newMatchData.matchType}
-              onChange={val => setNewMatchData({ ...newMatchData, matchType: val as any })}
+              onChange={val => {
+                const nextType = val as any;
+                setNewMatchData(prev => ({
+                  ...prev,
+                  matchType: nextType,
+                  opponent: prev.matchType !== nextType ? '' : prev.opponent
+                }));
+              }}
               options={[
                 { value: 'internal', label: t('matchday.type_internal') },
-                { value: 'friendly', label: t('matchday.type_friendly') }
+                { value: 'friendly', label: t('matchday.type_friendly') },
+                { value: 'tournament', label: t('matchday.type_tournament') }
               ]}
             />
           </div>
@@ -2386,17 +2853,67 @@ export default function Matchday() {
             </div>
           )}
 
-          {newMatchData.matchType !== 'internal' && (
+          {newMatchData.matchType === 'tournament' ? (
+            <>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">
+                  {t('matchday.tournament_label', 'CHỌN GIẢI ĐẤU')}
+                </label>
+                <Autocomplete
+                  value={newMatchData.tournamentName || (tournaments[0]?.name || '')}
+                  onChange={(val) => {
+                    const matching = tournaments.find(t => t.name.trim().toLowerCase() === val.trim().toLowerCase());
+                    const roundsForTour = getTournamentRounds(matching, matches);
+                    setNewMatchData(prev => ({
+                      ...prev,
+                      tournamentName: val,
+                      round: roundsForTour[0] || 'Vòng 1'
+                    }));
+                  }}
+                  options={tournamentOptions}
+                  placeholder={t('matchday.tournament_placeholder', 'CHỌN GIẢI ĐẤU')}
+                  allowNew={true}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">
+                  {t('matchday.round_label', 'VÒNG ĐẤU')}
+                </label>
+                <Autocomplete
+                  value={newMatchData.round || (newMatchRoundOptions[0] || 'Vòng 1')}
+                  onChange={(val) => setNewMatchData({ ...newMatchData, round: val })}
+                  options={newMatchRoundOptions}
+                  placeholder={t('matchday.round_placeholder', 'Chọn vòng đấu...')}
+                  allowNew={true}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">
+                  {t('matchday.opponent_label', 'ĐỘI ĐỐI THỦ')}
+                </label>
+                <Autocomplete
+                  value={newMatchData.opponent}
+                  onChange={(val) => setNewMatchData({ ...newMatchData, opponent: val })}
+                  options={newMatchTournamentOpponentOptions}
+                  placeholder={t('matchday.opponent_placeholder') || 'Nhập hoặc chọn đội đối thủ...'}
+                  allowNew={true}
+                />
+              </div>
+            </>
+          ) : newMatchData.matchType === 'friendly' ? (
             <div>
-              <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">{t('matchday.opponent_label') || 'Tên Đối thủ'}</label>
+              <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">
+                {t('matchday.opponent_label', 'Tên Đối thủ')}
+              </label>
               <Autocomplete
                 value={newMatchData.opponent}
                 onChange={(val) => setNewMatchData({ ...newMatchData, opponent: val })}
                 options={pastOpponents}
                 placeholder={t('matchday.opponent_placeholder') || 'Nhập tên đối thủ...'}
+                allowNew={true}
               />
             </div>
-          )}
+          ) : null}
 
           <div className="grid grid-cols-2 gap-4">
             <CustomDatePicker
@@ -2458,10 +2975,18 @@ export default function Matchday() {
             <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">{t('matchday.match_type_label') || 'Loại trận'}</label>
             <CustomSelect
               value={editInfo.matchType}
-              onChange={val => setEditInfo({ ...editInfo, matchType: val as any })}
+              onChange={val => {
+                const nextType = val as any;
+                setEditInfo((prev: any) => ({
+                  ...prev,
+                  matchType: nextType,
+                  opponent: prev.matchType !== nextType ? '' : prev.opponent
+                }));
+              }}
               options={[
                 { value: 'internal', label: t('matchday.type_internal') },
-                { value: 'friendly', label: t('matchday.type_friendly') }
+                { value: 'friendly', label: t('matchday.type_friendly') },
+                { value: 'tournament', label: t('matchday.type_tournament') }
               ]}
             />
           </div>
@@ -2520,17 +3045,56 @@ export default function Matchday() {
           )}
 
 
-          {editInfo.matchType !== 'internal' && (
+          {editInfo.matchType === 'tournament' ? (
+            <>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">
+                  {t('matchday.tournament_label', 'CHỌN GIẢI ĐẤU')}
+                </label>
+                <Autocomplete
+                  value={editInfo.tournamentName || (editInfo.opponent === editInfo.tournamentName ? editInfo.opponent : '') || (tournaments[0]?.name || '')}
+                  onChange={(val) => {
+                    const matching = tournaments.find(t => t.name.trim().toLowerCase() === val.trim().toLowerCase());
+                    const roundsForTour = getTournamentRounds(matching, matches);
+                    setEditInfo((prev: any) => ({
+                      ...prev,
+                      tournamentName: val,
+                      tournamentId: matching?.id || prev?.tournamentId,
+                      round: roundsForTour.includes(prev?.round) ? prev.round : (roundsForTour[0] || 'Vòng 1')
+                    }));
+                  }}
+                  options={tournamentOptions}
+                  placeholder={t('matchday.tournament_placeholder', 'CHỌN GIẢI ĐẤU')}
+                  allowNew={true}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">
+                  {t('matchday.round_label', 'VÒNG ĐẤU')}
+                </label>
+                <Autocomplete
+                  value={editInfo.round || (editMatchRoundOptions[0] || 'Vòng 1')}
+                  onChange={(val) => setEditInfo({ ...editInfo, round: val })}
+                  options={editMatchRoundOptions}
+                  placeholder={t('matchday.round_placeholder', 'Chọn vòng đấu...')}
+                  allowNew={true}
+                />
+              </div>
+            </>
+          ) : editInfo.matchType === 'friendly' ? (
             <div>
-              <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">{t('matchday.opponent_label') || 'Đối thủ'}</label>
+              <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1">
+                {t('matchday.opponent_label', 'Đối thủ')}
+              </label>
               <Autocomplete
                 value={editInfo.opponent}
                 onChange={(val) => setEditInfo({ ...editInfo, opponent: val })}
                 options={pastOpponents}
                 placeholder={t('matchday.opponent_placeholder') || 'Nhập tên đối thủ...'}
+                allowNew={true}
               />
             </div>
-          )}
+          ) : null}
 
           <div className="grid grid-cols-2 gap-4">
             <CustomDatePicker
@@ -2589,29 +3153,29 @@ export default function Matchday() {
         maxWidth="3xl"
       >
         <div className="space-y-5 text-center">
-          <p className="text-sm font-bold text-slate-700 uppercase tracking-wider">
+          <p className="text-sm sm:text-base font-bold text-text-main uppercase tracking-wider">
             {t('matchday.confirm_end_match')}
           </p>
 
           {/* Read-Only Score Banner */}
           {currentMatch && (
             <div className="bg-surface-2 p-4 sm:p-5 border-2 border-border-main shadow-lg">
-              {currentMatch.matchType === 'internal' ? (
+              {(currentMatch.matchType === 'internal' || currentMatch.matchType === 'tournament') ? (
                 <div className={`grid gap-2.5 w-full ${
-                  (currentMatch.teamCount || 2) === 2 ? 'grid-cols-2 max-w-xs mx-auto' : 
-                  (currentMatch.teamCount || 2) === 3 ? 'grid-cols-3' : 
+                  effectiveTeamCount === 2 ? 'grid-cols-2 max-w-xs mx-auto' : 
+                  effectiveTeamCount === 3 ? 'grid-cols-3' : 
                   'grid-cols-2 sm:grid-cols-4'
                 }`}>
-                  {(['A', 'B', 'C', 'D'] as const).slice(0, currentMatch.teamCount || 2).map((team) => {
+                  {(['A', 'B', 'C', 'D'] as const).slice(0, effectiveTeamCount).map((team) => {
                     const scoreField = `scoreTeam${team}` as keyof typeof currentMatch;
-                    const colorField = `team${team}Color` as keyof typeof currentMatch;
+                    const scoreVal = currentMatch[scoreField] ?? (team === 'A' ? currentMatch.scoreUs : team === 'B' ? currentMatch.scoreOpponent : 0) ?? 0;
                     return (
                       <div key={team} className="bg-surface border-2 border-border-main p-2.5 flex flex-col items-center justify-center text-center">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted mb-0.5 truncate max-w-full">
-                          {t(`matchday.team_${team.toLowerCase()}`)}
+                          {getTeamSlotName(team)}
                         </span>
                         <span className={`text-3xl sm:text-4xl font-display font-bold ${team === 'A' ? 'text-primary' : 'text-text-main'}`}>
-                          {Number(currentMatch[scoreField] ?? 0)}
+                          {Number(scoreVal)}
                         </span>
                       </div>
                     );
@@ -2619,13 +3183,13 @@ export default function Matchday() {
                 </div>
               ) : (
                 <div className="flex items-center justify-around">
-                  <div>
-                    <div className="text-xs font-bold text-secondary mb-1">{(settings.teamName || '5TactiQ').toUpperCase()}</div>
+                  <div className="text-center flex-1">
+                    <div className="text-xs font-bold text-secondary mb-1 truncate">{getTeamSlotName('A').toUpperCase()}</div>
                     <div className="text-5xl font-display text-primary">{currentMatch.scoreUs ?? 0}</div>
                   </div>
-                  <div className="text-4xl font-display text-text-muted opacity-40">-</div>
-                  <div>
-                    <div className="text-xs font-bold text-text-muted mb-1">{currentMatch.opponent || t('matchday.opponent_placeholder')}</div>
+                  <div className="text-4xl font-display text-text-muted opacity-40 px-2">-</div>
+                  <div className="text-center flex-1">
+                    <div className="text-xs font-bold text-text-muted mb-1 truncate">{getTeamSlotName('B').toUpperCase()}</div>
                     <div className="text-5xl font-display text-text-main">{currentMatch.scoreOpponent ?? 0}</div>
                   </div>
                 </div>
@@ -2642,21 +3206,27 @@ export default function Matchday() {
           <button
             type="button"
             onClick={() => setShowEndModal(false)}
-            className="flex-1 bg-transparent text-text-muted font-display uppercase tracking-wider py-3 border-2 border-slate-300 hover:bg-surface transition-colors active:scale-95"
+            className="flex-1 bg-transparent text-text-muted font-display uppercase tracking-wider py-3 border-2 border-border-main hover:bg-surface-2 transition-colors active:scale-95"
           >
             {t('matchday.cancel')}
           </button>
           <button
             type="button"
             onClick={() => {
+              const isMultiTeam = currentMatch!.matchType === 'internal' || currentMatch!.matchType === 'tournament';
               endMatch(currentMatch!.id, {
-                scoreUs: currentMatch!.matchType !== 'internal' ? currentMatch!.scoreUs : null,
-                scoreOpponent: currentMatch!.matchType !== 'internal' ? currentMatch!.scoreOpponent : null,
-                scoreTeamA: currentMatch!.matchType === 'internal' ? currentMatch!.scoreTeamA : null,
-                scoreTeamB: currentMatch!.matchType === 'internal' ? currentMatch!.scoreTeamB : null,
-                scoreTeamC: currentMatch!.matchType === 'internal' ? currentMatch!.scoreTeamC : null,
-                scoreTeamD: currentMatch!.matchType === 'internal' ? currentMatch!.scoreTeamD : null,
+                scoreUs: Number(currentMatch!.scoreUs ?? currentMatch!.scoreTeamA ?? 0),
+                scoreOpponent: Number(currentMatch!.scoreOpponent ?? currentMatch!.scoreTeamB ?? 0),
+                scoreTeamA: isMultiTeam ? Number(currentMatch!.scoreTeamA ?? currentMatch!.scoreUs ?? 0) : null,
+                scoreTeamB: isMultiTeam ? Number(currentMatch!.scoreTeamB ?? currentMatch!.scoreOpponent ?? 0) : null,
+                scoreTeamC: isMultiTeam ? Number(currentMatch!.scoreTeamC ?? 0) : null,
+                scoreTeamD: isMultiTeam ? Number(currentMatch!.scoreTeamD ?? 0) : null,
               });
+              // Automatically delete temporary NPCs created for this match
+              const matchNpcs = players.filter(p => p.isNPC && (p.matchId === currentMatch!.id || currentMatch!.teams?.[p.id] || currentMatch!.attendance?.[p.id]));
+              if (matchNpcs.length > 0) {
+                deletePlayers(matchNpcs.map(p => p.id));
+              }
               setShowEndModal(false);
             }}
             className="flex-1 bg-secondary text-white font-display uppercase tracking-wider py-3 border-2 border-secondary hover:bg-amber-600 transition-colors active:scale-95"
@@ -2683,32 +3253,31 @@ export default function Matchday() {
                   {t('matchday.match_score')}
                 </div>
 
-                {currentMatch.matchType === 'internal' ? (
+                {(currentMatch.matchType === 'internal' || currentMatch.matchType === 'tournament') ? (
                   <div className="flex flex-col items-center gap-6 w-full pb-2 px-1">
                     {[
                       ['A', 'B'],
                       ['C', 'D']
                     ].map((row, rowIdx) => {
-                      if (rowIdx === 1 && (currentMatch.teamCount || 2) < 3) return null;
+                      if (rowIdx === 1 && effectiveTeamCount < 3) return null;
                       
                       return (
                         <div key={rowIdx} className="flex justify-center items-center gap-3 sm:gap-6 w-full">
                           {row.map((team, idx) => {
-                            if (team === 'C' && (currentMatch.teamCount || 2) < 3) return null;
-                            if (team === 'D' && (currentMatch.teamCount || 2) < 4) return null;
+                            if (team === 'C' && effectiveTeamCount < 3) return null;
+                            if (team === 'D' && effectiveTeamCount < 4) return null;
                             const scoreField = `scoreTeam${team}` as keyof typeof liveData;
-                            const colorField = `team${team}Color` as keyof typeof currentMatch;
                             
                             return (
                               <div key={team} className="flex items-center gap-3 sm:gap-6">
                                 {idx > 0 && <span className="text-2xl sm:text-3xl font-display text-text-muted px-1">-</span>}
                                 <div className="flex flex-col items-center gap-1 sm:gap-2">
-                                  <span className="text-[10px] sm:text-xs font-bold text-text-muted">{t(`matchday.team_${team.toLowerCase()}`)}</span>
+                                  <span className="text-[10px] sm:text-xs font-bold text-text-muted uppercase max-w-[120px] truncate">{getTeamSlotName(team as any)}</span>
                                   <div className="flex items-center gap-1.5 sm:gap-3">
                                     <button
                                       type="button"
                                       onClick={() => setLiveData(prev => ({ ...prev, [scoreField]: Math.max(0, (prev[scoreField] as number) - 1) }))}
-                                      className="w-8 h-8 sm:w-10 sm:h-10 bg-surface hover:bg-surface-2 text-text-main font-display text-xl sm:text-2xl font-bold border border-border-main flex items-center justify-center shrink-0"
+                                      className="w-8 h-8 sm:w-10 sm:h-10 bg-surface hover:bg-surface-2 text-text-main font-display text-xl sm:text-2xl font-bold border border-border-main flex items-center justify-center shrink-0 cursor-pointer"
                                     >
                                       -
                                     </button>
@@ -2716,7 +3285,7 @@ export default function Matchday() {
                                     <button
                                       type="button"
                                       onClick={() => setLiveData(prev => ({ ...prev, [scoreField]: (prev[scoreField] as number) + 1 }))}
-                                      className={`w-8 h-8 sm:w-10 sm:h-10 text-white font-display text-xl sm:text-2xl font-bold flex items-center justify-center shrink-0 hover:opacity-90 ${team === 'A' ? 'bg-primary' : team === 'B' ? 'bg-secondary' : team === 'C' ? 'bg-emerald-700' : 'bg-amber-600'}`}
+                                      className={`w-8 h-8 sm:w-10 sm:h-10 text-white font-display text-xl sm:text-2xl font-bold flex items-center justify-center shrink-0 hover:opacity-90 cursor-pointer ${team === 'A' ? 'bg-primary' : team === 'B' ? 'bg-secondary' : team === 'C' ? 'bg-emerald-700' : 'bg-amber-600'}`}
                                     >
                                       +
                                     </button>
@@ -2731,14 +3300,14 @@ export default function Matchday() {
                   </div>
                 ) : (
                   <div className="flex justify-around items-center">
-                    {/* 5TactiQ */}
+                    {/* Team A / Our Team */}
                     <div className="flex flex-col items-center gap-1 sm:gap-2">
-                      <span className="text-[10px] sm:text-xs font-bold text-secondary uppercase tracking-wider">{(settings.teamName || '5TactiQ').toUpperCase()}</span>
+                      <span className="text-[10px] sm:text-xs font-bold text-secondary uppercase tracking-wider max-w-[140px] truncate">{getTeamSlotName('A').toUpperCase()}</span>
                       <div className="flex items-center gap-1.5 sm:gap-3">
                         <button
                           type="button"
                           onClick={() => setLiveData(prev => ({ ...prev, scoreUs: Math.max(0, prev.scoreUs - 1) }))}
-                          className="w-8 h-8 sm:w-10 sm:h-10 bg-surface hover:bg-surface-2 text-text-main font-display text-xl sm:text-2xl font-bold border border-border-main flex items-center justify-center shrink-0"
+                          className="w-8 h-8 sm:w-10 sm:h-10 bg-surface hover:bg-surface-2 text-text-main font-display text-xl sm:text-2xl font-bold border border-border-main flex items-center justify-center shrink-0 cursor-pointer"
                         >
                           -
                         </button>
@@ -2746,7 +3315,7 @@ export default function Matchday() {
                         <button
                           type="button"
                           onClick={() => setLiveData(prev => ({ ...prev, scoreUs: prev.scoreUs + 1 }))}
-                          className="w-8 h-8 sm:w-10 sm:h-10 bg-primary text-white font-display text-xl sm:text-2xl font-bold hover:bg-primary/90 flex items-center justify-center shrink-0"
+                          className="w-8 h-8 sm:w-10 sm:h-10 bg-primary text-white font-display text-xl sm:text-2xl font-bold hover:bg-primary/90 flex items-center justify-center shrink-0 cursor-pointer"
                         >
                           +
                         </button>
@@ -2755,14 +3324,14 @@ export default function Matchday() {
 
                     <span className="text-2xl sm:text-3xl font-display text-text-muted px-1">-</span>
 
-                    {/* Opponent */}
+                    {/* Team B / Opponent */}
                     <div className="flex flex-col items-center gap-1 sm:gap-2">
-                      <span className="text-[10px] sm:text-xs font-bold text-text-muted uppercase tracking-wider">{currentMatch.opponent || t('matchday.opponent_placeholder')}</span>
+                      <span className="text-[10px] sm:text-xs font-bold text-text-muted uppercase tracking-wider max-w-[140px] truncate">{getTeamSlotName('B').toUpperCase()}</span>
                       <div className="flex items-center gap-1.5 sm:gap-3">
                         <button
                           type="button"
                           onClick={() => setLiveData(prev => ({ ...prev, scoreOpponent: Math.max(0, prev.scoreOpponent - 1) }))}
-                          className="w-8 h-8 sm:w-10 sm:h-10 bg-surface hover:bg-surface-2 text-text-main font-display text-xl sm:text-2xl font-bold border border-border-main flex items-center justify-center shrink-0"
+                          className="w-8 h-8 sm:w-10 sm:h-10 bg-surface hover:bg-surface-2 text-text-main font-display text-xl sm:text-2xl font-bold border border-border-main flex items-center justify-center shrink-0 cursor-pointer"
                         >
                           -
                         </button>
@@ -2770,7 +3339,7 @@ export default function Matchday() {
                         <button
                           type="button"
                           onClick={() => setLiveData(prev => ({ ...prev, scoreOpponent: prev.scoreOpponent + 1 }))}
-                          className="w-8 h-8 sm:w-10 sm:h-10 bg-primary text-white font-display text-xl sm:text-2xl font-bold hover:bg-primary/90 flex items-center justify-center shrink-0"
+                          className="w-8 h-8 sm:w-10 sm:h-10 bg-primary text-white font-display text-xl sm:text-2xl font-bold hover:bg-primary/90 flex items-center justify-center shrink-0 cursor-pointer"
                         >
                           +
                         </button>
@@ -2787,8 +3356,8 @@ export default function Matchday() {
                     {t('matchday.goals_assists_direct')}
                   </h4>
 
-                  {/* Team Filter Pills for Internal Matches */}
-                  {currentMatch.matchType === 'internal' && presentPlayers.length > 0 && (
+                  {/* Team Filter Pills */}
+                  {(currentMatch.matchType === 'internal' || currentMatch.matchType === 'tournament' || Object.keys(currentMatch.teams || {}).length > 0) && presentPlayers.length > 0 && (
                     <div className="flex bg-surface-2 p-1 border-2 border-border-main gap-1 w-full overflow-x-auto hide-scrollbar">
                       <button
                         type="button"
@@ -2802,7 +3371,7 @@ export default function Matchday() {
                         {t('matchday.filter_all_teams', 'Tất cả')}
                       </button>
 
-                      {(['A', 'B', 'C', 'D'] as const).slice(0, currentMatch.teamCount || 2).map(team => {
+                      {(['A', 'B', 'C', 'D'] as const).slice(0, effectiveTeamCount).map(team => {
                         const isActive = liveModalTeamFilter === team;
 
                         return (
@@ -2810,7 +3379,7 @@ export default function Matchday() {
                             key={team}
                             type="button"
                             onClick={() => setLiveModalTeamFilter(team)}
-                            className={`flex-1 min-w-[55px] py-1.5 text-center font-display font-bold uppercase tracking-wider text-xs transition-all cursor-pointer ${
+                            className={`flex-1 min-w-[65px] py-1.5 px-2 text-center font-display font-bold uppercase tracking-wider text-xs transition-all cursor-pointer truncate ${
                               isActive
                                 ? team === 'A'
                                   ? 'bg-primary text-white shadow-xs'
@@ -2821,8 +3390,9 @@ export default function Matchday() {
                                   : 'bg-amber-600 text-white shadow-xs'
                                 : 'text-text-muted hover:text-text-main hover:bg-surface'
                             }`}
+                            title={getTeamSlotName(team)}
                           >
-                            {t(`matchday.team_${team.toLowerCase()}`)}
+                            {getTeamSlotName(team)}
                           </button>
                         );
                       })}
@@ -2846,11 +3416,11 @@ export default function Matchday() {
 
                 {presentPlayers.length === 0 ? (
                   <div className="text-center text-slate-400 py-4">{t('matchday.no_players_yet')}</div>
-                ) : currentMatch.matchType === 'internal' ? (
+                ) : (currentMatch.matchType === 'internal' || currentMatch.matchType === 'tournament' || Object.keys(currentMatch.teams || {}).length > 0) ? (
                   <div className="space-y-4">
                     {(() => {
                       const teamsToRender = (['A', 'B', 'C', 'D'] as const)
-                        .slice(0, currentMatch.teamCount || 2)
+                        .slice(0, effectiveTeamCount)
                         .filter(team => liveModalTeamFilter === 'ALL' || liveModalTeamFilter === team);
 
                       const unassignedPlayers = presentPlayers.filter(p => !getPlayerTeam(p.id));
@@ -2957,7 +3527,7 @@ export default function Matchday() {
                                 <div className={`${teamHeaderColor} px-3.5 py-2 flex items-center justify-between`}>
                                   <div className="flex items-center gap-2">
                                     <span className="font-display font-bold uppercase text-sm tracking-wider">
-                                      {t(`matchday.team_${team.toLowerCase()}`)}
+                                      {getTeamSlotName(team)}
                                     </span>
                                   </div>
                                 </div>
@@ -2985,7 +3555,9 @@ export default function Matchday() {
                                 </span>
                               </div>
                               <div className="p-2 sm:p-2.5 space-y-2">
-                                {unassignedPlayers.map(p => renderPlayerRow(p))}
+                                <div className="p-2 sm:p-2.5 space-y-2">
+                                  {unassignedPlayers.map(p => renderPlayerRow(p))}
+                                </div>
                               </div>
                             </div>
                           )}
@@ -3116,13 +3688,21 @@ export default function Matchday() {
           {currentMatch && (
             <div className="bg-surface-2 p-4 border-2 border-rose-500/40">
               <div className="text-xs font-display text-text-muted font-bold uppercase mb-1">
-                {currentMatch.matchType === 'internal' ? t('matchday.internal_match_caps') : t('matchday.friendly_match_caps')}
+                {currentMatch.matchType === 'internal' 
+                  ? t('matchday.internal_match_caps') 
+                  : currentMatch.matchType === 'tournament'
+                    ? `${t('matchday.tournament_match_caps')}${currentMatch.round ? ` • ${currentMatch.round.toUpperCase()}` : ''}`
+                    : t('matchday.friendly_match_caps')}
               </div>
               <div className="text-2xl font-display text-text-main uppercase font-bold">
-                {currentMatch.matchType === 'internal' ? t('matchday.internal_match_caps') : `VS ${currentMatch.opponent || t('matchday.opponent_placeholder').toUpperCase()}`}
+                {currentMatch.matchType === 'internal' 
+                  ? t('matchday.internal_match_caps') 
+                  : currentMatch.matchType === 'tournament'
+                    ? (currentMatch.tournamentName || t('matchday.tournament_match_caps')).toUpperCase()
+                    : `VS ${currentMatch.opponent || t('matchday.opponent_placeholder').toUpperCase()}`}
               </div>
               <div className="text-xs text-text-muted font-bold mt-1 text-center">
-                {formatDateDDMMYYYY(currentMatch.date)} • {currentMatch.time}
+                {formatDateDDMMYYYY(currentMatch.date)} - {currentMatch.time}
               </div>
             </div>
           )}
@@ -3143,6 +3723,10 @@ export default function Matchday() {
           <button
             type="button"
             onClick={() => {
+              const matchNpcs = players.filter(p => p.isNPC && (p.matchId === currentMatch!.id || currentMatch!.teams?.[p.id] || currentMatch!.attendance?.[p.id]));
+              if (matchNpcs.length > 0) {
+                deletePlayers(matchNpcs.map(p => p.id));
+              }
               deleteMatch(currentMatch!.id);
               setShowDeleteConfirmModal(false);
             }}
@@ -3239,35 +3823,38 @@ export default function Matchday() {
             <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-1.5">
               {t('matchday.npc_target_team_label', 'Phân vào Đội')}
             </label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {(['A', 'B', 'C', 'D'] as const).slice(0, currentMatch?.teamCount || 2).map(team => {
+            <div className="flex items-center gap-1.5 sm:gap-2 w-full">
+              {(['A', 'B', 'C', 'D'] as const).slice(0, effectiveTeamCount).map(team => {
                 const isSelected = npcTargetTeam === team;
+                const teamLabel = getTeamSlotName(team);
 
                 return (
                   <button
                     key={team}
                     type="button"
                     onClick={() => setNpcTargetTeam(team)}
-                    className={`py-3 px-2.5 border-2 font-display text-xs font-bold uppercase tracking-wider flex items-center justify-center transition-all cursor-pointer ${
+                    className={`flex-1 min-w-0 py-2.5 sm:py-3 px-1.5 sm:px-2 border-2 font-display text-[11px] sm:text-xs font-bold uppercase tracking-wider flex items-center justify-center text-center transition-all cursor-pointer ${
                       isSelected
                         ? 'bg-primary text-white border-primary shadow-xs scale-[1.02]'
                         : 'bg-surface-2 text-text-muted border-border-main hover:border-primary/40'
                     }`}
+                    title={teamLabel}
                   >
-                    <span>{t(`matchday.team_${team.toLowerCase()}`)}</span>
+                    <span className="truncate whitespace-nowrap">{teamLabel}</span>
                   </button>
                 );
               })}
               <button
                 type="button"
                 onClick={() => setNpcTargetTeam(null)}
-                className={`py-3 px-2.5 border-2 font-display text-xs font-bold uppercase tracking-wider flex items-center justify-center transition-all cursor-pointer ${
+                className={`flex-1 min-w-0 py-2.5 sm:py-3 px-1.5 sm:px-2 border-2 font-display text-[11px] sm:text-xs font-bold uppercase tracking-wider flex items-center justify-center text-center transition-all cursor-pointer ${
                   npcTargetTeam === null
                     ? 'bg-text-muted text-white border-text-muted shadow-xs scale-[1.02]'
                     : 'bg-surface-2 text-text-muted border-border-main hover:border-primary/40'
                 }`}
+                title={t('matchday.unassigned_short', 'Chưa chia')}
               >
-                <span>{t('matchday.unassigned', 'Chưa chia')}</span>
+                <span className="truncate whitespace-nowrap">{t('matchday.unassigned_short', 'Chưa chia')}</span>
               </button>
             </div>
           </div>
@@ -3313,6 +3900,21 @@ export default function Matchday() {
                 : (t('matchday.add_npc_btn', 'THÊM NPC') || 'THÊM NPC')}
             </button>
           </div>
+
+          {editingNpcId && (
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowNpcModal(false);
+                  setNpcToDelete({ id: editingNpcId, name: npcName });
+                }}
+                className="w-full py-3 bg-surface border-2 border-rose-500/50 text-rose-500 font-display uppercase tracking-wider hover:bg-rose-500/10 transition-colors flex items-center justify-center gap-1.5 font-bold text-xs cursor-pointer"
+              >
+                <Trash2 size={15} /> {t('matchday.delete_npc', 'XÓA CẦU THỦ NPC NÀY')}
+              </button>
+            </div>
+          )}
         </form>
       </BottomSheet>
 
@@ -3469,6 +4071,12 @@ export default function Matchday() {
         onClose={() => setShowExportModal(false)}
         match={currentMatch}
         players={matchdayPlayers}
+        teamSlotNames={{
+          A: getTeamSlotName('A'),
+          B: getTeamSlotName('B'),
+          C: getTeamSlotName('C'),
+          D: getTeamSlotName('D'),
+        }}
       />
 
 

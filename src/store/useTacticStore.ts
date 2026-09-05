@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { capacitorStorage } from '../utils/capacitorStorage';
 import type { TacticalFrame } from '../pages/Tactics';
+import { broadcastTacticsState } from '../services/liveTacticsService';
 
 export interface SavedTactic {
   id: string;
@@ -16,6 +17,11 @@ export interface ActiveBoardState {
   lines: any[];
   frames: TacticalFrame[];
   currentFrameIndex: number;
+  dimensions?: {
+    width: number;
+    height: number;
+    isLandscape: boolean;
+  };
 }
 
 interface TacticState {
@@ -33,7 +39,12 @@ export const useTacticStore = create<TacticState>()(
     (set) => ({
       savedTactics: [],
       activeBoard: null,
-      setActiveBoard: (activeBoard) => set({ activeBoard }),
+      setActiveBoard: (activeBoard) => {
+        set({ activeBoard });
+        if (activeBoard) {
+          broadcastTacticsState(activeBoard);
+        }
+      },
       addTactic: (tactic) => set((state) => {
         const newTactic: SavedTactic = {
           ...tactic,

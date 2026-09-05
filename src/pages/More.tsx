@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { HeartPulse, History, Settings, ChevronRight, MapPin, RefreshCw, ShieldCheck, Info, Coffee, MessageSquare, Package, Eraser, AlertTriangle, Smartphone, BellRing, Globe, Check, Moon, Sun, Monitor, Crown, LogOut, User as UserIcon, LogIn, Save, Cloud, CloudOff, Wifi, WifiOff, CheckCircle2, AlertCircle, Calculator, Loader2, Coins, ExternalLink } from 'lucide-react';
+import { HeartPulse, History, Settings, ChevronRight, MapPin, RefreshCw, ShieldCheck, Info, Coffee, MessageSquare, Package, Eraser, AlertTriangle, Smartphone, BellRing, Globe, Check, Moon, Sun, Monitor, Crown, LogOut, User as UserIcon, LogIn, Save, Cloud, CloudOff, Wifi, WifiOff, CheckCircle2, AlertCircle, Calculator, Loader2, Coins, ExternalLink, Trophy, Shirt, Wallet, Share2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { useAppBadge } from '../hooks/useAppBadge';
@@ -9,6 +9,8 @@ import { useToastStore } from '../store/useToastStore';
 import { MoreSkeleton } from '../components/ui/MoreSkeleton';
 import { BottomSheet } from '../components/ui/BottomSheet';
 import SettingsModal from './Settings';
+import { CabinetIcon } from '../components/CabinetIcon';
+import { ShareModal } from '../components/ShareModal';
 
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useThemeStore } from '../store/useThemeStore';
@@ -22,6 +24,7 @@ export default function More() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [isCurrencyOpen, setIsCurrencyOpen] = useState(false);
   const [isThemeOpen, setIsThemeOpen] = useState(false);
@@ -124,10 +127,34 @@ export default function More() {
   };
   const featureItems = [
     { 
+      icon: <Share2 className="text-teal-600" size={24} />, 
+      title: t('more.share_title', 'CHIA SẺ CHO ĐỘI'), 
+      action: () => setIsShareModalOpen(true), 
+      desc: t('more.share_desc', 'Chia sẻ Thống kê hoặc Sa bàn chiến thuật cho thành viên (Chỉ xem)') 
+    },
+    { 
       icon: <Calculator className="text-blue-500" size={24} />, 
       title: t('fee_splitter.title', 'CHIA TIỀN SÂN'), 
       path: '/fee-splitter', 
       desc: t('fee_splitter.subtitle', 'Tính toán & chia tiền sân, tiền nước cho các trận đấu') 
+    },
+    { 
+      icon: <Wallet className="text-emerald-600" size={24} />, 
+      title: t('more.fund_title', 'PHẠT & QUỸ ĐỘI'), 
+      path: '/fund', 
+      desc: t('more.fund_desc', 'Theo dõi thu chi ngân sách & tiền phạt thành viên') 
+    },
+    { 
+      icon: <Trophy className="text-amber-600" size={24} />, 
+      title: t('more.tournaments_title', 'GIẢI ĐẤU & CÚP'), 
+      path: '/tournaments', 
+      desc: t('more.tournaments_desc', 'Bảng xếp hạng điểm số, lịch thi đấu & kết quả giải') 
+    },
+    { 
+      icon: <CabinetIcon className="text-indigo-600" size={24} />, 
+      title: t('more.equipment_title', 'ĐỒ & ÁO ĐẤU'), 
+      path: '/equipment', 
+      desc: t('more.equipment_desc', 'Theo dõi trang thiết bị, người giữ đồ & cấp phát số áo') 
     },
     { icon: <MapPin className="text-amber-600" size={24} />, title: t('more.venues_title'), path: '/venues', desc: t('more.venues_desc') },
     { icon: <HeartPulse className="text-rose-500" size={24} />, title: t('more.fitness_title'), path: '/fitness', desc: t('more.fitness_desc') },
@@ -144,6 +171,7 @@ export default function More() {
       desc: t('more.tier_desc')
     },
   ];
+
 
 
   const languages = [
@@ -276,7 +304,7 @@ export default function More() {
               </div>
               <div className="flex-1 text-left min-w-0">
                 <div className="flex items-center gap-2">
-                  <h3 className={`font-display font-bold uppercase tracking-wider @sm:tracking-widest text-lg @sm:text-xl leading-snug pt-0.5 ${item.isDanger ? 'text-red-600 group-hover:text-red-700' : 'text-primary group-hover:text-secondary'} transition-colors truncate`} title={item.title}>
+                  <h3 className={`font-display font-bold uppercase tracking-wider @sm:tracking-widest text-base @sm:text-xl leading-snug pt-0.5 ${item.isDanger ? 'text-red-600 group-hover:text-red-700' : 'text-primary group-hover:text-secondary'} transition-colors break-words`} title={item.title}>
                     {item.title}
                   </h3>
                 </div>
@@ -900,6 +928,12 @@ export default function More() {
           </div>
         </div>
       </BottomSheet>
+
+      {/* Share Modal for Team Sharing */}
+      <ShareModal 
+        isOpen={isShareModalOpen} 
+        onClose={() => setIsShareModalOpen(false)} 
+      />
     </div>
   );
 }

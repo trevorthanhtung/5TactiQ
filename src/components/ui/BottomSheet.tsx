@@ -14,6 +14,7 @@ interface BottomSheetProps {
   noScroll?: boolean;
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | 'fit';
   closeOnOutsideClick?: boolean;
+  zIndex?: number;
   children: React.ReactNode;
 }
 
@@ -36,6 +37,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
   noScroll = false, 
   maxWidth = 'lg', 
   closeOnOutsideClick = false,
+  zIndex = 100,
   children 
 }) => {
   const [isDesktop, setIsDesktop] = useState(false);
@@ -83,13 +85,15 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className={`fixed inset-0 backdrop-blur-sm z-[100] ${isDesktop ? (variant === 'danger' ? 'bg-red-900/40' : 'bg-primary/40') : 'bg-black/40'}`}
+            style={{ zIndex }}
+            className={`fixed inset-0 backdrop-blur-sm ${isDesktop ? (variant === 'danger' ? 'bg-red-900/40' : 'bg-primary/40') : 'bg-black/40'}`}
             onClick={closeOnOutsideClick ? onClose : undefined}
           />
           
           {/* Sheet or Modal Container */}
           <div 
-            className={`fixed inset-0 z-[101] ${isDesktop ? 'flex justify-center items-center p-4' : 'pointer-events-none'}`}
+            style={{ zIndex: zIndex + 1 }}
+            className={`fixed inset-0 ${isDesktop ? 'flex justify-center items-center p-4' : 'pointer-events-none'}`}
             onClick={(e) => {
               if (closeOnOutsideClick && isDesktop && e.target === e.currentTarget) {
                 onClose();

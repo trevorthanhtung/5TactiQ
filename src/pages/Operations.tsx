@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Landmark, Shirt, MapPin, Calculator } from 'lucide-react';
+import { ArrowLeft, Wallet, Shirt, MapPin, Calculator } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
@@ -20,7 +20,7 @@ export default function Operations() {
           onClick={() => setActiveTab('finance')}
           className={`flex items-center gap-2 px-4 py-3 text-lg font-display uppercase tracking-widest transition-colors border-b-4 -mb-[2px] ${activeTab === 'finance' ? 'border-primary text-primary' : 'border-transparent text-slate-400 hover:text-text-muted'}`}
         >
-          <Landmark size={20} /> {t('operations.tab_finance', 'Quỹ Đội')}
+          <Wallet size={20} /> {t('operations.tab_finance', 'Quỹ Đội')}
         </button>
         <button 
           onClick={() => setActiveTab('jersey')}

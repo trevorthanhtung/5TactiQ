@@ -3,18 +3,18 @@ import { Link } from 'react-router-dom';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useMatchStore } from '../store/useMatchStore';
 import { useToastStore } from '../store/useToastStore';
-import { Plus, X, BarChart2, Check, Cross, Activity, Search, EyeOff, Calendar } from 'lucide-react';
+import { Plus, X, BarChart2, Check, Cross, Activity, Search, EyeOff, Calendar, Trash2 } from 'lucide-react';
 import { useHardwareBack } from '../hooks/useHardwareBack';
 import { RosterSkeleton } from '../components/ui/RosterSkeleton';
 import { BottomSheet } from '../components/ui/BottomSheet';
 import type { Position } from '../types';
 import { useTranslation } from 'react-i18next';
 import { compareVietnameseNames } from '../utils/sortUtils';
-import { isPlayerHidden, getPlayerPerMatchStatus, comparePlayers } from '../utils/playerUtils';
+import { isPlayerHidden, getPlayerPerMatchStatus, comparePlayers, getCleanupNpcIds } from '../utils/playerUtils';
 
 export default function Roster() {
   const { t } = useTranslation();
-  const { players, fetchPlayers, addPlayer } = usePlayerStore();
+  const { players, fetchPlayers, addPlayer, deletePlayer, deletePlayers, clearAllNpcs } = usePlayerStore();
   const { matches } = useMatchStore();
   const { addToast } = useToastStore();
   const [isLoading, setIsLoading] = useState(true);
@@ -31,6 +31,8 @@ export default function Roster() {
   const [newIsYouth, setNewIsYouth] = useState(false);
   const [newIsPerMatch, setNewIsPerMatch] = useState(false);
   const [newMatchQuota, setNewMatchQuota] = useState('1');
+  const [showClearNpcModal, setShowClearNpcModal] = useState(false);
+  const [npcToDelete, setNpcToDelete] = useState<typeof players[0] | null>(null);
 
   useHardwareBack(showAddForm, () => setShowAddForm(false));
 
@@ -41,6 +43,36 @@ export default function Roster() {
     }, 500); // 500ms delay to simulate Native loading
     return () => clearTimeout(timer);
   }, [fetchPlayers]);
+
+  // Auto-cleanup stale NPCs belonging to finished matches or orphan matches
+  useEffect(() => {
+    if (matches && matches.length > 0) {
+      const staleNpcIds = getCleanupNpcIds(players, matches);
+      if (staleNpcIds.length > 0) {
+        deletePlayers(staleNpcIds);
+      }
+    }
+  }, [matches, players, deletePlayers]);
+
+  const handleClearAllNpcs = async () => {
+    await clearAllNpcs();
+    setShowClearNpcModal(false);
+    addToast({
+      type: 'success',
+      message: t('roster.clear_npcs_success', 'Đã dọn dẹp sạch toàn bộ cầu thủ NPC')
+    });
+  };
+
+  const handleDeleteSingleNpc = async () => {
+    if (!npcToDelete) return;
+    const name = npcToDelete.name;
+    await deletePlayer(npcToDelete.id);
+    setNpcToDelete(null);
+    addToast({
+      type: 'info',
+      message: t('matchday.toast_npc_deleted', { name }) || `Đã xóa ${name}`
+    });
+  };
 
   const handleAddPlayer = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -361,6 +393,23 @@ export default function Roster() {
         </div>
       </div>
 
+      {filter === 'npc' && filteredPlayers.length > 0 && (
+        <div className="flex items-center justify-between bg-surface-2 border-2 border-border-main p-3 mb-4">
+          <div className="text-xs text-text-muted">
+            <span className="font-bold text-text-main uppercase font-display">{t('roster.npc_count', { count: filteredPlayers.length })}</span>
+            <span className="hidden sm:inline"> — {t('roster.npc_auto_note', 'NPC được tự động dọn khi kết thúc trận')}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowClearNpcModal(true)}
+            className="hallmark-btn flex items-center gap-1.5 py-1.5 px-3 text-xs bg-rose-600 text-white hover:bg-rose-700 cursor-pointer"
+          >
+            <Trash2 size={14} />
+            <span>{t('roster.clear_all_npcs', 'Dọn dẹp toàn bộ NPC')}</span>
+          </button>
+        </div>
+      )}
+
       {filteredPlayers.length === 0 ? (
         <div className="bg-surface border-2 border-border-main p-8 text-center my-4">
           <p className="text-text-muted font-bold text-sm uppercase tracking-wider">
@@ -383,8 +432,22 @@ export default function Roster() {
                       </div>
                     )}
                     {player.isNPC && (
-                      <div className="bg-slate-600 text-white font-display font-bold px-2 h-8 sm:h-9 flex items-center justify-center text-xs sm:text-sm border-l-2 border-slate-100/20" title="NPC / Guest Player">
-                        NPC
+                      <div className="flex items-center">
+                        <div className="bg-slate-600 text-white font-display font-bold px-2 h-8 sm:h-9 flex items-center justify-center text-xs sm:text-sm border-l-2 border-slate-100/20" title="NPC / Guest Player">
+                          NPC
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setNpcToDelete(player);
+                          }}
+                          className="bg-rose-600/90 hover:bg-rose-600 text-white w-8 sm:w-9 h-8 sm:h-9 flex items-center justify-center border-l-2 border-slate-100/20 transition-colors cursor-pointer"
+                          title={t('roster.delete_npc_quick', 'Xóa NPC này')}
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       </div>
                     )}
                     {player.healthStatus && player.healthStatus !== 'Khỏe mạnh' && (
@@ -440,6 +503,86 @@ export default function Roster() {
           })}
         </div>
       )}
+      {/* DELETE SINGLE NPC CONFIRMATION MODAL */}
+      <BottomSheet
+        isOpen={npcToDelete !== null}
+        onClose={() => setNpcToDelete(null)}
+        variant="danger"
+        title={
+          <span className="flex items-center gap-2">
+            <Trash2 size={24} /> {t('matchday.delete_npc_title', 'XÁC NHẬN XÓA NPC')}
+          </span>
+        }
+      >
+        <div className="space-y-4 text-center">
+          <p className="text-base font-bold text-text-main uppercase tracking-wide">
+            {t('matchday.confirm_delete_npc', 'Bạn có chắc chắn muốn xóa cầu thủ NPC này?')}
+          </p>
+
+          {npcToDelete && (
+            <div className="bg-surface-2 p-4 border-2 border-rose-500/40">
+              <div className="text-xl font-display text-text-main uppercase font-bold">
+                {npcToDelete.name}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="pt-6 flex gap-3 mt-4">
+          <button
+            type="button"
+            onClick={() => setNpcToDelete(null)}
+            className="flex-1 bg-transparent text-text-muted font-display uppercase tracking-wider py-3 border-2 border-border-main hover:bg-surface-2 transition-colors active:scale-95 cursor-pointer"
+          >
+            {t('roster.cancel', 'HỦY')}
+          </button>
+          <button
+            type="button"
+            onClick={handleDeleteSingleNpc}
+            className="flex-1 bg-rose-600 text-white font-display uppercase tracking-wider py-3 border-2 border-rose-700 hover:bg-rose-700 transition-colors active:scale-95 cursor-pointer"
+          >
+            {t('matchday.delete_npc', 'XÓA NPC')}
+          </button>
+        </div>
+      </BottomSheet>
+
+      {/* CLEAR ALL NPCS CONFIRMATION MODAL */}
+      <BottomSheet
+        isOpen={showClearNpcModal}
+        onClose={() => setShowClearNpcModal(false)}
+        variant="danger"
+        title={
+          <span className="flex items-center gap-2">
+            <Trash2 size={24} /> {t('roster.confirm_clear_npcs_title', 'XÁC NHẬN DỌN DẸP NPC')}
+          </span>
+        }
+      >
+        <div className="space-y-4 text-center">
+          <p className="text-base font-bold text-text-main uppercase tracking-wide">
+            {t('roster.confirm_clear_npcs_desc', 'Thao tác này sẽ xóa toàn bộ các cầu thủ NPC / khách tạm thời khỏi danh sách đội bóng.')}
+          </p>
+          <div className="bg-surface-2 p-3 border-2 border-rose-500/40 font-display text-primary font-bold text-lg">
+            {players.filter(p => p.isNPC).length} CẦU THỦ NPC
+          </div>
+        </div>
+
+        <div className="pt-6 flex gap-3 mt-4">
+          <button
+            type="button"
+            onClick={() => setShowClearNpcModal(false)}
+            className="flex-1 bg-transparent text-text-muted font-display uppercase tracking-wider py-3 border-2 border-border-main hover:bg-surface-2 transition-colors active:scale-95 cursor-pointer"
+          >
+            {t('roster.cancel', 'HỦY')}
+          </button>
+          <button
+            type="button"
+            onClick={handleClearAllNpcs}
+            className="flex-1 bg-rose-600 text-white font-display uppercase tracking-wider py-3 border-2 border-rose-700 hover:bg-rose-700 transition-colors active:scale-95 cursor-pointer"
+          >
+            {t('roster.clear_all_npcs', 'DỌN DẸP TOÀN BỘ NPC')}
+          </button>
+        </div>
+      </BottomSheet>
     </div>
   );
 }

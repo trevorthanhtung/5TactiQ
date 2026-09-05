@@ -11,6 +11,8 @@ interface PlayerState {
   addPlayer: (player: Omit<Player, 'id'>) => Promise<string>;
   updatePlayer: (id: string, player: Partial<Player>) => Promise<void>;
   deletePlayer: (id: string) => Promise<void>;
+  deletePlayers: (ids: string[]) => Promise<void>;
+  clearAllNpcs: () => Promise<void>;
   setCaptain: (id: string | null) => Promise<void>;
 }
 
@@ -38,6 +40,18 @@ export const usePlayerStore = create<PlayerState>()(
       deletePlayer: async (id) => {
         set((state) => ({
           players: state.players.filter(p => p.id !== id)
+        }));
+      },
+      deletePlayers: async (ids) => {
+        if (!ids || ids.length === 0) return;
+        const idSet = new Set(ids);
+        set((state) => ({
+          players: state.players.filter(p => !idSet.has(p.id))
+        }));
+      },
+      clearAllNpcs: async () => {
+        set((state) => ({
+          players: state.players.filter(p => !p.isNPC)
         }));
       },
       setCaptain: async (id) => {

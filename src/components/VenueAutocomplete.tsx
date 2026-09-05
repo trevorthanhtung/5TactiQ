@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useVenueStore } from '../store/useVenueStore';
 
 interface VenueAutocompleteProps {
@@ -8,7 +9,9 @@ interface VenueAutocompleteProps {
   placeholder?: string;
 }
 
-export function VenueAutocomplete({ value, onChange, placeholder = "Nhập tên sân bóng..." }: VenueAutocompleteProps) {
+export function VenueAutocomplete({ value, onChange, placeholder }: VenueAutocompleteProps) {
+  const { t } = useTranslation();
+  const displayPlaceholder = placeholder || t('venues.input_name_placeholder', 'Nhập tên sân bóng...');
   const { venues } = useVenueStore();
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -41,7 +44,7 @@ export function VenueAutocomplete({ value, onChange, placeholder = "Nhập tên 
           }}
           onFocus={() => setIsOpen(true)}
           className="w-full border-2 border-border-main bg-surface p-3 pr-10 rounded-none focus:border-primary outline-none font-bold"
-          placeholder={placeholder}
+          placeholder={displayPlaceholder}
           autoComplete="off"
         />
         <button

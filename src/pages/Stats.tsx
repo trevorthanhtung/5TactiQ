@@ -363,7 +363,7 @@ export default function Stats() {
                     <div key={player.id} className="flex flex-col gap-1">
                       <div className="flex justify-between items-center text-xs">
                         <span className="font-bold text-text-main uppercase tracking-wide truncate max-w-[200px]">
-                          {idx + 1}. {player.name}
+                          {idx + 1} - {player.name}
                         </span>
                         <span className="font-display font-bold text-primary text-sm">
                           {player[activeTab]} <span className="text-[10px] text-text-muted font-normal uppercase">{getUnitLabel()}</span>
@@ -389,6 +389,7 @@ export default function Stats() {
         </div>
 
       </div>
+
     </div>
   );
 }

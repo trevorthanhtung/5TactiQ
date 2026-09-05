@@ -574,17 +574,23 @@ export default function Tactics() {
     }
   }, [dimensions.width, dimensions.height, dimensions.isLandscape]);
 
-  // Auto-persist active board state
+  // Auto-persist active board state & broadcast live
   useEffect(() => {
     if (isBoardInitializedRef.current) {
+      const syncedFrames = frames.map((f, idx) => 
+        idx === currentFrameIndex
+          ? { ...f, positions: JSON.parse(JSON.stringify(positions)), lines: JSON.parse(JSON.stringify(lines)) }
+          : f
+      );
       setActiveBoard({
         positions,
         lines,
-        frames,
-        currentFrameIndex
+        frames: syncedFrames,
+        currentFrameIndex,
+        dimensions
       });
     }
-  }, [positions, lines, frames, currentFrameIndex]);
+  }, [positions, lines, frames, currentFrameIndex, dimensions]);
 
   const exportAsPng = () => {
     if (stageRef.current) {
@@ -956,14 +962,16 @@ export default function Tactics() {
             </h1>
           </div>
 
-          <button
-            onClick={() => { setActiveHelpTab('guide'); setIsHelpModalOpen(true); }}
-            className="flex items-center gap-1.5 font-display uppercase tracking-widest text-sm text-secondary hover:text-primary transition-colors font-bold"
-            title={t('tactics.help_shortcut')}
-          >
-            <HelpCircle size={18} />
-            <span className="hidden sm:inline">{t('tactics.help')}</span>
-          </button>
+          <div className="flex items-center gap-2 sm:gap-4">
+            <button
+              onClick={() => { setActiveHelpTab('guide'); setIsHelpModalOpen(true); }}
+              className="flex items-center gap-1.5 font-display uppercase tracking-widest text-sm text-secondary hover:text-primary transition-colors font-bold"
+              title={t('tactics.help_shortcut')}
+            >
+              <HelpCircle size={18} />
+              <span className="hidden sm:inline">{t('tactics.help')}</span>
+            </button>
+          </div>
         </div>
 
         {/* Main Content Area */}

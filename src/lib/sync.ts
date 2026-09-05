@@ -4,13 +4,19 @@ import { useMatchStore } from '../store/useMatchStore';
 import { useTacticStore } from '../store/useTacticStore';
 import { useVenueStore } from '../store/useVenueStore';
 import { useSettingsStore } from '../store/useSettingsStore';
+import { useFundStore } from '../store/useFundStore';
+import { useTournamentStore } from '../store/useTournamentStore';
+import { useEquipmentStore } from '../store/useEquipmentStore';
 
 export const STORAGE_KEYS_META: Record<string, string> = {
   'katfc-player-storage': 'Đội hình, Chấn thương & Tier',
   'tactic-storage': 'Dữ liệu Sa bàn (Chiến thuật)',
   'katfc-match-storage-v5': 'Dữ liệu Trận đấu & Lịch sử',
   'katfc-venues-storage': 'Danh bạ Đội bóng',
-  '5tactiq-settings-storage': 'Cài đặt Chung & Mùa giải'
+  '5tactiq-settings-storage': 'Cài đặt Chung & Mùa giải',
+  'katfc-fund-storage': 'Quỹ Đội & Tiền Phạt',
+  'katfc-tournaments-storage': 'Giải Đấu & Cúp',
+  'katfc-equipment-storage': 'Dụng Cụ & Số Áo Đấu'
 };
 
 export const STORAGE_KEYS = Object.keys(STORAGE_KEYS_META);
@@ -23,6 +29,9 @@ export const rehydrateAllStores = async () => {
       useTacticStore.persist?.rehydrate?.(),
       useVenueStore.persist?.rehydrate?.(),
       useSettingsStore.persist?.rehydrate?.(),
+      useFundStore.persist?.rehydrate?.(),
+      useTournamentStore.persist?.rehydrate?.(),
+      useEquipmentStore.persist?.rehydrate?.(),
     ]);
   } catch (e) {
     console.error('Failed to rehydrate stores:', e);

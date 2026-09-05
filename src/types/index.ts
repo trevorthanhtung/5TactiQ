@@ -32,6 +32,7 @@ export type MatchStatus = 'upcoming' | 'live' | 'finished';
 
 export interface PlayerMatchStat {
   playerId: string;
+  playerName?: string;
   goals: number;
   assists: number;
 }
@@ -43,6 +44,9 @@ export interface MatchInfo {
   location: string;
   time: string;
   matchType: 'friendly' | 'internal' | 'tournament';
+  tournamentId?: string;
+  tournamentName?: string;
+  round?: string;
   status: MatchStatus;
   weather?: {
     condition: 'rain' | 'clear' | 'cloudy';
@@ -116,10 +120,75 @@ export interface FundTransaction {
   id: string;
   date: string;
   type: 'Thu' | 'Chi';
-  category: 'Đóng quỹ thành viên' | 'Thuê sân' | 'Đồng phục' | 'Nước uống' | 'Khác';
+  category: 'Đóng quỹ thành viên' | 'Tiền phạt' | 'Thuê sân' | 'Đồng phục' | 'Nước uống' | 'Khác' | string;
   amount: number;
   note: string;
   playerId?: string | null;
+}
+
+export interface FineRecord {
+  id: string;
+  playerId: string;
+  reason: string;
+  amount: number;
+  date: string;
+  status: 'unpaid' | 'paid';
+  paidAt?: string;
+  transactionId?: string;
+  note?: string;
+}
+
+export interface TournamentTeam {
+  id: string;
+  name: string;
+  isOurTeam?: boolean;
+}
+
+export interface TournamentMatch {
+  id: string;
+  round: string; // VD: "Vòng 1", "Tứ kết", "Bán kết", "Chung kết"
+  homeTeamId: string;
+  awayTeamId: string;
+  homeScore: number | null;
+  awayScore: number | null;
+  date?: string;
+  time?: string;
+  venue?: string;
+  status: 'scheduled' | 'finished';
+}
+
+export interface Tournament {
+  id: string;
+  name: string;
+  season?: string;
+  format: 'league' | 'knockout' | 'combined';
+  status: 'upcoming' | 'ongoing' | 'completed';
+  teams: TournamentTeam[];
+  matches: TournamentMatch[];
+  startDate?: string;
+  endDate?: string;
+  notes?: string;
+}
+
+export interface EquipmentItem {
+  id: string;
+  name: string;
+  category: 'ball' | 'bib' | 'medical' | 'training' | 'other';
+  quantity: number;
+  condition: 'good' | 'fair' | 'damaged' | 'missing';
+  assignedPlayerId?: string | null;
+  assignedDate?: string;
+  notes?: string;
+}
+
+export interface JerseyAssignment {
+  id: string;
+  jerseyNumber: number;
+  playerId?: string | null;
+  size?: 'S' | 'M' | 'L' | 'XL' | 'XXL';
+  status: 'assigned' | 'available';
+  kitType?: 'home' | 'away' | 'third';
+  notes?: string;
 }
 
 export interface Venue {
@@ -145,3 +214,4 @@ export interface TeamSettings {
   seasonEndDate?: string;   // ISO format YYYY-MM-DD
   currency?: string;
 }
+

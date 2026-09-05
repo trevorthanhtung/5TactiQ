@@ -104,3 +104,39 @@ export function isPlayerEligibleForStats(player: Player): boolean {
   if (player.isNPC && !player.includeInStats) return false;
   return true;
 }
+
+/**
+ * Checks if a player belongs to the core official squad:
+ * - Includes ONLY: Official / Main Squad (Chính thức), Loan (Mượn - isBorrowed), Youth (Đội trẻ - isYouth).
+ * - Excludes: Per-match players (Đá theo trận - isPerMatch) and NPCs (isNPC).
+ * - Excludes: Hidden players.
+ */
+export function isCoreSquadPlayer(player: Player, matches: MatchInfo[] = []): boolean {
+  if (player.isNPC) return false;
+  if (player.isPerMatch) return false;
+  if (player.isManuallyHidden) return false;
+  if (isPlayerHidden(player, matches)) return false;
+  return true;
+}
+
+/**
+ * Identifies IDs of stale temporary NPCs that should be cleaned up:
+ * - NPCs whose match has finished (`status === 'finished'`)
+ * - NPCs whose match no longer exists in `matches` (orphan NPCs)
+ * - NPCs without a matchId if they are not active in any ongoing/upcoming match
+ */
+export function getCleanupNpcIds(players: Player[], matches: MatchInfo[]): string[] {
+  const ongoingMatchIds = new Set(matches.filter(m => m.status !== 'finished').map(m => m.id));
+  return players
+    .filter(p => {
+      if (!p.isNPC) return false;
+      if (p.matchId) {
+        return !ongoingMatchIds.has(p.matchId);
+      }
+      const isInOngoingMatch = matches.some(m => m.status !== 'finished' && (m.teams?.[p.id] || m.attendance?.[p.id]));
+      return !isInOngoingMatch;
+    })
+    .map(p => p.id);
+}
+
+

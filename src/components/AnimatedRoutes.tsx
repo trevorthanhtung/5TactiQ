@@ -25,6 +25,10 @@ import DataSync from '../pages/DataSync';
 import TierRanking from '../pages/TierRanking';
 import ResetPassword from '../pages/ResetPassword';
 import FeeSplitter from '../pages/FeeSplitter';
+import Fund from '../pages/Fund';
+import Tournaments from '../pages/Tournaments';
+import Equipment from '../pages/Equipment';
+import ShareView from '../pages/ShareView';
 
 export const AnimatedRoutes: React.FC = () => {
   const location = useLocation();
@@ -35,6 +39,9 @@ export const AnimatedRoutes: React.FC = () => {
                           window.location.search.includes('type=recovery') || 
                           window.location.hash.includes('error_code') || 
                           window.location.search.includes('error_code');
+  const isShareRoute = location.pathname.startsWith('/share') || 
+                       window.location.hash.includes('/share') || 
+                       window.location.hash.includes('#/share');
   const isAuthRoute = location.pathname.startsWith('/auth');
   const { session, isGuest, isLoading } = useAuthStore();
 
@@ -43,12 +50,15 @@ export const AnimatedRoutes: React.FC = () => {
   }
 
   const isInstalled = isInstalledApp();
-  const isWebLanding = !session && !isGuest && !isInstalled && !isAuthRoute;
+  const isWebLanding = !session && !isGuest && !isInstalled && !isAuthRoute && !isShareRoute;
 
   return (
     <AnimatePresence mode="wait">
       <Suspense fallback={<SuspenseLoader />}>
         <Routes location={location} key={isTactics ? 'tactics' : 'main'}>
+          {/* Public Share Route (Team member read-only mode) */}
+          {isShareRoute && <Route path="*" element={<ShareView />} />}
+
           {/* Reset Password Route */}
           {isResetPassword && <Route path="*" element={<ResetPassword />} />}
 
@@ -75,6 +85,9 @@ export const AnimatedRoutes: React.FC = () => {
               <Route path="sync" element={<DataSync />} />
               <Route path="tier-ranking" element={<TierRanking />} />
               <Route path="fee-splitter" element={<FeeSplitter />} />
+              <Route path="fund" element={<Fund />} />
+              <Route path="tournaments" element={<Tournaments />} />
+              <Route path="equipment" element={<Equipment />} />
             </Route>
           )}
 
@@ -83,7 +96,10 @@ export const AnimatedRoutes: React.FC = () => {
 
           <Route path="/auth" element={<Auth />} />
           <Route path="/tactics" element={<PageWrapper><Tactics /></PageWrapper>} />
+
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/share" element={<ShareView />} />
+          <Route path="/share/:id" element={<ShareView />} />
         </Routes>
       </Suspense>
     </AnimatePresence>
