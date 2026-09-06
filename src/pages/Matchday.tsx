@@ -24,6 +24,7 @@ import { isPlayerHidden, getPlayerPerMatchStatus, comparePlayers, getCleanupNpcI
 import { formatCurrencyAmount, LANGUAGE_DEFAULT_CURRENCY } from '../utils/currencyUtils';
 import { getCurrentSeasonRange, isMatchInSeason } from '../utils/seasonUtils';
 import { getTournamentRounds } from '../utils/tournamentUtils';
+import { calculateDefaultRating } from '../utils/ratingUtils';
 
 export default function Matchday() {
   const { t, i18n } = useTranslation();
@@ -539,31 +540,6 @@ export default function Matchday() {
     });
   };
 
-  // Helper to calculate default match rating according to PES/FIFA mechanics:
-  // Base: 6.0. Clean sheet GK: +0.4 (6.4 base, avoiding 9.0 inflation).
-  // Goals (diminishing): 1st goal +0.5, 2nd goal +0.4, 3rd+ goal +0.3 each.
-  // Assists: +0.2 each.
-  // Clamped between 1.0 and 10.0.
-  const calculateDefaultRating = (goals: number, assists: number, cleanSheetGK: boolean = false): number => {
-    let rating = 6.0;
-    if (cleanSheetGK) {
-      rating += 0.4;
-    }
-
-    const g = Math.max(0, goals || 0);
-    if (g === 1) {
-      rating += 0.5;
-    } else if (g === 2) {
-      rating += 0.9;
-    } else if (g >= 3) {
-      rating += 0.9 + (g - 2) * 0.3;
-    }
-
-    const a = Math.max(0, assists || 0);
-    rating += a * 0.2;
-
-    return Number(Math.min(10.0, Math.max(1.0, rating)).toFixed(1));
-  };
 
   // Live Update Form State
   const [liveData, setLiveData] = useState({ scoreUs: 0, scoreOpponent: 0, scoreTeamA: 0, scoreTeamB: 0, scoreTeamC: 0, scoreTeamD: 0 });

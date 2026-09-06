@@ -12,6 +12,7 @@ import { rehydrateAllStores } from '../lib/sync';
 import { broadcastTacticsState } from '../services/liveTacticsService';
 import { getCurrentSeasonRange, isMatchInSeason } from '../utils/seasonUtils';
 import { isPlayerEligibleForStats } from '../utils/playerUtils';
+import { resolvePlayerMatchRating } from '../utils/ratingUtils';
 import { createShareLink, type SharedStatsPayload, type SharedTacticsPayload, type SharedPlayerStat } from '../services/shareService';
 import { hapticImpact } from '../utils/haptics';
 
@@ -113,12 +114,13 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               totalGoals += g;
               totalAssists += a;
 
-              if (typeof s.rating === 'number' && s.rating > 0) {
-                playerStatsAgg[s.playerId].totalRating += s.rating;
+              const ratingVal = resolvePlayerMatchRating(s, false);
+              if (ratingVal > 0) {
+                playerStatsAgg[s.playerId].totalRating += ratingVal;
                 playerStatsAgg[s.playerId].ratedMatches += 1;
                 matchHasRating = true;
-                if (s.rating > highestMatchRating) {
-                  highestMatchRating = s.rating;
+                if (ratingVal > highestMatchRating) {
+                  highestMatchRating = ratingVal;
                 }
               }
             }

@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { compareVietnameseNames } from '../utils/sortUtils';
 import { getCurrentSeasonRange, isMatchInSeason } from '../utils/seasonUtils';
 import { isPlayerEligibleForStats } from '../utils/playerUtils';
+import { resolvePlayerMatchRating } from '../utils/ratingUtils';
 
 export default function Stats() {
   const { t } = useTranslation();
@@ -80,12 +81,13 @@ export default function Stats() {
         if (playerStatsAgg[s.playerId]) {
           playerStatsAgg[s.playerId].goals += s.goals || 0;
           playerStatsAgg[s.playerId].assists += s.assists || 0;
-          if (typeof s.rating === 'number' && s.rating > 0) {
-            playerStatsAgg[s.playerId].totalRating += s.rating;
+          const ratingVal = resolvePlayerMatchRating(s, false);
+          if (ratingVal > 0) {
+            playerStatsAgg[s.playerId].totalRating += ratingVal;
             playerStatsAgg[s.playerId].ratedMatches += 1;
             matchHasRating = true;
-            if (s.rating > highestMatchRating) {
-              highestMatchRating = s.rating;
+            if (ratingVal > highestMatchRating) {
+              highestMatchRating = ratingVal;
             }
           }
         }

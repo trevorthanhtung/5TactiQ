@@ -22,6 +22,7 @@ import { useTacticStore, type ActiveBoardState } from '../store/useTacticStore';
 import { BottomSheet } from '../components/ui/BottomSheet';
 import { CustomSelect } from '../components/CustomSelect';
 import { compareVietnameseNames } from '../utils/sortUtils';
+import { calculateDefaultRating } from '../utils/ratingUtils';
 
 export default function ShareView() {
   const { t } = useTranslation();
@@ -460,8 +461,23 @@ export default function ShareView() {
   }, [statsPayload, filterMode]);
 
   const getPlayerStatValue = (p: SharedPlayerStat, tab: StatTab): number => {
-    if (tab === 'rating') return p.rating ?? p.avgRating ?? 0;
+    if (tab === 'rating') {
+      const explicitRating = p.rating ?? p.avgRating ?? 0;
+      if (explicitRating > 0) return explicitRating;
+      if (p.goals > 0 || p.assists > 0) {
+        return calculateDefaultRating(p.goals, p.assists, false);
+      }
+      return 0;
+    }
     return p[tab] || 0;
+  };
+
+  const getPlayerRatedMatches = (p: SharedPlayerStat): number => {
+    if (typeof p.ratedMatches === 'number' && p.ratedMatches > 0) return p.ratedMatches;
+    if (getPlayerStatValue(p, 'rating') > 0) {
+      return Math.max(1, p.attendance || 1);
+    }
+    return 0;
   };
 
   const sortedPlayers = useMemo(() => {
@@ -470,10 +486,12 @@ export default function ShareView() {
 
     return list.sort((a, b) => {
       if (activeStatsTab === 'rating') {
-        const aRating = a.rating ?? a.avgRating ?? 0;
-        const bRating = b.rating ?? b.avgRating ?? 0;
+        const aRating = getPlayerStatValue(a, 'rating');
+        const bRating = getPlayerStatValue(b, 'rating');
         if (bRating !== aRating) return bRating - aRating;
-        if ((b.ratedMatches || 0) !== (a.ratedMatches || 0)) return (b.ratedMatches || 0) - (a.ratedMatches || 0);
+        const aMatches = getPlayerRatedMatches(a);
+        const bMatches = getPlayerRatedMatches(b);
+        if (bMatches !== aMatches) return bMatches - aMatches;
         if (b.goals !== a.goals) return b.goals - a.goals;
         if (b.assists !== a.assists) return b.assists - a.assists;
       } else {
@@ -528,7 +546,7 @@ export default function ShareView() {
   // Rating summary metrics
   const ratedPlayers = useMemo(() => {
     if (!activeStatsData) return [];
-    return activeStatsData.players.filter((p) => (p.rating ?? p.avgRating ?? 0) > 0);
+    return activeStatsData.players.filter((p) => getPlayerStatValue(p, 'rating') > 0);
   }, [activeStatsData]);
 
   const avgTeamRating = useMemo(() => {
@@ -537,14 +555,14 @@ export default function ShareView() {
       return activeStatsData.summary.avgTeamRating.toFixed(1);
     }
     if (ratedPlayers.length > 0) {
-      return (ratedPlayers.reduce((sum, p) => sum + (p.rating ?? p.avgRating ?? 0), 0) / ratedPlayers.length).toFixed(1);
+      return (ratedPlayers.reduce((sum, p) => sum + getPlayerStatValue(p, 'rating'), 0) / ratedPlayers.length).toFixed(1);
     }
     return '0.0';
   }, [activeStatsData, ratedPlayers]);
 
   const highestAvgRatingPlayer = useMemo(() => {
     if (ratedPlayers.length === 0) return null;
-    return [...ratedPlayers].sort((a, b) => (b.rating ?? b.avgRating ?? 0) - (a.rating ?? a.avgRating ?? 0))[0];
+    return [...ratedPlayers].sort((a, b) => getPlayerStatValue(b, 'rating') - getPlayerStatValue(a, 'rating'))[0];
   }, [ratedPlayers]);
 
   const highestMatchRating = useMemo(() => {
@@ -553,17 +571,17 @@ export default function ShareView() {
       return activeStatsData.summary.highestMatchRating.toFixed(1);
     }
     if (highestAvgRatingPlayer) {
-      return (highestAvgRatingPlayer.rating ?? highestAvgRatingPlayer.avgRating ?? 0).toFixed(1);
+      return getPlayerStatValue(highestAvgRatingPlayer, 'rating').toFixed(1);
     }
     return '0.0';
   }, [activeStatsData, highestAvgRatingPlayer]);
 
   const matchesWithRatingsCount = useMemo(() => {
     if (!activeStatsData) return 0;
-    if (activeStatsData.summary.matchesWithRatingsCount !== undefined) {
+    if (activeStatsData.summary.matchesWithRatingsCount !== undefined && activeStatsData.summary.matchesWithRatingsCount > 0) {
       return activeStatsData.summary.matchesWithRatingsCount;
     }
-    return ratedPlayers.length > 0 ? totalMatches : 0;
+    return ratedPlayers.length > 0 ? Math.max(1, totalMatches) : 0;
   }, [activeStatsData, ratedPlayers, totalMatches]);
 
   const getUnitLabel = () => {
@@ -646,8 +664,8 @@ export default function ShareView() {
   // Loading State
   if (isLoading) {
     return (
-      <div className="fixed inset-0 overflow-y-auto bg-surface flex flex-col items-center justify-center p-6 text-center z-50">
-        <div className="absolute inset-0 bg-accent/30 pointer-events-none -z-10" />
+      <div className="fixed inset-0 overflow-y-auto bg-background flex flex-col items-center justify-center p-6 text-center z-50">
+        <div className="fixed inset-0 bg-accent/30 pointer-events-none -z-10" />
         <div className="w-16 h-16 border-4 border-primary border-t-transparent animate-spin rounded-full mb-4"></div>
         <h2 className="font-display text-xl font-bold uppercase tracking-wider text-primary">
           {t('share.loading_title', 'ĐANG TẢI DỮ LIỆU ĐỘI BÓNG...')}
@@ -662,8 +680,8 @@ export default function ShareView() {
   // Error / Invalid Link State
   if (errorMsg || !payload) {
     return (
-      <div className="fixed inset-0 overflow-y-auto bg-surface flex flex-col items-center justify-center p-6 text-center z-50">
-        <div className="absolute inset-0 bg-accent/30 pointer-events-none -z-10" />
+      <div className="fixed inset-0 overflow-y-auto bg-background flex flex-col items-center justify-center p-6 text-center z-50">
+        <div className="fixed inset-0 bg-accent/30 pointer-events-none -z-10" />
         <div className="max-w-md w-full mx-auto flex flex-col items-center">
           <div className="w-16 h-16 border-2 border-red-500/40 bg-red-500/10 flex items-center justify-center mb-4">
             <X className="text-red-500" size={32} />
@@ -695,7 +713,10 @@ export default function ShareView() {
   const labelFontSize = Math.max(9, Math.round(11 * boardScale));
 
   return (
-    <div className="fixed inset-0 overflow-y-auto overscroll-y-contain bg-surface text-text-main flex flex-col selection:bg-primary/20">
+    <div className="fixed inset-0 overflow-y-auto overscroll-y-contain bg-background text-text-main flex flex-col selection:bg-primary/20">
+      {/* 🌟 Uniform background overlay matching Layout.tsx */}
+      <div className="fixed inset-0 bg-accent/30 pointer-events-none -z-10" />
+
       {/* 🌟 Member Portal Header */}
       <header className="sticky top-0 z-30 bg-surface/95 backdrop-blur-md border-b-2 border-border-main px-4 py-3 sm:px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
@@ -725,8 +746,8 @@ export default function ShareView() {
         </div>
       </header>
 
-      {/* 🌟 Content wrapper with original app's bg-accent/30 */}
-      <div className="flex-1 flex flex-col bg-accent/30 min-h-0">
+      {/* 🌟 Content wrapper */}
+      <div className="flex-1 flex flex-col min-h-0">
         {/* 📊 STATS VIEW MODE */}
         {payload.type === 'stats' && statsPayload && (
         <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 flex flex-col justify-between">
@@ -882,9 +903,11 @@ export default function ShareView() {
                               {getUnitLabel()}
                             </span>
                           </div>
-                          {activeStatsTab === 'rating' && (player.ratedMatches || 0) > 0 && (
+                          {activeStatsTab === 'rating' && (
                             <div className="text-[10px] text-text-muted font-display font-bold mt-0.5 uppercase tracking-wider">
-                              {player.ratedMatches} {t('stats.rated_matches_col', 'TRẬN ĐÃ CHẤM')}
+                              {getPlayerRatedMatches(player) > 0 
+                                ? `${getPlayerRatedMatches(player)} ${t('stats.rated_matches_col', 'TRẬN')}`
+                                : `0 ${t('stats.rated_matches_col', 'TRẬN')}`}
                             </div>
                           )}
                         </div>
@@ -927,7 +950,7 @@ export default function ShareView() {
                       {t('stats.total_team_rating', 'ĐIỂM TB TOÀN ĐỘI')}
                     </div>
                     <div className="text-3xl sm:text-4xl font-display text-primary font-bold">
-                      {avgTeamRating}
+                      {Number(avgTeamRating) > 0 ? Number(avgTeamRating).toFixed(1) : '—'}
                     </div>
                   </div>
 
@@ -936,9 +959,11 @@ export default function ShareView() {
                       {t('stats.top_rating_player', 'PHONG ĐỘ CAO NHẤT')}
                     </div>
                     <div className="text-3xl sm:text-4xl font-display text-secondary font-bold truncate px-1">
-                      {highestAvgRatingPlayer ? (highestAvgRatingPlayer.rating ?? highestAvgRatingPlayer.avgRating ?? 0).toFixed(1) : '0.0'}
+                      {highestAvgRatingPlayer && getPlayerStatValue(highestAvgRatingPlayer, 'rating') > 0
+                        ? getPlayerStatValue(highestAvgRatingPlayer, 'rating').toFixed(1)
+                        : '—'}
                     </div>
-                    {highestAvgRatingPlayer && (
+                    {highestAvgRatingPlayer && getPlayerStatValue(highestAvgRatingPlayer, 'rating') > 0 && (
                       <div className="text-[10px] font-bold text-text-muted truncate mt-0.5 uppercase font-display">
                         {highestAvgRatingPlayer.name}
                       </div>
@@ -959,7 +984,7 @@ export default function ShareView() {
                       {t('stats.highest_rated_match', 'ĐIỂM CAO NHẤT')}
                     </div>
                     <div className="text-3xl sm:text-4xl font-display text-text-main font-bold">
-                      {highestMatchRating}
+                      {Number(highestMatchRating) > 0 ? Number(highestMatchRating).toFixed(1) : '—'}
                     </div>
                   </div>
                 </div>
