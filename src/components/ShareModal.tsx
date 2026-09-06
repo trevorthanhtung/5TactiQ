@@ -76,13 +76,21 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   // Compute stats payload
   const statsPayload = useMemo<SharedStatsPayload>(() => {
     const computeForMatches = (matchList: typeof matches) => {
-      const playerStatsAgg: Record<string, { goals: number; assists: number; attendance: number }> = {};
+      const playerStatsAgg: Record<string, {
+        goals: number;
+        assists: number;
+        attendance: number;
+        totalRating: number;
+        ratedMatches: number;
+      }> = {};
       players.forEach((p) => {
-        playerStatsAgg[p.id] = { goals: 0, assists: 0, attendance: 0 };
+        playerStatsAgg[p.id] = { goals: 0, assists: 0, attendance: 0, totalRating: 0, ratedMatches: 0 };
       });
 
       let totalGoals = 0;
       let totalAssists = 0;
+      let highestMatchRating = 0;
+      let matchesWithRatingsCount = 0;
 
       matchList.forEach((m) => {
         if (m.attendance) {
@@ -94,6 +102,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
         }
 
         const shouldTrack = m.matchType !== 'internal' || !!m.trackStats;
+        let matchHasRating = false;
         if (shouldTrack && m.stats) {
           m.stats.forEach((s) => {
             if (playerStatsAgg[s.playerId]) {
@@ -103,30 +112,64 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               playerStatsAgg[s.playerId].assists += a;
               totalGoals += g;
               totalAssists += a;
+
+              if (typeof s.rating === 'number' && s.rating > 0) {
+                playerStatsAgg[s.playerId].totalRating += s.rating;
+                playerStatsAgg[s.playerId].ratedMatches += 1;
+                matchHasRating = true;
+                if (s.rating > highestMatchRating) {
+                  highestMatchRating = s.rating;
+                }
+              }
             }
           });
+        }
+        if (matchHasRating) {
+          matchesWithRatingsCount += 1;
         }
       });
 
       const eligible = players.filter(isPlayerEligibleForStats);
-      const sharedPlayers: SharedPlayerStat[] = eligible.map((p) => ({
-        id: p.id,
-        name: p.name,
-        number: p.jersey_number ?? undefined,
-        position: p.positions?.[0] || 'Cầu thủ',
-        photo: p.photo_url,
-        goals: playerStatsAgg[p.id]?.goals || 0,
-        assists: playerStatsAgg[p.id]?.assists || 0,
-        attendance: playerStatsAgg[p.id]?.attendance || 0,
-        matchesCount: matchList.length
-      }));
+      const sharedPlayers: SharedPlayerStat[] = eligible.map((p) => {
+        const agg = playerStatsAgg[p.id];
+        const ratedMatches = agg?.ratedMatches || 0;
+        const avgRating = ratedMatches > 0 ? Number((agg.totalRating / ratedMatches).toFixed(1)) : 0;
+        const positions = p.positions || [];
+        const positionLabel = positions.length > 0
+          ? positions.map((pos) => t(`position.${pos}`)).join(', ')
+          : undefined;
+
+        return {
+          id: p.id,
+          name: p.name,
+          number: p.jersey_number ?? undefined,
+          position: positionLabel,
+          positions,
+          photo: p.photo_url,
+          goals: agg?.goals || 0,
+          assists: agg?.assists || 0,
+          attendance: agg?.attendance || 0,
+          matchesCount: matchList.length,
+          rating: avgRating,
+          avgRating,
+          ratedMatches
+        };
+      });
+
+      const activeRatedPlayers = sharedPlayers.filter(p => (p.rating || 0) > 0);
+      const avgTeamRating = activeRatedPlayers.length > 0
+        ? Number((activeRatedPlayers.reduce((sum, p) => sum + (p.rating || 0), 0) / activeRatedPlayers.length).toFixed(1))
+        : 0;
 
       return {
         summary: {
           totalGoals,
           totalAssists,
           totalMatches: matchList.length,
-          playerCount: sharedPlayers.length
+          playerCount: sharedPlayers.length,
+          avgTeamRating,
+          highestMatchRating,
+          matchesWithRatingsCount
         },
         players: sharedPlayers
       };

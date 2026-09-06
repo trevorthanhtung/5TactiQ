@@ -7,6 +7,10 @@ import { useMatchStore } from '../store/useMatchStore';
 import { useTacticStore } from '../store/useTacticStore';
 import { useVenueStore } from '../store/useVenueStore';
 import { useSettingsStore } from '../store/useSettingsStore';
+import { useFundStore } from '../store/useFundStore';
+import { useTournamentStore } from '../store/useTournamentStore';
+import { useEquipmentStore } from '../store/useEquipmentStore';
+import { useTrainingStore } from '../store/useTrainingStore';
 import { exportData, importSelectedData, parseBackupData, STORAGE_KEYS } from '../lib/sync';
 import { useTranslation } from 'react-i18next';
 
@@ -364,6 +368,10 @@ export function CloudSyncProvider({ children }: { children: React.ReactNode }) {
     const unsubTactic = useTacticStore.subscribe(triggerDebouncedSync);
     const unsubVenue = useVenueStore.subscribe(triggerDebouncedSync);
     const unsubSettings = useSettingsStore.subscribe(triggerDebouncedSync);
+    const unsubFund = useFundStore.subscribe(triggerDebouncedSync);
+    const unsubTournament = useTournamentStore.subscribe(triggerDebouncedSync);
+    const unsubEquipment = useEquipmentStore.subscribe(triggerDebouncedSync);
+    const unsubTraining = useTrainingStore.subscribe(triggerDebouncedSync);
 
     return () => {
       unsubPlayer();
@@ -371,6 +379,10 @@ export function CloudSyncProvider({ children }: { children: React.ReactNode }) {
       unsubTactic();
       unsubVenue();
       unsubSettings();
+      unsubFund();
+      unsubTournament();
+      unsubEquipment();
+      unsubTraining();
       clearTimeout(timer);
     };
   }, [session?.user?.id, syncNow]);

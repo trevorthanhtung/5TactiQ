@@ -6,11 +6,15 @@ export interface SharedPlayerStat {
   name: string;
   number?: number;
   position?: string;
+  positions?: string[];
   photo?: string;
   goals: number;
   assists: number;
   attendance: number;
   matchesCount: number;
+  rating?: number;
+  avgRating?: number;
+  ratedMatches?: number;
 }
 
 export interface SharedStatsPayload {
@@ -26,6 +30,9 @@ export interface SharedStatsPayload {
     totalAssists: number;
     totalMatches: number;
     playerCount: number;
+    avgTeamRating?: number;
+    highestMatchRating?: number;
+    matchesWithRatingsCount?: number;
   };
   players: SharedPlayerStat[];
   allTimeData?: {
@@ -34,6 +41,9 @@ export interface SharedStatsPayload {
       totalAssists: number;
       totalMatches: number;
       playerCount: number;
+      avgTeamRating?: number;
+      highestMatchRating?: number;
+      matchesWithRatingsCount?: number;
     };
     players: SharedPlayerStat[];
   };

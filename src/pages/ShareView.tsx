@@ -33,7 +33,8 @@ export default function ShareView() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Stats view state
-  const [activeStatsTab, setActiveStatsTab] = useState<'goals' | 'assists' | 'attendance'>('goals');
+  type StatTab = 'goals' | 'assists' | 'attendance' | 'rating';
+  const [activeStatsTab, setActiveStatsTab] = useState<StatTab>('goals');
   const [filterMode, setFilterMode] = useState<'current_season' | 'all_time'>('current_season');
   const [showAllZeroStats, setShowAllZeroStats] = useState<boolean>(false);
   const [selectedPlayer, setSelectedPlayer] = useState<SharedPlayerStat | null>(null);
@@ -458,34 +459,50 @@ export default function ShareView() {
     };
   }, [statsPayload, filterMode]);
 
+  const getPlayerStatValue = (p: SharedPlayerStat, tab: StatTab): number => {
+    if (tab === 'rating') return p.rating ?? p.avgRating ?? 0;
+    return p[tab] || 0;
+  };
+
   const sortedPlayers = useMemo(() => {
     if (!activeStatsData) return [];
     const list = [...activeStatsData.players];
 
     return list.sort((a, b) => {
-      if (b[activeStatsTab] !== a[activeStatsTab]) {
-        return b[activeStatsTab] - a[activeStatsTab];
-      }
-      if (activeStatsTab === 'goals') {
-        if (b.assists !== a.assists) return b.assists - a.assists;
-        if (b.attendance !== a.attendance) return b.attendance - a.attendance;
-      } else if (activeStatsTab === 'assists') {
+      if (activeStatsTab === 'rating') {
+        const aRating = a.rating ?? a.avgRating ?? 0;
+        const bRating = b.rating ?? b.avgRating ?? 0;
+        if (bRating !== aRating) return bRating - aRating;
+        if ((b.ratedMatches || 0) !== (a.ratedMatches || 0)) return (b.ratedMatches || 0) - (a.ratedMatches || 0);
         if (b.goals !== a.goals) return b.goals - a.goals;
-        if (b.attendance !== a.attendance) return b.attendance - a.attendance;
+        if (b.assists !== a.assists) return b.assists - a.assists;
       } else {
-        if (b.goals !== a.goals) return b.goals - a.goals;
-        if (b.assists !== a.assists) return b.assists - a.assists;
+        const aVal = a[activeStatsTab] || 0;
+        const bVal = b[activeStatsTab] || 0;
+        if (bVal !== aVal) {
+          return bVal - aVal;
+        }
+        if (activeStatsTab === 'goals') {
+          if (b.assists !== a.assists) return b.assists - a.assists;
+          if (b.attendance !== a.attendance) return b.attendance - a.attendance;
+        } else if (activeStatsTab === 'assists') {
+          if (b.goals !== a.goals) return b.goals - a.goals;
+          if (b.attendance !== a.attendance) return b.attendance - a.attendance;
+        } else {
+          if (b.goals !== a.goals) return b.goals - a.goals;
+          if (b.assists !== a.assists) return b.assists - a.assists;
+        }
       }
       return compareVietnameseNames(a.name, b.name);
     });
   }, [activeStatsData, activeStatsTab]);
 
   const activeContributors = useMemo(() => {
-    return sortedPlayers.filter((p) => (p[activeStatsTab] || 0) > 0);
+    return sortedPlayers.filter((p) => getPlayerStatValue(p, activeStatsTab) > 0);
   }, [sortedPlayers, activeStatsTab]);
 
   const zeroStatPlayers = useMemo(() => {
-    return sortedPlayers.filter((p) => (p[activeStatsTab] || 0) === 0);
+    return sortedPlayers.filter((p) => getPlayerStatValue(p, activeStatsTab) === 0);
   }, [sortedPlayers, activeStatsTab]);
 
   const displayedPlayers = useMemo(() => {
@@ -496,11 +513,11 @@ export default function ShareView() {
 
   const topPerformers = useMemo(() => {
     return activeContributors.slice(0, 5);
-  }, [activeContributors, activeStatsTab]);
+  }, [activeContributors]);
 
   const maxStat = useMemo(() => {
     if (topPerformers.length === 0) return 1;
-    return Math.max(...topPerformers.map((p) => p[activeStatsTab]), 1);
+    return Math.max(...topPerformers.map((p) => getPlayerStatValue(p, activeStatsTab)), 1);
   }, [topPerformers, activeStatsTab]);
 
   const totalTeamGoals = activeStatsData.summary.totalGoals;
@@ -508,15 +525,57 @@ export default function ShareView() {
   const totalMatches = activeStatsData.summary.totalMatches;
   const avgGoalsPerMatch = totalMatches > 0 ? (totalTeamGoals / totalMatches).toFixed(1) : '0.0';
 
+  // Rating summary metrics
+  const ratedPlayers = useMemo(() => {
+    if (!activeStatsData) return [];
+    return activeStatsData.players.filter((p) => (p.rating ?? p.avgRating ?? 0) > 0);
+  }, [activeStatsData]);
+
+  const avgTeamRating = useMemo(() => {
+    if (!activeStatsData) return '0.0';
+    if (activeStatsData.summary.avgTeamRating !== undefined && activeStatsData.summary.avgTeamRating > 0) {
+      return activeStatsData.summary.avgTeamRating.toFixed(1);
+    }
+    if (ratedPlayers.length > 0) {
+      return (ratedPlayers.reduce((sum, p) => sum + (p.rating ?? p.avgRating ?? 0), 0) / ratedPlayers.length).toFixed(1);
+    }
+    return '0.0';
+  }, [activeStatsData, ratedPlayers]);
+
+  const highestAvgRatingPlayer = useMemo(() => {
+    if (ratedPlayers.length === 0) return null;
+    return [...ratedPlayers].sort((a, b) => (b.rating ?? b.avgRating ?? 0) - (a.rating ?? a.avgRating ?? 0))[0];
+  }, [ratedPlayers]);
+
+  const highestMatchRating = useMemo(() => {
+    if (!activeStatsData) return '0.0';
+    if (activeStatsData.summary.highestMatchRating !== undefined && activeStatsData.summary.highestMatchRating > 0) {
+      return activeStatsData.summary.highestMatchRating.toFixed(1);
+    }
+    if (highestAvgRatingPlayer) {
+      return (highestAvgRatingPlayer.rating ?? highestAvgRatingPlayer.avgRating ?? 0).toFixed(1);
+    }
+    return '0.0';
+  }, [activeStatsData, highestAvgRatingPlayer]);
+
+  const matchesWithRatingsCount = useMemo(() => {
+    if (!activeStatsData) return 0;
+    if (activeStatsData.summary.matchesWithRatingsCount !== undefined) {
+      return activeStatsData.summary.matchesWithRatingsCount;
+    }
+    return ratedPlayers.length > 0 ? totalMatches : 0;
+  }, [activeStatsData, ratedPlayers, totalMatches]);
+
   const getUnitLabel = () => {
     switch (activeStatsTab) {
       case 'goals': return t('stats.unit_goals', 'BÀN');
       case 'assists': return t('stats.unit_assists', 'KIẾN TẠO');
       case 'attendance': return t('stats.unit_matches', 'TRẬN');
+      case 'rating': return t('stats.unit_rating', 'ĐIỂM');
     }
   };
 
-  const handleTabChange = (tab: 'goals' | 'assists' | 'attendance') => {
+  const handleTabChange = (tab: StatTab) => {
     setActiveStatsTab(tab);
     setShowAllZeroStats(false);
   };
@@ -587,7 +646,8 @@ export default function ShareView() {
   // Loading State
   if (isLoading) {
     return (
-      <div className="fixed inset-0 overflow-y-auto bg-background flex flex-col items-center justify-center p-6 text-center z-50">
+      <div className="fixed inset-0 overflow-y-auto bg-surface flex flex-col items-center justify-center p-6 text-center z-50">
+        <div className="absolute inset-0 bg-accent/30 pointer-events-none -z-10" />
         <div className="w-16 h-16 border-4 border-primary border-t-transparent animate-spin rounded-full mb-4"></div>
         <h2 className="font-display text-xl font-bold uppercase tracking-wider text-primary">
           {t('share.loading_title', 'ĐANG TẢI DỮ LIỆU ĐỘI BÓNG...')}
@@ -602,22 +662,25 @@ export default function ShareView() {
   // Error / Invalid Link State
   if (errorMsg || !payload) {
     return (
-      <div className="fixed inset-0 overflow-y-auto bg-background flex flex-col items-center justify-center p-6 text-center max-w-md mx-auto z-50">
-        <div className="w-16 h-16 border-2 border-red-500/40 bg-red-500/10 flex items-center justify-center mb-4">
-          <X className="text-red-500" size={32} />
+      <div className="fixed inset-0 overflow-y-auto bg-surface flex flex-col items-center justify-center p-6 text-center z-50">
+        <div className="absolute inset-0 bg-accent/30 pointer-events-none -z-10" />
+        <div className="max-w-md w-full mx-auto flex flex-col items-center">
+          <div className="w-16 h-16 border-2 border-red-500/40 bg-red-500/10 flex items-center justify-center mb-4">
+            <X className="text-red-500" size={32} />
+          </div>
+          <h2 className="font-display text-xl font-bold uppercase tracking-wider text-red-600 mb-2">
+            {t('share.error_title', 'LIÊN KẾT KHÔNG KHẢ DỤNG')}
+          </h2>
+          <p className="text-xs text-text-muted mb-6 leading-relaxed">
+            {errorMsg || t('share.error_generic', 'Không tìm thấy nội dung chia sẻ hoặc liên kết đã bị hủy.')}
+          </p>
+          <a
+            href="/"
+            className="px-6 py-2.5 bg-primary text-white font-display font-bold uppercase text-xs tracking-wider border-2 border-primary hover:bg-primary/90 transition-all"
+          >
+            {t('common.go_home', 'Về trang chính')}
+          </a>
         </div>
-        <h2 className="font-display text-xl font-bold uppercase tracking-wider text-red-600 mb-2">
-          {t('share.error_title', 'LIÊN KẾT KHÔNG KHẢ DỤNG')}
-        </h2>
-        <p className="text-xs text-text-muted mb-6 leading-relaxed">
-          {errorMsg || t('share.error_generic', 'Không tìm thấy nội dung chia sẻ hoặc liên kết đã bị hủy.')}
-        </p>
-        <a
-          href="/"
-          className="px-6 py-2.5 bg-primary text-white font-display font-bold uppercase text-xs tracking-wider border-2 border-primary hover:bg-primary/90 transition-all"
-        >
-          {t('common.go_home', 'Về trang chính')}
-        </a>
       </div>
     );
   }
@@ -632,7 +695,7 @@ export default function ShareView() {
   const labelFontSize = Math.max(9, Math.round(11 * boardScale));
 
   return (
-    <div className="fixed inset-0 overflow-y-auto overscroll-y-contain bg-background text-text-main flex flex-col selection:bg-primary/20">
+    <div className="fixed inset-0 overflow-y-auto overscroll-y-contain bg-surface text-text-main flex flex-col selection:bg-primary/20">
       {/* 🌟 Member Portal Header */}
       <header className="sticky top-0 z-30 bg-surface/95 backdrop-blur-md border-b-2 border-border-main px-4 py-3 sm:px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
@@ -662,8 +725,10 @@ export default function ShareView() {
         </div>
       </header>
 
-      {/* 📊 STATS VIEW MODE */}
-      {payload.type === 'stats' && statsPayload && (
+      {/* 🌟 Content wrapper with original app's bg-accent/30 */}
+      <div className="flex-1 flex flex-col bg-accent/30 min-h-0">
+        {/* 📊 STATS VIEW MODE */}
+        {payload.type === 'stats' && statsPayload && (
         <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 flex flex-col justify-between">
           {/* 🏆 Header Section */}
           <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-3 sm:gap-4 mb-5 sm:mb-6 pb-2 border-b-2 border-border-main">
@@ -730,6 +795,17 @@ export default function ShareView() {
             >
               {t('stats.attendance', 'SỐ TRẬN CÓ MẶT')}
             </button>
+            <button 
+              type="button"
+              onClick={() => handleTabChange('rating')}
+              className={`shrink-0 px-3 sm:px-4 py-2 sm:py-2.5 text-sm sm:text-base font-display uppercase tracking-wider transition-all border-b-4 -mb-[2px] font-bold cursor-pointer ${
+                activeStatsTab === 'rating' 
+                  ? 'border-primary text-primary bg-primary/5' 
+                  : 'border-transparent text-text-muted hover:text-text-main'
+              }`}
+            >
+              {t('stats.tab_rating', 'ĐIỂM ĐÁNH GIÁ')}
+            </button>
           </div>
 
           {/* 📐 2-Column Responsive Layout */}
@@ -747,6 +823,8 @@ export default function ShareView() {
                       ? t('stats.total_goals_col', 'TỔNG BÀN') 
                       : activeStatsTab === 'assists' 
                       ? t('stats.total_assists_col', 'TỔNG KIẾN TẠO') 
+                      : activeStatsTab === 'rating'
+                      ? t('stats.rating_col', 'ĐIỂM TB')
                       : t('stats.total_matches_col', 'SỐ TRẬN')}
                   </span>
                 </div>
@@ -757,8 +835,9 @@ export default function ShareView() {
                   </div>
                 ) : (
                   displayedPlayers.map((player, index) => {
-                    const isLeader = index === 0 && player[activeStatsTab] > 0;
-                    const isPodium = index < 3 && player[activeStatsTab] > 0;
+                    const statVal = getPlayerStatValue(player, activeStatsTab);
+                    const isLeader = index === 0 && statVal > 0;
+                    const isPodium = index < 3 && statVal > 0;
 
                     return (
                       <div 
@@ -789,21 +868,25 @@ export default function ShareView() {
                               </span>
                             )}
                           </div>
-                          <div className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-text-muted mt-0.5 font-display">
-                            {player.position || t('stats.unknown_position', 'Chưa rõ vị trí')}
-                          </div>
                         </div>
 
                         {/* Score Value with Unit */}
                         <div className="text-right shrink-0">
-                          <span className={`text-2xl sm:text-3xl font-display font-bold leading-none ${
-                            isLeader ? 'text-secondary' : 'text-primary'
-                          }`}>
-                            {player[activeStatsTab]}
-                          </span>
-                          <span className="text-[11px] sm:text-xs text-text-muted font-bold font-display uppercase ml-1.5">
-                            {getUnitLabel()}
-                          </span>
+                          <div>
+                            <span className={`text-2xl sm:text-3xl font-display font-bold leading-none ${
+                              isLeader ? 'text-secondary' : 'text-primary'
+                            }`}>
+                              {activeStatsTab === 'rating' ? (statVal > 0 ? statVal.toFixed(1) : '—') : statVal}
+                            </span>
+                            <span className="text-[11px] sm:text-xs text-text-muted font-bold font-display uppercase ml-1.5">
+                              {getUnitLabel()}
+                            </span>
+                          </div>
+                          {activeStatsTab === 'rating' && (player.ratedMatches || 0) > 0 && (
+                            <div className="text-[10px] text-text-muted font-display font-bold mt-0.5 uppercase tracking-wider">
+                              {player.ratedMatches} {t('stats.rated_matches_col', 'TRẬN ĐÃ CHẤM')}
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
@@ -837,43 +920,88 @@ export default function ShareView() {
             <div className="lg:col-span-5 flex flex-col gap-4 sm:gap-6">
               
               {/* 📊 Team Summary Metrics (2x2 KPI Cards) */}
-              <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">
-                    {t('stats.total_team_goals', 'TỔNG BÀN THẮNG')}
+              {activeStatsTab === 'rating' ? (
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                  <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">
+                      {t('stats.total_team_rating', 'ĐIỂM TB TOÀN ĐỘI')}
+                    </div>
+                    <div className="text-3xl sm:text-4xl font-display text-primary font-bold">
+                      {avgTeamRating}
+                    </div>
                   </div>
-                  <div className="text-3xl sm:text-4xl font-display text-primary font-bold">
-                    {totalTeamGoals}
-                  </div>
-                </div>
 
-                <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">
-                    {t('stats.total_team_assists', 'TỔNG KIẾN TẠO')}
+                  <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">
+                      {t('stats.top_rating_player', 'PHONG ĐỘ CAO NHẤT')}
+                    </div>
+                    <div className="text-3xl sm:text-4xl font-display text-secondary font-bold truncate px-1">
+                      {highestAvgRatingPlayer ? (highestAvgRatingPlayer.rating ?? highestAvgRatingPlayer.avgRating ?? 0).toFixed(1) : '0.0'}
+                    </div>
+                    {highestAvgRatingPlayer && (
+                      <div className="text-[10px] font-bold text-text-muted truncate mt-0.5 uppercase font-display">
+                        {highestAvgRatingPlayer.name}
+                      </div>
+                    )}
                   </div>
-                  <div className="text-3xl sm:text-4xl font-display text-secondary font-bold">
-                    {totalTeamAssists}
-                  </div>
-                </div>
 
-                <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">
-                    {t('stats.total_matches', 'SỐ TRẬN TỔNG')}
+                  <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">
+                      {t('stats.rated_matches_col', 'TRẬN ĐÃ CHẤM')}
+                    </div>
+                    <div className="text-3xl sm:text-4xl font-display text-text-main font-bold">
+                      {matchesWithRatingsCount}
+                    </div>
                   </div>
-                  <div className="text-3xl sm:text-4xl font-display text-text-main font-bold">
-                    {totalMatches}
-                  </div>
-                </div>
 
-                <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">
-                    {t('stats.avg_goals_match', 'TB BÀN / TRẬN')}
-                  </div>
-                  <div className="text-3xl sm:text-4xl font-display text-text-main font-bold">
-                    {avgGoalsPerMatch}
+                  <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">
+                      {t('stats.highest_rated_match', 'ĐIỂM CAO NHẤT')}
+                    </div>
+                    <div className="text-3xl sm:text-4xl font-display text-text-main font-bold">
+                      {highestMatchRating}
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                  <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">
+                      {t('stats.total_team_goals', 'TỔNG BÀN THẮNG')}
+                    </div>
+                    <div className="text-3xl sm:text-4xl font-display text-primary font-bold">
+                      {totalTeamGoals}
+                    </div>
+                  </div>
+
+                  <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">
+                      {t('stats.total_team_assists', 'TỔNG KIẾN TẠO')}
+                    </div>
+                    <div className="text-3xl sm:text-4xl font-display text-secondary font-bold">
+                      {totalTeamAssists}
+                    </div>
+                  </div>
+
+                  <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">
+                      {t('stats.total_matches', 'SỐ TRẬN TỔNG')}
+                    </div>
+                    <div className="text-3xl sm:text-4xl font-display text-text-main font-bold">
+                      {totalMatches}
+                    </div>
+                  </div>
+
+                  <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">
+                      {t('stats.avg_goals_match', 'TB BÀN / TRẬN')}
+                    </div>
+                    <div className="text-3xl sm:text-4xl font-display text-text-main font-bold">
+                      {avgGoalsPerMatch}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* 📈 Visual Horizontal Bar Chart */}
               <div className="hallmark-card bg-surface border-2 border-border-main p-4 sm:p-6 flex flex-col gap-4 shadow-sm">
@@ -886,6 +1014,8 @@ export default function ShareView() {
                       ? t('stats.tab_scoring', 'GHI BÀN') 
                       : activeStatsTab === 'assists' 
                       ? t('stats.tab_assisting', 'KIẾN TẠO') 
+                      : activeStatsTab === 'rating'
+                      ? t('stats.tab_rating_chart', 'ĐIỂM TRUNG BÌNH')
                       : t('stats.tab_appearance', 'RA SÂN')}
                   </span>
                 </div>
@@ -897,7 +1027,8 @@ export default function ShareView() {
                 ) : (
                   <div className="flex flex-col gap-3.5 pt-1">
                     {topPerformers.map((player, idx) => {
-                      const percentage = Math.max(8, (player[activeStatsTab] / maxStat) * 100);
+                      const statVal = getPlayerStatValue(player, activeStatsTab);
+                      const percentage = Math.max(8, (statVal / maxStat) * 100);
                       const isTop1 = idx === 0;
 
                       return (
@@ -907,7 +1038,7 @@ export default function ShareView() {
                               {idx + 1} - {player.name}
                             </span>
                             <span className="font-display font-bold text-primary text-sm">
-                              {player[activeStatsTab]} <span className="text-[10px] text-text-muted font-normal uppercase">{getUnitLabel()}</span>
+                              {activeStatsTab === 'rating' ? statVal.toFixed(1) : statVal} <span className="text-[10px] text-text-muted font-normal uppercase">{getUnitLabel()}</span>
                             </span>
                           </div>
 
@@ -1179,14 +1310,16 @@ export default function ShareView() {
               </div>
               <div>
                 <h3 className="font-display font-bold uppercase text-lg text-text-main">{selectedPlayer.name}</h3>
-                <p className="text-xs text-text-muted font-sans">
-                  {selectedPlayer.position || 'Cầu thủ'} • #{selectedPlayer.number || '-'}
-                </p>
+                {selectedPlayer.number !== null && selectedPlayer.number !== undefined && (
+                  <p className="text-xs text-text-muted font-sans">
+                    #{selectedPlayer.number}
+                  </p>
+                )}
               </div>
             </div>
 
             {/* Stat Cards Breakdown */}
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <div className="p-3 bg-surface border border-border-main text-center">
                 <span className="text-[10px] font-display font-bold uppercase text-text-muted block">{t('stats.tab_scoring', 'BÀN THẮNG')}</span>
                 <span className="text-xl font-display font-black text-primary mt-1 block">{selectedPlayer.goals}</span>
@@ -1198,6 +1331,14 @@ export default function ShareView() {
               <div className="p-3 bg-surface border border-border-main text-center">
                 <span className="text-[10px] font-display font-bold uppercase text-text-muted block">{t('stats.tab_appearance', 'ĐIỂM DANH')}</span>
                 <span className="text-xl font-display font-black text-text-main mt-1 block">{selectedPlayer.attendance}</span>
+              </div>
+              <div className="p-3 bg-surface border border-border-main text-center">
+                <span className="text-[10px] font-display font-bold uppercase text-text-muted block">{t('stats.rating_col', 'ĐIỂM TB')}</span>
+                <span className="text-xl font-display font-black text-emerald-600 dark:text-emerald-400 mt-1 block">
+                  {(selectedPlayer.rating ?? selectedPlayer.avgRating ?? 0) > 0 
+                    ? (selectedPlayer.rating ?? selectedPlayer.avgRating ?? 0).toFixed(1) 
+                    : '-'}
+                </span>
               </div>
             </div>
 
@@ -1214,19 +1355,20 @@ export default function ShareView() {
         </BottomSheet>
       )}
 
-      {/* 🔒 Footer */}
-      <footer className="border-t border-border-main/60 py-4 px-4 text-center text-xs text-text-muted mt-auto">
-        <p className="font-display font-bold uppercase tracking-wider text-[11px] text-primary/80">
-          {payload.teamName 
-            ? (payload.teamName.trim().toUpperCase().startsWith('5TACTIQ') 
-                ? payload.teamName.trim() 
-                : `5TactiQ - ${payload.teamName.trim()}`)
-            : '5TactiQ'}
-        </p>
-        <p className="text-[10px] mt-0.5 text-text-muted/80">
-          {t('share.footer_notice', 'Dữ liệu được chia sẻ an toàn ở chế độ Chỉ đọc. Không có quyền chỉnh sửa.')}
-        </p>
-      </footer>
+        {/* 🔒 Footer */}
+        <footer className="border-t border-border-main/60 py-4 px-4 text-center text-xs text-text-muted mt-auto bg-surface/40">
+          <p className="font-display font-bold uppercase tracking-wider text-[11px] text-primary/80">
+            {payload.teamName 
+              ? (payload.teamName.trim().toUpperCase().startsWith('5TACTIQ') 
+                  ? payload.teamName.trim() 
+                  : `5TactiQ - ${payload.teamName.trim()}`)
+              : '5TactiQ'}
+          </p>
+          <p className="text-[10px] mt-0.5 text-text-muted/80">
+            {t('share.footer_notice', 'Dữ liệu được chia sẻ an toàn ở chế độ Chỉ đọc. Không có quyền chỉnh sửa.')}
+          </p>
+        </footer>
+      </div>
     </div>
   );
 }

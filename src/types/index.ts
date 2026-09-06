@@ -35,6 +35,8 @@ export interface PlayerMatchStat {
   playerName?: string;
   goals: number;
   assists: number;
+  rating?: number;
+  isRatingOverridden?: boolean;
 }
 
 export interface MatchInfo {

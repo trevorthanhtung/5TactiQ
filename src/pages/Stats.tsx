@@ -16,7 +16,8 @@ export default function Stats() {
   const { players, fetchPlayers } = usePlayerStore();
   const { matches } = useMatchStore();
   const { settings } = useSettingsStore();
-  const [activeTab, setActiveTab] = useState<'goals' | 'assists' | 'attendance'>('goals');
+  type StatTab = 'goals' | 'assists' | 'attendance' | 'rating';
+  const [activeTab, setActiveTab] = useState<StatTab>('goals');
   const [filterMode, setFilterMode] = useState<'all_time' | 'current_season'>('current_season');
   const [showAllZeroStats, setShowAllZeroStats] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -30,10 +31,16 @@ export default function Stats() {
   }, [fetchPlayers]);
 
   // Aggregate stats from matches
-  const playerStatsAgg: Record<string, { goals: number; assists: number; attendance: number }> = {};
+  const playerStatsAgg: Record<string, {
+    goals: number;
+    assists: number;
+    attendance: number;
+    totalRating: number;
+    ratedMatches: number;
+  }> = {};
 
   players.forEach(p => {
-    playerStatsAgg[p.id] = { goals: 0, assists: 0, attendance: 0 };
+    playerStatsAgg[p.id] = { goals: 0, assists: 0, attendance: 0, totalRating: 0, ratedMatches: 0 };
   });
 
   const seasonRange = useMemo(() => getCurrentSeasonRange(settings), [settings.seasonStartDate, settings.seasonEndDate]);
@@ -52,6 +59,9 @@ export default function Stats() {
     return t('stats.aggregated_data', { count: filteredMatches.length });
   };
 
+  let highestMatchRating = 0;
+  let matchesWithRatingsCount = 0;
+
   filteredMatches.forEach(m => {
     // Attendance count across all matches
     if (m.attendance) {
@@ -62,15 +72,27 @@ export default function Stats() {
       });
     }
 
-    // Goals & Assists from match stats
+    // Goals, Assists & Rating from match stats
     const shouldTrackStats = m.matchType !== 'internal' || !!m.trackStats;
+    let matchHasRating = false;
     if (shouldTrackStats && m.stats) {
       m.stats.forEach(s => {
         if (playerStatsAgg[s.playerId]) {
           playerStatsAgg[s.playerId].goals += s.goals || 0;
           playerStatsAgg[s.playerId].assists += s.assists || 0;
+          if (typeof s.rating === 'number' && s.rating > 0) {
+            playerStatsAgg[s.playerId].totalRating += s.rating;
+            playerStatsAgg[s.playerId].ratedMatches += 1;
+            matchHasRating = true;
+            if (s.rating > highestMatchRating) {
+              highestMatchRating = s.rating;
+            }
+          }
         }
       });
+    }
+    if (matchHasRating) {
+      matchesWithRatingsCount += 1;
     }
   });
 
@@ -78,30 +100,45 @@ export default function Stats() {
     return players.filter(isPlayerEligibleForStats);
   }, [players]);
 
-  const playersWithStats = eligiblePlayers.map(p => ({
-    ...p,
-    goals: playerStatsAgg[p.id]?.goals || 0,
-    assists: playerStatsAgg[p.id]?.assists || 0,
-    attendance: playerStatsAgg[p.id]?.attendance || 0,
-  }));
+  const playersWithStats = eligiblePlayers.map(p => {
+    const agg = playerStatsAgg[p.id];
+    const ratedMatches = agg?.ratedMatches || 0;
+    const avgRating = ratedMatches > 0 ? Number((agg.totalRating / ratedMatches).toFixed(1)) : 0;
+    return {
+      ...p,
+      goals: agg?.goals || 0,
+      assists: agg?.assists || 0,
+      attendance: agg?.attendance || 0,
+      rating: avgRating,
+      avgRating,
+      ratedMatches,
+    };
+  });
 
   const sortedPlayers = useMemo(() => {
     return [...playersWithStats].sort((a, b) => {
       // 1. Primary tab stat
-      if (b[activeTab] !== a[activeTab]) {
-        return b[activeTab] - a[activeTab];
-      }
+      if (activeTab === 'rating') {
+        if (b.avgRating !== a.avgRating) return b.avgRating - a.avgRating;
+        if (b.ratedMatches !== a.ratedMatches) return b.ratedMatches - a.ratedMatches;
+        if (b.goals !== a.goals) return b.goals - a.goals;
+        if (b.assists !== a.assists) return b.assists - a.assists;
+      } else {
+        if (b[activeTab] !== a[activeTab]) {
+          return b[activeTab] - a[activeTab];
+        }
 
-      // 2. Secondary stats tie-breakers
-      if (activeTab === 'goals') {
-        if (b.assists !== a.assists) return b.assists - a.assists;
-        if (b.attendance !== a.attendance) return b.attendance - a.attendance;
-      } else if (activeTab === 'assists') {
-        if (b.goals !== a.goals) return b.goals - a.goals;
-        if (b.attendance !== a.attendance) return b.attendance - a.attendance;
-      } else if (activeTab === 'attendance') {
-        if (b.goals !== a.goals) return b.goals - a.goals;
-        if (b.assists !== a.assists) return b.assists - a.assists;
+        // 2. Secondary stats tie-breakers
+        if (activeTab === 'goals') {
+          if (b.assists !== a.assists) return b.assists - a.assists;
+          if (b.attendance !== a.attendance) return b.attendance - a.attendance;
+        } else if (activeTab === 'assists') {
+          if (b.goals !== a.goals) return b.goals - a.goals;
+          if (b.attendance !== a.attendance) return b.attendance - a.attendance;
+        } else if (activeTab === 'attendance') {
+          if (b.goals !== a.goals) return b.goals - a.goals;
+          if (b.assists !== a.assists) return b.assists - a.assists;
+        }
       }
 
       // 3. Fallback: Vietnamese name sorting
@@ -114,12 +151,22 @@ export default function Stats() {
   const totalTeamAssists = playersWithStats.reduce((sum, p) => sum + p.assists, 0);
   const avgGoalsPerMatch = filteredMatches.length > 0 ? (totalTeamGoals / filteredMatches.length).toFixed(1) : '0.0';
 
-  const maxStat = sortedPlayers.length > 0 && sortedPlayers[0][activeTab] > 0 ? sortedPlayers[0][activeTab] : 1;
-  const topPerformers = sortedPlayers.filter(p => p[activeTab] > 0).slice(0, 5);
+  // Team Rating KPI calculations
+  const ratedPlayersList = playersWithStats.filter(p => p.ratedMatches > 0);
+  const teamAvgRating = ratedPlayersList.length > 0
+    ? (ratedPlayersList.reduce((sum, p) => sum + p.avgRating, 0) / ratedPlayersList.length).toFixed(1)
+    : '0.0';
+  const topRatedPlayer = sortedPlayers.find(p => p.ratedMatches > 0);
+
+  const maxStat = activeTab === 'rating'
+    ? 10.0
+    : (sortedPlayers.length > 0 && sortedPlayers[0][activeTab] > 0 ? sortedPlayers[0][activeTab] : 1);
+
+  const topPerformers = sortedPlayers.filter(p => (activeTab === 'rating' ? p.avgRating > 0 : p[activeTab] > 0)).slice(0, 5);
 
   // Split players into active contributors vs zero-stat
-  const activeContributors = sortedPlayers.filter(p => p[activeTab] > 0);
-  const zeroStatPlayers = sortedPlayers.filter(p => p[activeTab] === 0);
+  const activeContributors = sortedPlayers.filter(p => (activeTab === 'rating' ? p.avgRating > 0 : p[activeTab] > 0));
+  const zeroStatPlayers = sortedPlayers.filter(p => (activeTab === 'rating' ? p.avgRating === 0 : p[activeTab] === 0));
 
   // If no one has > 0, show top 5 anyway
   const displayedPlayers = activeContributors.length > 0 
@@ -129,6 +176,7 @@ export default function Stats() {
   const getUnitLabel = () => {
     if (activeTab === 'goals') return t('roster.goal_unit', 'bàn');
     if (activeTab === 'assists') return t('roster.assist_unit', 'kiến tạo');
+    if (activeTab === 'rating') return t('stats.unit_rating', 'điểm');
     return t('roster.match_unit', 'trận');
   };
 
@@ -209,6 +257,16 @@ export default function Stats() {
         >
           {t('stats.attendance', 'SỐ TRẬN CÓ MẶT')}
         </button>
+        <button 
+          onClick={() => { setActiveTab('rating'); setShowAllZeroStats(false); }}
+          className={`shrink-0 px-3 sm:px-4 py-2 sm:py-2.5 text-sm sm:text-base font-display uppercase tracking-wider transition-all border-b-4 -mb-[2px] font-bold ${
+            activeTab === 'rating' 
+              ? 'border-primary text-primary bg-primary/5' 
+              : 'border-transparent text-text-muted hover:text-text-main'
+          }`}
+        >
+          {t('stats.tab_rating', 'ĐIỂM ĐÁNH GIÁ')}
+        </button>
       </div>
 
       {/* 📐 2-Column Responsive Layout */}
@@ -221,15 +279,15 @@ export default function Stats() {
             {/* Table Subheader */}
             <div className="p-3 sm:p-4 bg-surface-2 border-b-2 border-border-main flex justify-between items-center text-xs font-display font-bold uppercase tracking-wider text-text-muted">
               <span>{t('stats.rank_and_player', 'HẠNG & CẦU THỦ')}</span>
-              <span>{activeTab === 'goals' ? t('stats.total_goals_col', 'TỔNG BÀN') : activeTab === 'assists' ? t('stats.total_assists_col', 'TỔNG KIẾN TẠO') : t('stats.total_matches_col', 'SỐ TRẬN')}</span>
+              <span>{activeTab === 'goals' ? t('stats.total_goals_col', 'TỔNG BÀN') : activeTab === 'assists' ? t('stats.total_assists_col', 'TỔNG KIẾN TẠO') : activeTab === 'rating' ? t('stats.rating_col', 'ĐIỂM TB') : t('stats.total_matches_col', 'SỐ TRẬN')}</span>
             </div>
 
             {displayedPlayers.length === 0 ? (
               <div className="p-8 text-center text-text-muted font-medium text-sm">{t('stats.no_data', 'Chưa có dữ liệu thống kê')}</div>
             ) : (
               displayedPlayers.map((player, index) => {
-                const isLeader = index === 0 && player[activeTab] > 0;
-                const isPodium = index < 3 && player[activeTab] > 0;
+                const isLeader = index === 0 && (activeTab === 'rating' ? player.avgRating > 0 : player[activeTab] > 0);
+                const isPodium = index < 3 && (activeTab === 'rating' ? player.avgRating > 0 : player[activeTab] > 0);
 
                 return (
                   <Link 
@@ -267,14 +325,23 @@ export default function Stats() {
 
                     {/* Score Value with Unit */}
                     <div className="text-right shrink-0">
-                      <span className={`text-2xl sm:text-3xl font-display font-bold leading-none ${
-                        isLeader ? 'text-secondary' : 'text-primary'
-                      }`}>
-                        {player[activeTab]}
-                      </span>
-                      <span className="text-[11px] sm:text-xs text-text-muted font-bold font-display uppercase ml-1.5">
-                        {getUnitLabel()}
-                      </span>
+                      <div>
+                        <span className={`text-2xl sm:text-3xl font-display font-bold leading-none ${
+                          isLeader ? 'text-secondary' : 'text-primary'
+                        }`}>
+                          {activeTab === 'rating' 
+                            ? (player.avgRating > 0 ? player.avgRating.toFixed(1) : '—') 
+                            : player[activeTab]}
+                        </span>
+                        <span className="text-[11px] sm:text-xs text-text-muted font-bold font-display uppercase ml-1.5">
+                          {getUnitLabel()}
+                        </span>
+                      </div>
+                      {activeTab === 'rating' && player.ratedMatches > 0 && (
+                        <div className="text-[10px] text-text-muted font-display font-bold mt-0.5 uppercase tracking-wider">
+                          {player.ratedMatches} {t('stats.rated_matches_col', 'trận')}
+                        </div>
+                      )}
                     </div>
                   </Link>
                 );
@@ -308,35 +375,76 @@ export default function Stats() {
         <div className="lg:col-span-5 flex flex-col gap-4 sm:gap-6">
           
           {/* 📊 Team Summary Metrics (3-4 KPI Cards) */}
-          <div className="grid grid-cols-2 gap-3 sm:gap-4">
-            <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">
-                {t('stats.total_team_goals', 'TỔNG BÀN THẮNG')}
+          {activeTab === 'rating' ? (
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">
+                  {t('stats.total_team_rating', 'ĐIỂM TB TOÀN ĐỘI')}
+                </div>
+                <div className="text-3xl sm:text-4xl font-display text-primary font-bold">{teamAvgRating}</div>
               </div>
-              <div className="text-3xl sm:text-4xl font-display text-primary font-bold">{totalTeamGoals}</div>
-            </div>
 
-            <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">
-                {t('stats.total_team_assists', 'TỔNG KIẾN TẠO')}
+              <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display truncate">
+                  {t('stats.top_rating_player', 'PHONG ĐỘ CAO NHẤT')}
+                </div>
+                <div className="text-3xl sm:text-4xl font-display text-secondary font-bold">
+                  {topRatedPlayer && topRatedPlayer.avgRating > 0 ? topRatedPlayer.avgRating.toFixed(1) : '—'}
+                </div>
+                {topRatedPlayer && topRatedPlayer.avgRating > 0 && (
+                  <div className="text-[10px] text-text-muted font-bold uppercase tracking-wider truncate mt-0.5">
+                    {topRatedPlayer.name}
+                  </div>
+                )}
               </div>
-              <div className="text-3xl sm:text-4xl font-display text-secondary font-bold">{totalTeamAssists}</div>
-            </div>
 
-            <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">
-                {t('stats.total_matches', 'SỐ TRẬN TỔNG')}
+              <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">
+                  {t('stats.highest_rated_match', 'TRẬN ĐÃ CHẤM')}
+                </div>
+                <div className="text-3xl sm:text-4xl font-display text-text-main font-bold">{matchesWithRatingsCount}</div>
               </div>
-              <div className="text-3xl sm:text-4xl font-display text-text-main font-bold">{filteredMatches.length}</div>
-            </div>
 
-            <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">
-                {t('stats.avg_goals_match', 'TB BÀN / TRẬN')}
+              <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">
+                  {t('stats.rating', 'ĐIỂM CAO NHẤT')}
+                </div>
+                <div className="text-3xl sm:text-4xl font-display text-text-main font-bold">
+                  {highestMatchRating > 0 ? highestMatchRating.toFixed(1) : '—'}
+                </div>
               </div>
-              <div className="text-3xl sm:text-4xl font-display text-text-main font-bold">{avgGoalsPerMatch}</div>
             </div>
-          </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">
+                  {t('stats.total_team_goals', 'TỔNG BÀN THẮNG')}
+                </div>
+                <div className="text-3xl sm:text-4xl font-display text-primary font-bold">{totalTeamGoals}</div>
+              </div>
+
+              <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">
+                  {t('stats.total_team_assists', 'TỔNG KIẾN TẠO')}
+                </div>
+                <div className="text-3xl sm:text-4xl font-display text-secondary font-bold">{totalTeamAssists}</div>
+              </div>
+
+              <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">
+                  {t('stats.total_matches', 'SỐ TRẬN TỔNG')}
+                </div>
+                <div className="text-3xl sm:text-4xl font-display text-text-main font-bold">{filteredMatches.length}</div>
+              </div>
+
+              <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1 font-display">
+                  {t('stats.avg_goals_match', 'TB BÀN / TRẬN')}
+                </div>
+                <div className="text-3xl sm:text-4xl font-display text-text-main font-bold">{avgGoalsPerMatch}</div>
+              </div>
+            </div>
+          )}
 
           {/* 📈 Visual Horizontal Bar Chart */}
           <div className="hallmark-card bg-surface border-2 border-border-main p-4 sm:p-6 flex flex-col gap-4 shadow-sm">
@@ -345,7 +453,13 @@ export default function Stats() {
                 {t('stats.top_performers_title', 'TOP HIỆU SUẤT TRỰC QUAN')}
               </h2>
               <span className="text-[11px] font-display uppercase tracking-wider text-text-muted font-bold">
-                {activeTab === 'goals' ? t('stats.tab_scoring', 'GHI BÀN') : activeTab === 'assists' ? t('stats.tab_assisting', 'KIẾN TẠO') : t('stats.tab_appearance', 'RA SÂN')}
+                {activeTab === 'goals' 
+                  ? t('stats.tab_scoring', 'GHI BÀN') 
+                  : activeTab === 'assists' 
+                    ? t('stats.tab_assisting', 'KIẾN TẠO') 
+                    : activeTab === 'rating'
+                      ? t('stats.tab_rating_chart', 'PHONG ĐỘ')
+                      : t('stats.tab_appearance', 'RA SÂN')}
               </span>
             </div>
 
@@ -356,7 +470,8 @@ export default function Stats() {
             ) : (
               <div className="flex flex-col gap-3.5 pt-1">
                 {topPerformers.map((player, idx) => {
-                  const percentage = Math.max(8, (player[activeTab] / maxStat) * 100);
+                  const statValue = activeTab === 'rating' ? player.avgRating : player[activeTab];
+                  const percentage = Math.max(8, (statValue / maxStat) * 100);
                   const isTop1 = idx === 0;
 
                   return (
@@ -366,7 +481,7 @@ export default function Stats() {
                           {idx + 1} - {player.name}
                         </span>
                         <span className="font-display font-bold text-primary text-sm">
-                          {player[activeTab]} <span className="text-[10px] text-text-muted font-normal uppercase">{getUnitLabel()}</span>
+                          {activeTab === 'rating' ? player.avgRating.toFixed(1) : player[activeTab]} <span className="text-[10px] text-text-muted font-normal uppercase">{getUnitLabel()}</span>
                         </span>
                       </div>
 

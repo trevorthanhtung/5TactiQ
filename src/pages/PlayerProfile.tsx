@@ -98,12 +98,28 @@ export default function PlayerProfile() {
     return sum;
   }, 0);
 
+  // Calculate player rating across all valid finished matches
+  let totalRatingSum = 0;
+  let ratedMatchesCount = 0;
+  matches.forEach(m => {
+    if (m.status !== 'finished') return;
+    const shouldTrackStats = m.matchType !== 'internal' || !!m.trackStats;
+    if (shouldTrackStats && m.stats) {
+      const s = m.stats.find(stat => stat.playerId === player.id);
+      if (s && typeof s.rating === 'number' && s.rating > 0) {
+        totalRatingSum += s.rating;
+        ratedMatchesCount += 1;
+      }
+    }
+  });
+  const avgPlayerRating = ratedMatchesCount > 0 ? (totalRatingSum / ratedMatchesCount).toFixed(1) : '—';
+
   // Filter all finished matches this player participated in
   const playerMatches = matches.filter(m => {
     if (m.status !== 'finished') return false;
     const isAttended = m.attendance?.[player.id] === 'present';
     const stat = m.stats?.find(s => s.playerId === player.id);
-    const hasStats = stat && ((stat.goals || 0) > 0 || (stat.assists || 0) > 0);
+    const hasStats = stat && ((stat.goals || 0) > 0 || (stat.assists || 0) > 0 || (typeof stat.rating === 'number' && stat.rating > 0));
     const hasTeam = !!m.teams?.[player.id];
     return isAttended || hasStats || hasTeam;
   });
@@ -528,8 +544,8 @@ export default function PlayerProfile() {
             </div>
           )}
 
-          {/* 📊 Performance KPI Grid (4 Cards) */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+          {/* 📊 Performance KPI Grid (5 Cards) */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
             <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
               <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1">{t('roster.goals', 'Bàn thắng')}</div>
               <div className="text-3xl sm:text-4xl font-display text-primary font-bold">{totalGoals}</div>
@@ -546,6 +562,16 @@ export default function PlayerProfile() {
             </div>
 
             <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1">{t('stats.rating_col', 'ĐIỂM TB')}</div>
+              <div className="text-3xl sm:text-4xl font-display text-amber-500 font-bold">{avgPlayerRating}</div>
+              {ratedMatchesCount > 0 && (
+                <div className="text-[10px] font-display font-bold text-text-muted uppercase tracking-wider mt-0.5">
+                  {ratedMatchesCount} {t('stats.rated_matches_col', 'TRẬN')}
+                </div>
+              )}
+            </div>
+
+            <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main col-span-2 sm:col-span-1">
               <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1">{t('roster.contribution_rate', 'Đóng góp / Trận')}</div>
               <div className="text-3xl sm:text-4xl font-display text-text-main font-bold">
                 {playerMatches.length > 0 ? ((totalGoals + totalAssists) / playerMatches.length).toFixed(1) : '0.0'}
@@ -609,6 +635,11 @@ export default function PlayerProfile() {
 
                       {/* In-match individual player contributions */}
                       <div className="flex items-center gap-2 shrink-0">
+                        {typeof stat?.rating === 'number' && stat.rating > 0 && (
+                          <span className="px-2 py-1 bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 font-display text-xs font-bold uppercase">
+                            {stat.rating.toFixed(1)}
+                          </span>
+                        )}
                         {matchGoals > 0 && (
                           <span className="px-2 py-1 bg-primary text-white font-display text-xs font-bold uppercase">
                             {matchGoals} {t('roster.goal_unit', 'Bàn')}
@@ -619,7 +650,7 @@ export default function PlayerProfile() {
                             {matchAssists} {t('roster.assist_unit', 'Kiến tạo')}
                           </span>
                         )}
-                        {matchGoals === 0 && matchAssists === 0 && (
+                        {matchGoals === 0 && matchAssists === 0 && (!stat?.rating || stat.rating === 0) && (
                           <span className="text-[11px] text-text-muted font-display uppercase tracking-wider font-bold">
                             {t('roster.attended_badge', 'ĐÃ RA SÂN')}
                           </span>

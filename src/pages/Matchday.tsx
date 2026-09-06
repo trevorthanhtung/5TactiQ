@@ -127,6 +127,14 @@ export default function Matchday() {
   }, [players, currentMatch]);
 
   const [activeTab, setActiveTab] = useState<'attendance' | 'teams' | 'summary'>('attendance');
+  const effectiveActiveTab = currentMatch?.matchType === 'friendly' ? 'attendance' : activeTab;
+
+  useEffect(() => {
+    if (currentMatch?.matchType === 'friendly' && activeTab === 'teams') {
+      setActiveTab('attendance');
+    }
+  }, [currentMatch?.matchType, activeTab]);
+
   const [filterMode, setFilterMode] = useState<'all_time' | 'current_season'>('current_season');
   const [matchCategoryFilter, setMatchCategoryFilter] = useState<'all' | 'internal' | 'friendly' | 'tournament' | 'live'>('all');
   const [matchSearchQuery, setMatchSearchQuery] = useState('');
@@ -504,29 +512,107 @@ export default function Matchday() {
     return mDate.getTime() < now.getTime();
   }, [currentMatch?.date]);
 
+  // Helper to check if a GK kept a clean sheet (0 goals conceded)
+  const isCleanSheetGK = (p: any, scores: { scoreUs?: number; scoreOpponent?: number; scoreTeamA?: number; scoreTeamB?: number; scoreTeamC?: number; scoreTeamD?: number }): boolean => {
+    if (!p.positions?.includes('GK')) return false;
+    const match = currentMatch;
+    if (!match) return false;
+
+    if (match.matchType === 'friendly') {
+      return (scores.scoreOpponent ?? match.scoreOpponent ?? 0) === 0;
+    }
+
+    const team = getPlayerTeam(p.id);
+    if (!team) return false;
+
+    if (match.teamCount === 2 || !match.teamCount) {
+      if (team === 'A') return (scores.scoreTeamB ?? match.scoreTeamB ?? 0) === 0;
+      if (team === 'B') return (scores.scoreTeamA ?? match.scoreTeamA ?? 0) === 0;
+      return false;
+    }
+
+    const otherTeams = (['A', 'B', 'C', 'D'] as const).slice(0, match.teamCount).filter(t => t !== team);
+    return otherTeams.every(ot => {
+      const scoreKey = `scoreTeam${ot}` as keyof typeof scores;
+      const matchScoreKey = `scoreTeam${ot}` as keyof typeof match;
+      return (scores[scoreKey] ?? (match[matchScoreKey] as number) ?? 0) === 0;
+    });
+  };
+
+  // Helper to calculate default match rating according to PES/FIFA mechanics:
+  // Base: 6.0. Clean sheet GK: +0.4 (6.4 base, avoiding 9.0 inflation).
+  // Goals (diminishing): 1st goal +0.5, 2nd goal +0.4, 3rd+ goal +0.3 each.
+  // Assists: +0.2 each.
+  // Clamped between 1.0 and 10.0.
+  const calculateDefaultRating = (goals: number, assists: number, cleanSheetGK: boolean = false): number => {
+    let rating = 6.0;
+    if (cleanSheetGK) {
+      rating += 0.4;
+    }
+
+    const g = Math.max(0, goals || 0);
+    if (g === 1) {
+      rating += 0.5;
+    } else if (g === 2) {
+      rating += 0.9;
+    } else if (g >= 3) {
+      rating += 0.9 + (g - 2) * 0.3;
+    }
+
+    const a = Math.max(0, assists || 0);
+    rating += a * 0.2;
+
+    return Number(Math.min(10.0, Math.max(1.0, rating)).toFixed(1));
+  };
+
   // Live Update Form State
   const [liveData, setLiveData] = useState({ scoreUs: 0, scoreOpponent: 0, scoreTeamA: 0, scoreTeamB: 0, scoreTeamC: 0, scoreTeamD: 0 });
-  const [liveStatsMap, setLiveStatsMap] = useState<Record<string, { goals: number; assists: number }>>({});
+  const [liveStatsMap, setLiveStatsMap] = useState<Record<string, { goals: number; assists: number; rating: number; isRatingOverridden: boolean }>>({});
   const [liveModalTeamFilter, setLiveModalTeamFilter] = useState<'ALL' | 'A' | 'B' | 'C' | 'D' | 'UNASSIGNED'>('ALL');
 
   const openLiveUpdateModal = () => {
     const match = getMatchInfo();
     if (!match) return;
-    setLiveData({
+    const matchScores = {
       scoreUs: match.scoreUs ?? match.scoreTeamA ?? 0,
       scoreOpponent: match.scoreOpponent ?? match.scoreTeamB ?? 0,
       scoreTeamA: match.scoreTeamA ?? match.scoreUs ?? 0,
       scoreTeamB: match.scoreTeamB ?? match.scoreOpponent ?? 0,
       scoreTeamC: match.scoreTeamC ?? 0,
       scoreTeamD: match.scoreTeamD ?? 0,
-    });
+    };
+    setLiveData(matchScores);
 
-    const initialMap: Record<string, { goals: number; assists: number }> = {};
+    const initialMap: Record<string, { goals: number; assists: number; rating: number; isRatingOverridden: boolean }> = {};
     if (match.stats && match.stats.length > 0) {
       match.stats.forEach(s => {
-        initialMap[s.playerId] = { goals: s.goals, assists: s.assists };
+        const p = players.find(pl => pl.id === s.playerId);
+        const cleanSheet = p ? isCleanSheetGK(p, matchScores) : false;
+        const defaultR = calculateDefaultRating(s.goals || 0, s.assists || 0, cleanSheet);
+        const hasExplicitRating = typeof s.rating === 'number' && s.rating > 0;
+        initialMap[s.playerId] = {
+          goals: s.goals || 0,
+          assists: s.assists || 0,
+          rating: hasExplicitRating ? s.rating! : defaultR,
+          isRatingOverridden: s.isRatingOverridden ?? (hasExplicitRating && s.rating !== defaultR)
+        };
       });
     }
+
+    // Initialize all present players so they can be rated right away
+    presentPlayers.forEach(p => {
+      if (!initialMap[p.id]) {
+        const cleanSheet = isCleanSheetGK(p, matchScores);
+        const defaultR = calculateDefaultRating(0, 0, cleanSheet);
+        initialMap[p.id] = {
+          goals: 0,
+          assists: 0,
+          rating: defaultR,
+          isRatingOverridden: false
+        };
+      }
+    });
+
     setLiveStatsMap(initialMap);
     setLiveModalTeamFilter('ALL');
     setShowLiveUpdateModal(true);
@@ -535,12 +621,14 @@ export default function Matchday() {
   const handleSaveLiveUpdate = () => {
     if (!currentMatch) return;
     const statsArray = Object.entries(liveStatsMap)
-      .filter(([_, stat]) => stat.goals > 0 || stat.assists > 0)
+      .filter(([_, stat]) => stat.goals > 0 || stat.assists > 0 || (typeof stat.rating === 'number' && stat.rating > 0))
       .map(([playerId, stat]) => ({
         playerId,
         playerName: players.find(p => p.id === playerId)?.name,
-        goals: stat.goals,
-        assists: stat.assists
+        goals: stat.goals || 0,
+        assists: stat.assists || 0,
+        rating: stat.rating,
+        isRatingOverridden: stat.isRatingOverridden
       }));
 
     const isMultiTeam = currentMatch.matchType === 'internal' || currentMatch.matchType === 'tournament';
@@ -558,14 +646,24 @@ export default function Matchday() {
   };
 
   const handleLiveGoalChange = (p: any, increment: boolean) => {
-    const currentGoals = liveStatsMap[p.id]?.goals || 0;
+    const currentStat = liveStatsMap[p.id] || { goals: 0, assists: 0, rating: 6.0, isRatingOverridden: false };
+    const currentGoals = currentStat.goals;
     const newGoals = increment ? currentGoals + 1 : Math.max(0, currentGoals - 1);
 
     if (newGoals === currentGoals) return;
 
+    const cleanSheet = isCleanSheetGK(p, liveData);
+    const newRating = currentStat.isRatingOverridden
+      ? currentStat.rating
+      : calculateDefaultRating(newGoals, currentStat.assists, cleanSheet);
+
     setLiveStatsMap(prev => ({
       ...prev,
-      [p.id]: { ...(prev[p.id] || { goals: 0, assists: 0 }), goals: newGoals }
+      [p.id]: {
+        ...currentStat,
+        goals: newGoals,
+        rating: newRating
+      }
     }));
 
     if (currentMatch) {
@@ -591,6 +689,84 @@ export default function Matchday() {
       }
     }
   };
+
+  const handleLiveAssistChange = (p: any, increment: boolean) => {
+    const currentStat = liveStatsMap[p.id] || { goals: 0, assists: 0, rating: 6.0, isRatingOverridden: false };
+    const currentAssists = currentStat.assists;
+    const newAssists = increment ? currentAssists + 1 : Math.max(0, currentAssists - 1);
+
+    if (newAssists === currentAssists) return;
+
+    const cleanSheet = isCleanSheetGK(p, liveData);
+    const newRating = currentStat.isRatingOverridden
+      ? currentStat.rating
+      : calculateDefaultRating(currentStat.goals, newAssists, cleanSheet);
+
+    setLiveStatsMap(prev => ({
+      ...prev,
+      [p.id]: {
+        ...currentStat,
+        assists: newAssists,
+        rating: newRating
+      }
+    }));
+  };
+
+  const handleLiveRatingChange = (playerId: string, delta: number) => {
+    setLiveStatsMap(prev => {
+      const currentStat = prev[playerId] || { goals: 0, assists: 0, rating: 6.0, isRatingOverridden: false };
+      const currentRating = currentStat.rating ?? 6.0;
+      const newRating = Number(Math.min(10.0, Math.max(1.0, currentRating + delta)).toFixed(1));
+      return {
+        ...prev,
+        [playerId]: {
+          ...currentStat,
+          rating: newRating,
+          isRatingOverridden: true
+        }
+      };
+    });
+  };
+
+  const handleResetRating = (playerId: string) => {
+    setLiveStatsMap(prev => {
+      const currentStat = prev[playerId] || { goals: 0, assists: 0, rating: 6.0, isRatingOverridden: false };
+      const p = players.find(pl => pl.id === playerId);
+      const cleanSheet = p ? isCleanSheetGK(p, liveData) : false;
+      const defaultR = calculateDefaultRating(currentStat.goals, currentStat.assists, cleanSheet);
+      return {
+        ...prev,
+        [playerId]: {
+          ...currentStat,
+          rating: defaultR,
+          isRatingOverridden: false
+        }
+      };
+    });
+  };
+
+  // Automatically sync GK ratings with clean sheet status when match scores change in live modal (if rating not manually overridden)
+  useEffect(() => {
+    if (!showLiveUpdateModal) return;
+    setLiveStatsMap(prevMap => {
+      let changed = false;
+      const nextMap = { ...prevMap };
+      presentPlayers.forEach(p => {
+        if (p.positions?.includes('GK')) {
+          const stat = nextMap[p.id];
+          if (stat && !stat.isRatingOverridden) {
+            const cleanSheet = isCleanSheetGK(p, liveData);
+            const expectedRating = calculateDefaultRating(stat.goals, stat.assists, cleanSheet);
+            if (stat.rating !== expectedRating) {
+              nextMap[p.id] = { ...stat, rating: expectedRating };
+              changed = true;
+            }
+          }
+        }
+      });
+      return changed ? nextMap : prevMap;
+    });
+  }, [liveData.scoreUs, liveData.scoreOpponent, liveData.scoreTeamA, liveData.scoreTeamB, liveData.scoreTeamC, liveData.scoreTeamD, showLiveUpdateModal]);
 
   // New Match Form state
   const [newMatchData, setNewMatchData] = useState({
@@ -1879,22 +2055,6 @@ export default function Matchday() {
     );
   }
 
-  const matchScorers = (currentMatch?.stats || [])
-    .filter(s => (s.goals || 0) > 0)
-    .map(s => {
-      const p = players.find(player => player.id === s.playerId);
-      return { name: p?.name || s.playerName || 'Cầu thủ', goals: s.goals || 0 };
-    })
-    .sort((a, b) => b.goals - a.goals);
-
-  const matchAssisters = (currentMatch?.stats || [])
-    .filter(s => (s.assists || 0) > 0)
-    .map(s => {
-      const p = players.find(player => player.id === s.playerId);
-      return { name: p?.name || s.playerName || 'Cầu thủ', assists: s.assists || 0 };
-    })
-    .sort((a, b) => b.assists - a.assists);
-
   const totalAttendanceCount = presentCount + absentCount + pendingCount;
 
   return (
@@ -2039,12 +2199,20 @@ export default function Matchday() {
           )}
 
           {currentMatch.status === 'finished' && (
-            <button
-              onClick={() => startMatch(currentMatch.id)}
-              className="hallmark-btn px-3 py-2 text-xs md:text-sm font-bold bg-surface-2 text-text-main border-border-main hover:bg-border-main flex items-center justify-center flex-1 sm:flex-none whitespace-nowrap"
-            >
-              {t('matchday.edit_result')}
-            </button>
+            <>
+              <button
+                onClick={openLiveUpdateModal}
+                className="hallmark-btn px-3 py-2 text-xs md:text-sm font-bold bg-primary text-white border-primary hover:bg-primary/90 flex items-center justify-center shadow-xs flex-1 sm:flex-none whitespace-nowrap"
+              >
+                {t('matchday.rate_and_stats_btn', 'Chấm điểm')}
+              </button>
+              <button
+                onClick={() => startMatch(currentMatch.id)}
+                className="hallmark-btn px-3 py-2 text-xs md:text-sm font-bold bg-surface-2 text-text-main border-border-main hover:bg-border-main flex items-center justify-center flex-1 sm:flex-none whitespace-nowrap"
+              >
+                {t('matchday.edit_result')}
+              </button>
+            </>
           )}
 
           <div className="flex items-center justify-center gap-1 w-full sm:w-auto sm:border-l-2 border-border-main sm:pl-2 sm:ml-1 mt-1 sm:mt-0 order-last sm:order-none">
@@ -2207,24 +2375,35 @@ export default function Matchday() {
         ) : null
       )}
 
-      {/* 4. Navigation Segmented Tabs */}
-      <div className="flex bg-surface-2 p-1 border-2 border-border-main gap-1 shrink-0">
-        <button
-          onClick={() => setActiveTab('attendance')}
-          className={`flex-1 py-2 text-sm md:text-base md:py-2.5 font-display uppercase tracking-wider transition-all ${activeTab === 'attendance' ? 'bg-primary text-white font-bold shadow-sm' : 'text-text-muted hover:text-primary font-bold'}`}
-        >
-          {t('matchday.attendance_list')}
-        </button>
-        <button
-          onClick={() => setActiveTab('teams')}
-          className={`flex-1 py-2 text-sm md:text-base md:py-2.5 font-display uppercase tracking-wider transition-all ${activeTab === 'teams' ? 'bg-primary text-white font-bold shadow-sm' : 'text-text-muted hover:text-primary font-bold'}`}
-        >
-          {t('matchday.split_teams')}
-        </button>
-      </div>
+      {/* 4. Navigation Segmented Tabs (Internal & Tournament only) */}
+      {(currentMatch.matchType === 'internal' || currentMatch.matchType === 'tournament') ? (
+        <div className="flex bg-surface-2 p-1 border-2 border-border-main gap-1 shrink-0">
+          <button
+            onClick={() => setActiveTab('attendance')}
+            className={`flex-1 py-2 text-sm md:text-base md:py-2.5 font-display uppercase tracking-wider transition-all ${effectiveActiveTab === 'attendance' ? 'bg-primary text-white font-bold shadow-sm' : 'text-text-muted hover:text-primary font-bold'}`}
+          >
+            {t('matchday.attendance_list')}
+          </button>
+          <button
+            onClick={() => setActiveTab('teams')}
+            className={`flex-1 py-2 text-sm md:text-base md:py-2.5 font-display uppercase tracking-wider transition-all ${effectiveActiveTab === 'teams' ? 'bg-primary text-white font-bold shadow-sm' : 'text-text-muted hover:text-primary font-bold'}`}
+          >
+            {t('matchday.split_teams')}
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between pb-2 border-b-2 border-border-main shrink-0">
+          <h2 className="font-display text-lg sm:text-xl uppercase font-bold text-primary tracking-wider">
+            {t('matchday.attendance_list', 'DANH SÁCH THI ĐẤU')}
+          </h2>
+          <span className="text-xs font-display font-bold uppercase tracking-wider text-text-muted">
+            {presentCount} / {totalAttendanceCount} {t('matchday.present', 'CÓ MẶT')}
+          </span>
+        </div>
+      )}
 
       {/* 5. Tab Content: Attendance */}
-      {activeTab === 'attendance' && (
+      {effectiveActiveTab === 'attendance' && (
         <div className="space-y-4 pb-8">
           {/* Attendance Proportional Bar & Stats Cluster */}
           <div className="bg-surface p-3.5 sm:p-4 border-2 border-border-main shadow-sm flex flex-col gap-2.5">
@@ -2507,7 +2686,8 @@ export default function Matchday() {
         </div>
       )}
 
-      {activeTab === 'teams' && (
+      {/* 6. Tab Content: Teams (Internal & Tournament only) */}
+      {effectiveActiveTab === 'teams' && currentMatch.matchType !== 'friendly' && (
         <div className="flex flex-col gap-4">
           <div className="bg-surface p-3.5 sm:p-4 border-2 border-border-main flex justify-between items-center gap-3">
             <h3 className="font-display text-lg sm:text-2xl text-primary uppercase font-bold tracking-wide">
@@ -3356,8 +3536,8 @@ export default function Matchday() {
                     {t('matchday.goals_assists_direct')}
                   </h4>
 
-                  {/* Team Filter Pills */}
-                  {(currentMatch.matchType === 'internal' || currentMatch.matchType === 'tournament' || Object.keys(currentMatch.teams || {}).length > 0) && presentPlayers.length > 0 && (
+                  {/* Team Filter Pills (Internal & Tournament only) */}
+                  {(currentMatch.matchType === 'internal' || currentMatch.matchType === 'tournament') && presentPlayers.length > 0 && (
                     <div className="flex bg-surface-2 p-1 border-2 border-border-main gap-1 w-full overflow-x-auto hide-scrollbar">
                       <button
                         type="button"
@@ -3414,244 +3594,193 @@ export default function Matchday() {
                   )}
                 </div>
 
-                {presentPlayers.length === 0 ? (
-                  <div className="text-center text-slate-400 py-4">{t('matchday.no_players_yet')}</div>
-                ) : (currentMatch.matchType === 'internal' || currentMatch.matchType === 'tournament' || Object.keys(currentMatch.teams || {}).length > 0) ? (
-                  <div className="space-y-4">
-                    {(() => {
-                      const teamsToRender = (['A', 'B', 'C', 'D'] as const)
-                        .slice(0, effectiveTeamCount)
-                        .filter(team => liveModalTeamFilter === 'ALL' || liveModalTeamFilter === team);
+                {(() => {
+                  const renderLiveUpdatePlayerRow = (p: typeof presentPlayers[0]) => {
+                    const stat = liveStatsMap[p.id] || { goals: 0, assists: 0, rating: 6.0, isRatingOverridden: false };
+                    const ratingVal = typeof stat.rating === 'number' ? stat.rating : 6.0;
 
-                      const unassignedPlayers = presentPlayers.filter(p => !getPlayerTeam(p.id));
-                      const showUnassigned = (liveModalTeamFilter === 'ALL' || liveModalTeamFilter === 'UNASSIGNED') && unassignedPlayers.length > 0;
-
-                      const renderPlayerRow = (p: typeof presentPlayers[0]) => {
-                        const stat = liveStatsMap[p.id] || { goals: 0, assists: 0 };
-                        return (
-                          <div key={p.id} className="p-2.5 sm:p-3 bg-surface border-2 border-border-main flex flex-col gap-2.5 hover:border-primary/40 transition-colors">
-                            {/* Row 1: Player Info */}
-                            <div className="flex items-center justify-between gap-2 min-w-0">
-                              <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                <span className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-surface-2 text-text-muted border border-border-main font-display text-xs font-bold shrink-0">
-                                  {p.jersey_number || '?'}
-                                </span>
-                                <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                                  <span className="font-bold text-sm sm:text-base text-text-main leading-snug uppercase truncate" title={p.name}>
-                                    {p.name}
-                                  </span>
-                                  {p.isNPC && (
-                                    <span className="text-[9px] font-bold uppercase tracking-wider bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-400/30 px-1 py-0.2 shrink-0">
-                                      NPC
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                              {p.positions && p.positions.length > 0 && (
-                                <span className="text-[10px] text-text-muted font-medium shrink-0">
-                                  {p.positions.map(pos => t(`position.${pos}`, pos)).join(', ')}
+                    return (
+                      <div key={p.id} className="p-2.5 sm:p-3 bg-surface border-2 border-border-main flex flex-col gap-2.5 hover:border-primary/40 transition-colors">
+                        {/* Row 1: Player Info */}
+                        <div className="flex items-center justify-between gap-2 min-w-0">
+                          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                            <span className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-surface-2 text-text-muted border border-border-main font-display text-xs font-bold shrink-0">
+                              {p.jersey_number || '?'}
+                            </span>
+                            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                              <span className="font-bold text-sm sm:text-base text-text-main leading-snug uppercase truncate" title={p.name}>
+                                {p.name}
+                              </span>
+                              {p.isNPC && (
+                                <span className="text-[9px] font-bold uppercase tracking-wider bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-400/30 px-1 py-0.2 shrink-0">
+                                  NPC
                                 </span>
                               )}
                             </div>
-
-                            {/* Row 2: Goals & Assists Controllers */}
-                            <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border-main/50">
-                              {/* Goals */}
-                              <div className="flex items-center justify-between bg-surface-2 px-2.5 py-1 border border-border-main shadow-xs">
-                                <span className="text-[10px] sm:text-xs font-bold text-text-muted">{t('matchday.goals_short')}</span>
-                                <div className="flex items-center gap-1 sm:gap-1.5">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleLiveGoalChange(p, false)}
-                                    className="w-6 h-6 sm:w-7 sm:h-7 bg-surface hover:bg-surface-2 font-bold border border-border-main text-text-main flex items-center justify-center text-xs sm:text-sm shrink-0 cursor-pointer active:scale-95"
-                                  >
-                                    -
-                                  </button>
-                                  <span className="w-4 sm:w-6 text-center font-display text-base sm:text-lg text-primary font-bold">{stat.goals}</span>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleLiveGoalChange(p, true)}
-                                    className="w-6 h-6 sm:w-7 sm:h-7 bg-primary text-white font-bold hover:brightness-110 flex items-center justify-center text-xs sm:text-sm shrink-0 cursor-pointer active:scale-95"
-                                  >
-                                    +
-                                  </button>
-                                </div>
-                              </div>
-
-                              {/* Assists */}
-                              <div className="flex items-center justify-between bg-surface-2 px-2.5 py-1 border border-border-main shadow-xs">
-                                <span className="text-[10px] sm:text-xs font-bold text-text-muted">{t('matchday.assists_short')}</span>
-                                <div className="flex items-center gap-1 sm:gap-1.5">
-                                  <button
-                                    type="button"
-                                    onClick={() => setLiveStatsMap(prev => ({
-                                      ...prev,
-                                      [p.id]: { ...stat, assists: Math.max(0, stat.assists - 1) }
-                                    }))}
-                                    className="w-6 h-6 sm:w-7 sm:h-7 bg-surface hover:bg-surface-2 font-bold border border-border-main text-text-main flex items-center justify-center text-xs sm:text-sm shrink-0 cursor-pointer active:scale-95"
-                                  >
-                                    -
-                                  </button>
-                                  <span className="w-4 sm:w-6 text-center font-display text-base sm:text-lg text-secondary font-bold">{stat.assists}</span>
-                                  <button
-                                    type="button"
-                                    onClick={() => setLiveStatsMap(prev => ({
-                                      ...prev,
-                                      [p.id]: { ...stat, assists: stat.assists + 1 }
-                                    }))}
-                                    className="w-6 h-6 sm:w-7 sm:h-7 bg-secondary text-white font-bold hover:brightness-110 flex items-center justify-center text-xs sm:text-sm shrink-0 cursor-pointer active:scale-95"
-                                  >
-                                    +
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
                           </div>
-                        );
-                      };
-
-                      return (
-                        <>
-                          {teamsToRender.map(team => {
-                            const teamPlayers = presentPlayers.filter(p => getPlayerTeam(p.id) === team);
-
-                            const teamHeaderColor = 
-                              team === 'A' ? 'bg-primary text-white border-primary' :
-                              team === 'B' ? 'bg-slate-800 text-white dark:bg-slate-700 border-slate-800' :
-                              team === 'C' ? 'bg-emerald-700 text-white border-emerald-700' :
-                              'bg-amber-600 text-white border-amber-600';
-
-                            return (
-                              <div key={team} className="border-2 border-border-main overflow-hidden bg-surface shadow-xs">
-                                {/* Team Header Banner */}
-                                <div className={`${teamHeaderColor} px-3.5 py-2 flex items-center justify-between`}>
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-display font-bold uppercase text-sm tracking-wider">
-                                      {getTeamSlotName(team)}
-                                    </span>
-                                  </div>
-                                </div>
-
-                                {/* Player Rows */}
-                                <div className="p-2 sm:p-2.5 space-y-2">
-                                  {teamPlayers.length === 0 ? (
-                                    <div className="text-center text-text-muted py-3 text-xs italic">
-                                      {t('matchday.no_players_in_team', 'Chưa có cầu thủ nào trong đội này')}
-                                    </div>
-                                  ) : (
-                                    teamPlayers.map(p => renderPlayerRow(p))
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })}
-
-                          {/* Unassigned section if any */}
-                          {showUnassigned && (
-                            <div className="border-2 border-dashed border-border-main overflow-hidden bg-surface/50 shadow-xs">
-                              <div className="bg-surface-2 text-text-muted px-3.5 py-2 flex items-center justify-between border-b border-border-main">
-                                <span className="font-display font-bold uppercase text-xs tracking-wider">
-                                  {t('matchday.unassigned_players', 'Chưa chia đội')}
-                                </span>
-                              </div>
-                              <div className="p-2 sm:p-2.5 space-y-2">
-                                <div className="p-2 sm:p-2.5 space-y-2">
-                                  {unassignedPlayers.map(p => renderPlayerRow(p))}
-                                </div>
-                              </div>
-                            </div>
+                          {p.positions && p.positions.length > 0 && (
+                            <span className="text-[10px] text-text-muted font-medium shrink-0">
+                              {p.positions.map(pos => t(`position.${pos}`, pos)).join(', ')}
+                            </span>
                           )}
-                        </>
-                      );
-                    })()}
-                  </div>
-                ) : (
-                  <div className="space-y-2.5">
-                    {presentPlayers.map((p) => {
-                      const stat = liveStatsMap[p.id] || { goals: 0, assists: 0 };
-                      return (
-                        <div key={p.id} className="p-2.5 sm:p-3 bg-surface border-2 border-border-main flex flex-col gap-2.5 hover:border-primary/40 transition-colors">
-                          {/* Row 1: Player Info */}
-                          <div className="flex items-center justify-between gap-2 min-w-0">
-                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                              <span className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-surface-2 text-text-muted border border-border-main font-display text-xs font-bold shrink-0">
-                                {p.jersey_number || '?'}
-                              </span>
-                              <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                                <span className="font-bold text-sm sm:text-base text-text-main leading-snug uppercase truncate" title={p.name}>
-                                  {p.name}
-                                </span>
-                                {p.isNPC && (
-                                  <span className="text-[9px] font-bold uppercase tracking-wider bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-400/30 px-1 py-0.2 shrink-0">
-                                    NPC
-                                  </span>
-                                )}
-                              </div>
+                        </div>
+
+                        {/* Row 2: Goals & Assists Controllers */}
+                        <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border-main/50">
+                          {/* Goals */}
+                          <div className="flex items-center justify-between bg-surface-2 px-2.5 py-1 border border-border-main shadow-xs">
+                            <span className="text-[10px] sm:text-xs font-bold text-text-muted">{t('matchday.goals_short')}</span>
+                            <div className="flex items-center gap-1 sm:gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleLiveGoalChange(p, false)}
+                                className="w-6 h-6 sm:w-7 sm:h-7 bg-surface hover:bg-surface-2 font-bold border border-border-main text-text-main flex items-center justify-center text-xs sm:text-sm shrink-0 cursor-pointer active:scale-95"
+                              >
+                                -
+                              </button>
+                              <span className="w-4 sm:w-6 text-center font-display text-base sm:text-lg text-primary font-bold">{stat.goals}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleLiveGoalChange(p, true)}
+                                className="w-6 h-6 sm:w-7 sm:h-7 bg-primary text-white font-bold hover:brightness-110 flex items-center justify-center text-xs sm:text-sm shrink-0 cursor-pointer active:scale-95"
+                              >
+                                +
+                              </button>
                             </div>
-                            {p.positions && p.positions.length > 0 && (
-                              <span className="text-[10px] text-text-muted font-medium shrink-0">
-                                {p.positions.map(pos => t(`position.${pos}`, pos)).join(', ')}
-                              </span>
-                            )}
                           </div>
 
-                          {/* Row 2: Goals & Assists Controllers */}
-                          <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border-main/50">
-                            {/* Goals */}
-                            <div className="flex items-center justify-between bg-surface-2 px-2.5 py-1 border border-border-main shadow-xs">
-                              <span className="text-[10px] sm:text-xs font-bold text-text-muted">{t('matchday.goals_short')}</span>
-                              <div className="flex items-center gap-1 sm:gap-1.5">
-                                <button
-                                  type="button"
-                                  onClick={() => handleLiveGoalChange(p, false)}
-                                  className="w-6 h-6 sm:w-7 sm:h-7 bg-surface hover:bg-surface-2 font-bold border border-border-main text-text-main flex items-center justify-center text-xs sm:text-sm shrink-0 cursor-pointer active:scale-95"
-                                >
-                                  -
-                                </button>
-                                <span className="w-4 sm:w-6 text-center font-display text-base sm:text-lg text-primary font-bold">{stat.goals}</span>
-                                <button
-                                  type="button"
-                                  onClick={() => handleLiveGoalChange(p, true)}
-                                  className="w-6 h-6 sm:w-7 sm:h-7 bg-primary text-white font-bold hover:brightness-110 flex items-center justify-center text-xs sm:text-sm shrink-0 cursor-pointer active:scale-95"
-                                >
-                                  +
-                                </button>
-                              </div>
-                            </div>
-
-                            {/* Assists */}
-                            <div className="flex items-center justify-between bg-surface-2 px-2.5 py-1 border border-border-main shadow-xs">
-                              <span className="text-[10px] sm:text-xs font-bold text-text-muted">{t('matchday.assists_short')}</span>
-                              <div className="flex items-center gap-1 sm:gap-1.5">
-                                <button
-                                  type="button"
-                                  onClick={() => setLiveStatsMap(prev => ({
-                                    ...prev,
-                                    [p.id]: { ...stat, assists: Math.max(0, stat.assists - 1) }
-                                  }))}
-                                  className="w-6 h-6 sm:w-7 sm:h-7 bg-surface hover:bg-surface-2 font-bold border border-border-main text-text-main flex items-center justify-center text-xs sm:text-sm shrink-0 cursor-pointer active:scale-95"
-                                >
-                                  -
-                                </button>
-                                <span className="w-4 sm:w-6 text-center font-display text-base sm:text-lg text-secondary font-bold">{stat.assists}</span>
-                                <button
-                                  type="button"
-                                  onClick={() => setLiveStatsMap(prev => ({
-                                    ...prev,
-                                    [p.id]: { ...stat, assists: stat.assists + 1 }
-                                  }))}
-                                  className="w-6 h-6 sm:w-7 sm:h-7 bg-secondary text-white font-bold hover:brightness-110 flex items-center justify-center text-xs sm:text-sm shrink-0 cursor-pointer active:scale-95"
-                                >
-                                  +
-                                </button>
-                              </div>
+                          {/* Assists */}
+                          <div className="flex items-center justify-between bg-surface-2 px-2.5 py-1 border border-border-main shadow-xs">
+                            <span className="text-[10px] sm:text-xs font-bold text-text-muted">{t('matchday.assists_short')}</span>
+                            <div className="flex items-center gap-1 sm:gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleLiveAssistChange(p, false)}
+                                className="w-6 h-6 sm:w-7 sm:h-7 bg-surface hover:bg-surface-2 font-bold border border-border-main text-text-main flex items-center justify-center text-xs sm:text-sm shrink-0 cursor-pointer active:scale-95"
+                              >
+                                -
+                              </button>
+                              <span className="w-4 sm:w-6 text-center font-display text-base sm:text-lg text-secondary font-bold">{stat.assists}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleLiveAssistChange(p, true)}
+                                className="w-6 h-6 sm:w-7 sm:h-7 bg-secondary text-white font-bold hover:brightness-110 flex items-center justify-center text-xs sm:text-sm shrink-0 cursor-pointer active:scale-95"
+                              >
+                                +
+                              </button>
                             </div>
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
+
+                        {/* Row 3: Rating Controller & GK Equalizer */}
+                        <div className="flex flex-col gap-1.5 pt-1 border-t border-border-main/50">
+                          <div className="flex items-center justify-between bg-surface-2 px-2.5 py-1 border border-border-main shadow-xs">
+                            <span className="text-[10px] sm:text-xs font-bold text-text-muted uppercase tracking-wider">
+                              {t('matchday.rating_short', 'Điểm:')}
+                            </span>
+
+                            <div className="flex items-center gap-1 sm:gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleLiveRatingChange(p.id, -0.1)}
+                                className="w-6 h-6 sm:w-7 sm:h-7 bg-surface hover:bg-surface-2 font-bold border border-border-main text-text-main flex items-center justify-center text-xs sm:text-sm shrink-0 cursor-pointer active:scale-95"
+                              >
+                                -
+                              </button>
+                              <span className="w-8 sm:w-10 text-center font-display text-base sm:text-lg text-text-main font-bold">
+                                {ratingVal.toFixed(1)}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleLiveRatingChange(p.id, 0.1)}
+                                className="w-6 h-6 sm:w-7 sm:h-7 bg-surface hover:bg-surface-2 font-bold border border-border-main text-text-main flex items-center justify-center text-xs sm:text-sm shrink-0 cursor-pointer active:scale-95"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* GK Bonus Shortcut */}
+                          {p.positions?.includes('GK') && (
+                            <div className="pt-0.5">
+                              <button
+                                type="button"
+                                onClick={() => handleLiveRatingChange(p.id, 0.2)}
+                                className="w-full py-1.5 px-3 bg-surface hover:bg-surface-2 text-text-main border border-border-main hover:border-primary/50 text-xs font-bold font-display uppercase tracking-wider transition-colors active:scale-95 text-center cursor-pointer shadow-xs"
+                              >
+                                {t('matchday.gk_save_btn', 'Cứu thua')}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  };
+
+                  if (presentPlayers.length === 0) {
+                    return <div className="text-center text-slate-400 py-4">{t('matchday.no_players_yet')}</div>;
+                  }
+
+                  if (currentMatch.matchType === 'internal' || currentMatch.matchType === 'tournament') {
+                    const teamsToRender = (['A', 'B', 'C', 'D'] as const)
+                      .slice(0, effectiveTeamCount)
+                      .filter(team => liveModalTeamFilter === 'ALL' || liveModalTeamFilter === team);
+
+                    const unassignedPlayers = presentPlayers.filter(p => !getPlayerTeam(p.id));
+                    const showUnassigned = (liveModalTeamFilter === 'ALL' || liveModalTeamFilter === 'UNASSIGNED') && unassignedPlayers.length > 0;
+
+                    return (
+                      <div className="space-y-4">
+                        {teamsToRender.map(team => {
+                          const teamPlayers = presentPlayers.filter(p => getPlayerTeam(p.id) === team);
+                          const teamHeaderColor = 
+                            team === 'A' ? 'bg-primary text-white border-primary' :
+                            team === 'B' ? 'bg-slate-800 text-white dark:bg-slate-700 border-slate-800' :
+                            team === 'C' ? 'bg-emerald-700 text-white border-emerald-700' :
+                            'bg-amber-600 text-white border-amber-600';
+
+                          return (
+                            <div key={team} className="border-2 border-border-main overflow-hidden bg-surface shadow-xs">
+                              <div className={`${teamHeaderColor} px-3.5 py-2 flex items-center justify-between`}>
+                                <span className="font-display font-bold uppercase text-sm tracking-wider">
+                                  {getTeamSlotName(team)}
+                                </span>
+                              </div>
+                              <div className="p-2 sm:p-2.5 space-y-2">
+                                {teamPlayers.length === 0 ? (
+                                  <div className="text-center text-text-muted py-3 text-xs italic">
+                                    {t('matchday.no_players_in_team', 'Chưa có cầu thủ nào trong đội này')}
+                                  </div>
+                                ) : (
+                                  teamPlayers.map(p => renderLiveUpdatePlayerRow(p))
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+
+                        {showUnassigned && (
+                          <div className="border-2 border-dashed border-border-main overflow-hidden bg-surface/50 shadow-xs">
+                            <div className="bg-surface-2 text-text-muted px-3.5 py-2 flex items-center justify-between border-b border-border-main">
+                              <span className="font-display font-bold uppercase text-xs tracking-wider">
+                                {t('matchday.unassigned_players', 'Chưa chia đội')}
+                              </span>
+                            </div>
+                            <div className="p-2 sm:p-2.5 space-y-2">
+                              {unassignedPlayers.map(p => renderLiveUpdatePlayerRow(p))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="space-y-2.5">
+                      {presentPlayers.map(p => renderLiveUpdatePlayerRow(p))}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 
