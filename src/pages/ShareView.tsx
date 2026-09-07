@@ -1316,53 +1316,79 @@ export default function ShareView() {
           title={
             <div className="flex items-center gap-2">
               <Users className="text-primary" size={20} />
-              <span className="font-display uppercase">{selectedPlayer.name}</span>
+              <span className="font-display uppercase tracking-wide">{selectedPlayer.name}</span>
             </div>
           }
-          maxWidth="sm"
+          maxWidth="3xl"
         >
           <div className="flex flex-col gap-4 py-2 text-text-main">
             {/* Header with Photo and Jersey */}
-            <div className="flex items-center gap-4 p-4 bg-surface border-2 border-border-main">
-              <div className="w-16 h-16 border-2 border-primary bg-primary/10 flex items-center justify-center overflow-hidden">
+            <div className="flex items-center gap-4 p-3.5 sm:p-4 bg-surface border-2 border-border-main">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 border-2 border-primary bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
                 {selectedPlayer.photo ? (
                   <img src={selectedPlayer.photo} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="font-display font-black text-2xl text-primary">
+                  <span className="font-display font-black text-xl sm:text-2xl text-primary">
                     {selectedPlayer.number || '-'}
                   </span>
                 )}
               </div>
-              <div>
-                <h3 className="font-display font-bold uppercase text-lg text-text-main">{selectedPlayer.name}</h3>
+              <div className="flex-1 min-w-0 flex items-center gap-2.5 flex-wrap">
+                <h3 className="font-display font-bold uppercase text-base sm:text-xl text-text-main truncate">
+                  {selectedPlayer.name}
+                </h3>
                 {selectedPlayer.number !== null && selectedPlayer.number !== undefined && (
-                  <p className="text-xs text-text-muted font-sans">
+                  <span className="text-xs font-display font-bold px-2 py-0.5 bg-surface-2 text-text-muted border border-border-main shrink-0">
                     #{selectedPlayer.number}
-                  </p>
+                  </span>
                 )}
               </div>
             </div>
 
-            {/* Stat Cards Breakdown */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <div className="p-3 bg-surface border border-border-main text-center">
-                <span className="text-[10px] font-display font-bold uppercase text-text-muted block">{t('stats.tab_scoring', 'BÀN THẮNG')}</span>
-                <span className="text-xl font-display font-black text-primary mt-1 block">{selectedPlayer.goals}</span>
+            {/* Stat Cards Breakdown - Responsive: 3 + 2 on mobile, 5 in 1 row on desktop */}
+            <div className="grid grid-cols-6 sm:grid-cols-5 gap-2 sm:gap-3">
+              <div className="col-span-2 sm:col-span-1 p-2.5 sm:px-2.5 sm:py-3.5 bg-surface border border-border-main text-center flex flex-col justify-center items-center">
+                <span className="text-[10px] sm:text-xs font-display font-bold uppercase text-text-muted block whitespace-nowrap tracking-wider">
+                  {t('stats.tab_scoring', 'GHI BÀN')}
+                </span>
+                <span className="text-xl sm:text-2xl font-display font-black text-primary mt-1 block">
+                  {selectedPlayer.goals}
+                </span>
               </div>
-              <div className="p-3 bg-surface border border-border-main text-center">
-                <span className="text-[10px] font-display font-bold uppercase text-text-muted block">{t('stats.tab_assisting', 'KIẾN TẠO')}</span>
-                <span className="text-xl font-display font-black text-secondary mt-1 block">{selectedPlayer.assists}</span>
+              <div className="col-span-2 sm:col-span-1 p-2.5 sm:px-2.5 sm:py-3.5 bg-surface border border-border-main text-center flex flex-col justify-center items-center">
+                <span className="text-[10px] sm:text-xs font-display font-bold uppercase text-text-muted block whitespace-nowrap tracking-wider">
+                  {t('stats.tab_assisting', 'KIẾN TẠO')}
+                </span>
+                <span className="text-xl sm:text-2xl font-display font-black text-secondary mt-1 block">
+                  {selectedPlayer.assists}
+                </span>
               </div>
-              <div className="p-3 bg-surface border border-border-main text-center">
-                <span className="text-[10px] font-display font-bold uppercase text-text-muted block">{t('stats.tab_appearance', 'ĐIỂM DANH')}</span>
-                <span className="text-xl font-display font-black text-text-main mt-1 block">{selectedPlayer.attendance}</span>
+              <div className="col-span-2 sm:col-span-1 p-2.5 sm:px-2.5 sm:py-3.5 bg-surface border border-border-main text-center flex flex-col justify-center items-center">
+                <span className="text-[10px] sm:text-xs font-display font-bold uppercase text-text-muted block whitespace-nowrap tracking-wider">
+                  {t('stats.tab_appearance', 'RA SÂN')}
+                </span>
+                <span className="text-xl sm:text-2xl font-display font-black text-text-main mt-1 block">
+                  {selectedPlayer.attendance}
+                </span>
               </div>
-              <div className="p-3 bg-surface border border-border-main text-center">
-                <span className="text-[10px] font-display font-bold uppercase text-text-muted block">{t('stats.rating_col', 'ĐIỂM TB')}</span>
-                <span className="text-xl font-display font-black text-emerald-600 dark:text-emerald-400 mt-1 block">
-                  {(selectedPlayer.rating ?? selectedPlayer.avgRating ?? 0) > 0 
-                    ? (selectedPlayer.rating ?? selectedPlayer.avgRating ?? 0).toFixed(1) 
+              <div className="col-span-3 sm:col-span-1 p-2.5 sm:px-2.5 sm:py-3.5 bg-surface border border-border-main text-center flex flex-col justify-center items-center">
+                <span className="text-[10px] sm:text-xs font-display font-bold uppercase text-text-muted block whitespace-nowrap tracking-wider">
+                  {t('stats.rating_col', 'ĐIỂM TB')}
+                </span>
+                <span className="text-xl sm:text-2xl font-display font-black text-emerald-600 dark:text-emerald-400 mt-1 block">
+                  {getPlayerStatValue(selectedPlayer, 'rating') > 0 
+                    ? getPlayerStatValue(selectedPlayer, 'rating').toFixed(1) 
                     : '-'}
+                </span>
+              </div>
+              <div className="col-span-3 sm:col-span-1 p-2.5 sm:px-2.5 sm:py-3.5 bg-surface border border-border-main text-center flex flex-col justify-center items-center">
+                <span className="text-[10px] sm:text-xs font-display font-bold uppercase text-text-muted block whitespace-nowrap tracking-wider">
+                  {t('roster.contribution_rate', 'ĐÓNG GÓP / TRẬN')}
+                </span>
+                <span className="text-xl sm:text-2xl font-display font-black text-text-main mt-1 block">
+                  {selectedPlayer.attendance > 0 
+                    ? ((selectedPlayer.goals + selectedPlayer.assists) / selectedPlayer.attendance).toFixed(1) 
+                    : '0.0'}
                 </span>
               </div>
             </div>
@@ -1371,7 +1397,7 @@ export default function ShareView() {
               <button
                 type="button"
                 onClick={() => setSelectedPlayer(null)}
-                className="w-full py-2 bg-surface-card border border-border-main text-text-muted hover:text-text-main font-display font-bold uppercase text-xs tracking-wider"
+                className="w-full py-2.5 bg-surface-card border border-border-main text-text-muted hover:text-text-main font-display font-bold uppercase text-xs tracking-wider transition-colors"
               >
                 {t('common.close', 'ĐÓNG')}
               </button>
