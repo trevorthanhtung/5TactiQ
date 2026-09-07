@@ -141,13 +141,16 @@ export const ShareModal: React.FC<ShareModalProps> = ({
           ? positions.map((pos) => t(`position.${pos}`)).join(', ')
           : undefined;
 
+        // Strip large data: or blob: Base64 URIs to prevent URL bloat
+        const photoUrl = p.photo_url && p.photo_url.startsWith('http') ? p.photo_url : undefined;
+
         return {
           id: p.id,
           name: p.name,
           number: p.jersey_number ?? undefined,
           position: positionLabel,
           positions,
-          photo: p.photo_url,
+          photo: photoUrl,
           goals: agg?.goals || 0,
           assists: agg?.assists || 0,
           attendance: agg?.attendance || 0,
@@ -183,13 +186,17 @@ export const ShareModal: React.FC<ShareModalProps> = ({
       : finishedMatches;
 
     const seasonData = computeForMatches(seasonMatches);
-    const allTimeData = computeForMatches(finishedMatches);
+    // Only include allTimeData if it differs from current season data to save payload size
+    const isSameAsAllTime = !hasSeasonConfig || seasonMatches.length === finishedMatches.length;
+    const allTimeData = isSameAsAllTime ? undefined : computeForMatches(finishedMatches);
+
+    const safeLogo = settings.logoUrl && settings.logoUrl.startsWith('http') ? settings.logoUrl : undefined;
 
     return {
       v: 1,
       type: 'stats',
       teamName: settings.teamName?.trim() || '5TactiQ',
-      logoUrl: settings.logoUrl,
+      logoUrl: safeLogo,
       seasonLabel: seasonRange ? seasonRange.label : undefined,
       hasSeasonConfig: true,
       createdAt: new Date().toISOString(),
@@ -225,11 +232,13 @@ export const ShareModal: React.FC<ShareModalProps> = ({
       category = savedTactics[0].category;
     }
 
+    const safeLogo = settings.logoUrl && settings.logoUrl.startsWith('http') ? settings.logoUrl : undefined;
+
     return {
       v: 1,
       type: 'tactics',
       teamName: settings.teamName?.trim() || '5TactiQ',
-      logoUrl: settings.logoUrl,
+      logoUrl: safeLogo,
       tacticName,
       category,
       createdAt: new Date().toISOString(),

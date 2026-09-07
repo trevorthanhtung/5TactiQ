@@ -156,11 +156,71 @@ export async function decompressShareData(encoded: string): Promise<SharedPayloa
   return null;
 }
 
+// Helper to get safe base URL for sharing
+export function getShareBaseUrl(): string {
+  if (typeof window === 'undefined') return 'https://5tactiq.vercel.app';
+  const origin = window.location.origin;
+  if (
+    !origin ||
+    origin.includes('localhost') ||
+    origin.includes('127.0.0.1') ||
+    origin.startsWith('capacitor://') ||
+    origin.startsWith('ionic://') ||
+    origin.startsWith('file://')
+  ) {
+    return 'https://5tactiq.vercel.app';
+  }
+  return origin;
+}
+
+// Client-side helper to call URL shortening proxy
+export async function tryShortenUrl(longUrl: string): Promise<string | null> {
+  // Avoid calling API if already very short
+  if (!longUrl || longUrl.length < 60) return longUrl;
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4000);
+
+    let apiUrl = '/api/shorten';
+    if (typeof window !== 'undefined') {
+      const origin = window.location.origin;
+      if (origin.startsWith('capacitor://') || origin.startsWith('ionic://') || origin.startsWith('file://')) {
+        apiUrl = 'https://5tactiq.vercel.app/api/shorten';
+      }
+    }
+
+    const resp = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ url: longUrl }),
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data?.shortUrl && typeof data.shortUrl === 'string') {
+        return data.shortUrl;
+      }
+    }
+  } catch (err) {
+    console.warn('[ShareService] URL shortening failed or timed out, using fallback URL:', err);
+  }
+
+  return null;
+}
+
 // Generate share link
 export async function createShareLink(payload: SharedPayload): Promise<string> {
+  const baseUrl = getShareBaseUrl();
+
   // 1. Try Supabase cloud share if online and table is accessible
   try {
-    const shareId = 's_' + Math.random().toString(36).substring(2, 10);
+    // Ultra-compact 6-char share ID (e.g. s_a8k9m2)
+    const shareId = 's_' + Math.random().toString(36).substring(2, 8);
     const { error } = await supabase.from('team_shares').insert({
       id: shareId,
       share_type: payload.type,
@@ -170,17 +230,27 @@ export async function createShareLink(payload: SharedPayload): Promise<string> {
     });
 
     if (!error) {
-      const baseUrl = window.location.origin;
       return `${baseUrl}/share?id=${shareId}`;
     }
   } catch {
-    // Graceful fallback to client-side compressed URL hash
+    // Graceful fallback to client-side compressed URL
   }
 
   // 2. Client-side URL Hash Compression (Works 100% offline, zero database required)
   const compressed = await compressShareData(payload);
-  const baseUrl = window.location.origin;
-  return `${baseUrl}/share?d=${compressed}`;
+  const longDeflateUrl = `${baseUrl}/share?d=${compressed}`;
+
+  // 3. Automatically shorten client-side deflate URL via proxy (spoo.me / TinyURL)
+  try {
+    const shortUrl = await tryShortenUrl(longDeflateUrl);
+    if (shortUrl) {
+      return shortUrl;
+    }
+  } catch {
+    // Ignore and return long URL
+  }
+
+  return longDeflateUrl;
 }
 
 // Fetch shared payload (from cloud ID or compressed URL hash)
