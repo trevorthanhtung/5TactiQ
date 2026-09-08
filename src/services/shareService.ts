@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import { supabase } from '../lib/supabase';
 import type { TacticalFrame } from '../pages/Tactics';
 
@@ -159,18 +160,20 @@ export async function decompressShareData(encoded: string): Promise<SharedPayloa
 // Helper to get safe base URL for sharing
 export function getShareBaseUrl(): string {
   if (typeof window === 'undefined') return 'https://5tactiq.vercel.app';
-  const origin = window.location.origin;
-  if (
-    !origin ||
-    origin.includes('localhost') ||
-    origin.includes('127.0.0.1') ||
-    origin.startsWith('capacitor://') ||
-    origin.startsWith('ionic://') ||
-    origin.startsWith('file://')
-  ) {
+
+  // Only override to production URL if running inside native mobile app (Capacitor) or Electron desktop
+  const isNative = Capacitor.isNativePlatform();
+  const isElectron = typeof navigator !== 'undefined' && navigator.userAgent.toLowerCase().includes('electron');
+  const isFileOrCapacitorProto = window.location.protocol === 'file:' || 
+    window.location.origin.startsWith('capacitor://') || 
+    window.location.origin.startsWith('ionic://');
+
+  if (isNative || isElectron || isFileOrCapacitorProto) {
     return 'https://5tactiq.vercel.app';
   }
-  return origin;
+
+  // In standard browser environment (localhost:5173, LAN IP, staging, or production domain), use current origin!
+  return window.location.origin;
 }
 
 // Client-side helper to call URL shortening proxy
@@ -184,8 +187,13 @@ export async function tryShortenUrl(longUrl: string): Promise<string | null> {
 
     let apiUrl = '/api/shorten';
     if (typeof window !== 'undefined') {
-      const origin = window.location.origin;
-      if (origin.startsWith('capacitor://') || origin.startsWith('ionic://') || origin.startsWith('file://')) {
+      const isNative = Capacitor.isNativePlatform();
+      const isElectron = typeof navigator !== 'undefined' && navigator.userAgent.toLowerCase().includes('electron');
+      const isFileOrCapacitorProto = window.location.protocol === 'file:' || 
+        window.location.origin.startsWith('capacitor://') || 
+        window.location.origin.startsWith('ionic://');
+
+      if (isNative || isElectron || isFileOrCapacitorProto) {
         apiUrl = 'https://5tactiq.vercel.app/api/shorten';
       }
     }

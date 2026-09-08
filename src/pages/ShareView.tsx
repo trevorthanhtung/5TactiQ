@@ -720,18 +720,33 @@ export default function ShareView() {
       {/* 🌟 Member Portal Header */}
       <header className="sticky top-0 z-30 bg-surface/95 backdrop-blur-md border-b-2 border-border-main px-4 py-3 sm:px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-2.5 min-w-0">
             {payload.logoUrl ? (
-              <img src={payload.logoUrl} alt="Logo" className="w-9 h-9 object-contain shrink-0 border border-border-main" />
+              <img 
+                src={payload.logoUrl} 
+                alt="Logo" 
+                className="w-9 h-9 object-contain shrink-0 border border-border-main"
+                onError={(e) => {
+                  e.currentTarget.src = '/logo.png';
+                  e.currentTarget.className = 'w-9 h-9 object-contain shrink-0 drop-shadow-sm';
+                }}
+              />
             ) : (
-              <div className="w-9 h-9 border-2 border-primary bg-primary/10 flex items-center justify-center font-display font-black text-primary text-base shrink-0">
-                5T
-              </div>
+              <img 
+                src="/logo.png" 
+                alt="5TactiQ Logo" 
+                className="w-9 h-9 object-contain shrink-0 drop-shadow-sm" 
+              />
             )}
             <div className="min-w-0 flex items-center gap-2">
               <h1 className="font-display font-black uppercase text-base sm:text-xl text-primary truncate leading-tight">
                 5TactiQ
               </h1>
+              {payload.teamName && payload.teamName.trim().toUpperCase() !== '5TACTIQ' && (
+                <span className="text-xs font-bold text-text-muted uppercase tracking-wider truncate border-l-2 border-border-main pl-2">
+                  {payload.teamName}
+                </span>
+              )}
             </div>
           </div>
 
