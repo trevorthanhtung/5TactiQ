@@ -13,6 +13,7 @@ import { broadcastTacticsState } from '../services/liveTacticsService';
 import { getCurrentSeasonRange, isMatchInSeason } from '../utils/seasonUtils';
 import { isPlayerEligibleForStats } from '../utils/playerUtils';
 import { resolvePlayerMatchRating } from '../utils/ratingUtils';
+import { shouldTrackMatchStats } from '../utils/matchUtils';
 import { createShareLink, type SharedStatsPayload, type SharedTacticsPayload, type SharedPlayerStat } from '../services/shareService';
 import { hapticImpact } from '../utils/haptics';
 
@@ -102,7 +103,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
           });
         }
 
-        const shouldTrack = m.matchType !== 'internal' || !!m.trackStats;
+        const shouldTrack = shouldTrackMatchStats(m);
         let matchHasRating = false;
         if (shouldTrack && m.stats) {
           m.stats.forEach((s) => {

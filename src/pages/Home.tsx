@@ -21,6 +21,7 @@ import { HomeSkeleton } from '../components/ui/HomeSkeleton';
 import { compareVietnameseNames } from '../utils/sortUtils';
 import { getCurrentSeasonRange, isMatchInSeason } from '../utils/seasonUtils';
 import { isPlayerEligibleForStats, isCoreSquadPlayer } from '../utils/playerUtils';
+import { shouldTrackMatchStats } from '../utils/matchUtils';
 
 export default function Home() {
   const { t } = useTranslation();
@@ -57,7 +58,7 @@ export default function Home() {
   const goalCounts: Record<string, number> = {};
   
   finishedMatches.forEach(m => {
-    const shouldTrackStats = m.matchType !== 'internal' || !!m.trackStats;
+    const shouldTrackStats = shouldTrackMatchStats(m);
     if (shouldTrackStats) {
       m.stats?.forEach(s => {
         if (s.goals > 0) {

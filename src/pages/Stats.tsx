@@ -11,6 +11,7 @@ import { compareVietnameseNames } from '../utils/sortUtils';
 import { getCurrentSeasonRange, isMatchInSeason } from '../utils/seasonUtils';
 import { isPlayerEligibleForStats } from '../utils/playerUtils';
 import { resolvePlayerMatchRating } from '../utils/ratingUtils';
+import { shouldTrackMatchStats } from '../utils/matchUtils';
 
 export default function Stats() {
   const { t } = useTranslation();
@@ -74,7 +75,7 @@ export default function Stats() {
     }
 
     // Goals, Assists & Rating from match stats
-    const shouldTrackStats = m.matchType !== 'internal' || !!m.trackStats;
+    const shouldTrackStats = shouldTrackMatchStats(m);
     let matchHasRating = false;
     if (shouldTrackStats && m.stats) {
       m.stats.forEach(s => {

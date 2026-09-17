@@ -14,6 +14,8 @@ import { BottomSheet } from '../components/ui/BottomSheet';
 import type { Position, HealthStatus } from '../types';
 import { useTranslation, Trans } from 'react-i18next';
 import { isPlayerHidden, getPlayerPerMatchStatus } from '../utils/playerUtils';
+import { shouldTrackMatchStats } from '../utils/matchUtils';
+import { resolvePlayerMatchRating } from '../utils/ratingUtils';
 
 export default function PlayerProfile() {
   const { t, i18n } = useTranslation();
@@ -80,8 +82,7 @@ export default function PlayerProfile() {
   // Calculate player goals and assists across all valid finished matches
   const totalGoals = matches.reduce((sum, m) => {
     if (m.status !== 'finished') return sum;
-    const shouldTrackStats = m.matchType !== 'internal' || !!m.trackStats;
-    if (shouldTrackStats && m.stats) {
+    if (shouldTrackMatchStats(m) && m.stats) {
       const s = m.stats.find(stat => stat.playerId === player.id);
       if (s) return sum + (s.goals || 0);
     }
@@ -90,8 +91,7 @@ export default function PlayerProfile() {
 
   const totalAssists = matches.reduce((sum, m) => {
     if (m.status !== 'finished') return sum;
-    const shouldTrackStats = m.matchType !== 'internal' || !!m.trackStats;
-    if (shouldTrackStats && m.stats) {
+    if (shouldTrackMatchStats(m) && m.stats) {
       const s = m.stats.find(stat => stat.playerId === player.id);
       if (s) return sum + (s.assists || 0);
     }
@@ -103,11 +103,11 @@ export default function PlayerProfile() {
   let ratedMatchesCount = 0;
   matches.forEach(m => {
     if (m.status !== 'finished') return;
-    const shouldTrackStats = m.matchType !== 'internal' || !!m.trackStats;
-    if (shouldTrackStats && m.stats) {
+    if (shouldTrackMatchStats(m) && m.stats) {
       const s = m.stats.find(stat => stat.playerId === player.id);
-      if (s && typeof s.rating === 'number' && s.rating > 0) {
-        totalRatingSum += s.rating;
+      const ratingVal = resolvePlayerMatchRating(s, false);
+      if (ratingVal > 0) {
+        totalRatingSum += ratingVal;
         ratedMatchesCount += 1;
       }
     }
@@ -563,7 +563,7 @@ export default function PlayerProfile() {
 
             <div className="hallmark-card p-3.5 sm:p-4 text-center bg-surface border-2 border-border-main">
               <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-1">{t('stats.rating_col', 'ĐIỂM TB')}</div>
-              <div className="text-3xl sm:text-4xl font-display text-amber-500 font-bold">{avgPlayerRating}</div>
+              <div className="text-3xl sm:text-4xl font-display text-amber-700 dark:text-amber-400 font-bold">{avgPlayerRating}</div>
               {ratedMatchesCount > 0 && (
                 <div className="text-[10px] font-display font-bold text-text-muted uppercase tracking-wider mt-0.5">
                   {ratedMatchesCount} {t('stats.rated_matches_col', 'TRẬN')}
@@ -604,7 +604,7 @@ export default function PlayerProfile() {
                   const matchAssists = stat?.assists || 0;
 
                   let resultBadge = null;
-                  if (m.status === 'finished' && typeof m.scoreUs === 'number' && typeof m.scoreOpponent === 'number') {
+                  if (m.matchType !== 'internal' && m.status === 'finished' && typeof m.scoreUs === 'number' && typeof m.scoreOpponent === 'number') {
                     if (m.scoreUs > m.scoreOpponent) {
                       resultBadge = <span className="px-2 py-0.5 bg-emerald-500 text-white font-display text-xs font-bold">{t('roster.result_win', 'THẮNG')} {m.scoreUs}-{m.scoreOpponent}</span>;
                     } else if (m.scoreUs < m.scoreOpponent) {
@@ -624,7 +624,7 @@ export default function PlayerProfile() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-display font-bold text-sm sm:text-base text-text-main uppercase tracking-wide">
-                            vs {m.opponent || t('roster.internal_match', 'Trận đấu nội bộ')}
+                            {m.matchType === 'internal' ? t('roster.internal_match', 'Trận đấu nội bộ') : `vs ${m.opponent || t('roster.default_opponent', 'Đối thủ')}`}
                           </span>
                           {resultBadge}
                         </div>
@@ -636,7 +636,7 @@ export default function PlayerProfile() {
                       {/* In-match individual player contributions */}
                       <div className="flex items-center gap-2 shrink-0">
                         {typeof stat?.rating === 'number' && stat.rating > 0 && (
-                          <span className="px-2 py-1 bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 font-display text-xs font-bold uppercase">
+                          <span className="px-2 py-1 bg-amber-700 text-white font-display text-xs font-bold uppercase">
                             {stat.rating.toFixed(1)}
                           </span>
                         )}

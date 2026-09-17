@@ -25,6 +25,7 @@ import { formatCurrencyAmount, LANGUAGE_DEFAULT_CURRENCY } from '../utils/curren
 import { getCurrentSeasonRange, isMatchInSeason } from '../utils/seasonUtils';
 import { getTournamentRounds } from '../utils/tournamentUtils';
 import { calculateDefaultRating } from '../utils/ratingUtils';
+import { shouldTrackMatchStats } from '../utils/matchUtils';
 
 export default function Matchday() {
   const { t, i18n } = useTranslation();
@@ -608,6 +609,7 @@ export default function Matchday() {
       }));
 
     const isMultiTeam = currentMatch.matchType === 'internal' || currentMatch.matchType === 'tournament';
+    const hasAnyStats = statsArray.some(s => (s.goals || 0) > 0 || (s.assists || 0) > 0 || (typeof s.rating === 'number' && s.rating > 0));
     updateLiveMatch(currentMatch.id, {
       scoreUs: isMultiTeam ? liveData.scoreTeamA : liveData.scoreUs,
       scoreOpponent: isMultiTeam ? liveData.scoreTeamB : liveData.scoreOpponent,
@@ -615,7 +617,8 @@ export default function Matchday() {
       scoreTeamB: liveData.scoreTeamB,
       scoreTeamC: liveData.scoreTeamC,
       scoreTeamD: liveData.scoreTeamD,
-      stats: statsArray
+      stats: statsArray,
+      ...(hasAnyStats ? { trackStats: true } : {})
     });
 
     setShowLiveUpdateModal(false);
@@ -748,7 +751,7 @@ export default function Matchday() {
   const [newMatchData, setNewMatchData] = useState({
     matchType: 'internal' as 'internal' | 'friendly' | 'tournament',
     teamCount: 2 as 2 | 3 | 4,
-    trackStats: false,
+    trackStats: true,
     opponent: '',
     tournamentName: '',
     round: 'Vòng 1',
@@ -836,7 +839,7 @@ export default function Matchday() {
     setNewMatchData({
       matchType: 'internal',
       teamCount: 2,
-      trackStats: false,
+      trackStats: true,
       opponent: '',
       tournamentName: firstTour?.name || '',
       round: initialRounds[0] || 'Vòng 1',
@@ -859,7 +862,7 @@ export default function Matchday() {
         ...match,
         tournamentName: tourName,
         opponent: oppName,
-        trackStats: match.trackStats ?? (match.matchType !== 'internal'),
+        trackStats: shouldTrackMatchStats(match),
       });
       setShowEditModal(true);
     }
@@ -930,7 +933,7 @@ export default function Matchday() {
     createMatch({
       matchType: newMatchData.matchType,
       teamCount: newMatchData.teamCount || 2,
-      trackStats: newMatchData.matchType === 'internal' ? newMatchData.trackStats : true,
+      trackStats: newMatchData.matchType === 'internal' ? (newMatchData.trackStats !== false) : true,
       opponent: newMatchData.matchType === 'tournament' ? '' : (newMatchData.opponent || ''),
       tournamentName: newMatchData.matchType === 'tournament' ? (matchingTour?.name || targetTourName) : undefined,
       tournamentId: newMatchData.matchType === 'tournament' ? matchingTour?.id : undefined,
@@ -1468,11 +1471,11 @@ export default function Matchday() {
                 )}
                 {match.matchType === 'internal' && match.status === 'finished' && (
                   <span className={`px-1.5 py-0.5 text-[9px] font-display font-bold uppercase tracking-wider ${
-                    match.trackStats 
+                    shouldTrackMatchStats(match) 
                       ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/30' 
                       : 'bg-slate-500/10 text-slate-500 border border-slate-500/20'
                   }`}>
-                    {match.trackStats ? t('matchday.stats_tracked_badge') : t('matchday.stats_untracked_badge')}
+                    {shouldTrackMatchStats(match) ? t('matchday.stats_tracked_badge') : t('matchday.stats_untracked_badge')}
                   </span>
                 )}
               </div>
@@ -2237,11 +2240,11 @@ export default function Matchday() {
           )}
           {currentMatch.matchType === 'internal' && currentMatch.status === 'finished' && (
             <span className={`inline-flex items-center px-2 py-0.5 text-[10px] font-display font-bold uppercase tracking-wider ${
-              currentMatch.trackStats 
+              shouldTrackMatchStats(currentMatch) 
                 ? 'bg-emerald-500/15 text-emerald-600 border border-emerald-500/30' 
                 : 'bg-slate-500/15 text-slate-500 border border-slate-500/30'
             }`}>
-              {currentMatch.trackStats ? t('matchday.stats_tracked_badge') : t('matchday.stats_untracked_badge')}
+              {shouldTrackMatchStats(currentMatch) ? t('matchday.stats_tracked_badge') : t('matchday.stats_untracked_badge')}
             </span>
           )}
         </div>

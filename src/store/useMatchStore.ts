@@ -62,7 +62,7 @@ export const useMatchStore = create<MatchState>()(
           status: 'upcoming',
           weather: info.weather,
           teamCount: info.teamCount || 2,
-          trackStats: info.trackStats !== undefined ? info.trackStats : (info.matchType !== 'internal'),
+          trackStats: info.trackStats !== undefined ? info.trackStats : true,
           teamAColor: info.teamAColor || 'Đỏ',
           teamBColor: info.teamBColor || 'Xanh',
           teamCColor: info.teamCColor || 'Trắng',
