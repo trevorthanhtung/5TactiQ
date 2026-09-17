@@ -123,12 +123,12 @@ export default function HeadToHead() {
 
     return {
       opponentsList: sortedOpponents,
-      totalOpponents: sortedOpponents.length,
+      totalOpponents: sortedOpponents.filter((opp: any) => !opp.isInternalGroup).length,
       totalMatches: validMatches.length,
       totalWins,
       totalLosses
     };
-  }, [matches, t, filterMode, hasSeasonConfig, seasonRange]);
+  }, [matches, t, filterMode, matchTypeFilter, hasSeasonConfig, seasonRange]);
 
   const formatDate = (dateStr: string) => {
     if (!dateStr) return '';
