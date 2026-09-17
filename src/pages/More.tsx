@@ -863,7 +863,12 @@ export default function More() {
                 <span className="font-bold text-text-main">{t('sync.last_synced', 'Đồng bộ lần cuối:')}</span>
                 <span>
                   {lastSyncedAt
-                    ? new Date(lastSyncedAt).toLocaleString(i18n.language === 'vi' ? 'vi-VN' : 'en-US', {
+                    ? new Date(lastSyncedAt).toLocaleString(
+                        i18n.language === 'vi' ? 'vi-VN' : 
+                        i18n.language === 'es' ? 'es-ES' : 
+                        i18n.language === 'pt' ? 'pt-BR' : 
+                        i18n.language === 'ru' ? 'ru-RU' : 
+                        i18n.language === 'ar' ? 'ar-SA' : 'en-US', {
                         hour: '2-digit',
                         minute: '2-digit',
                         day: '2-digit',

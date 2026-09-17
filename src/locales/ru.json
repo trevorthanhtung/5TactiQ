@@ -529,6 +529,7 @@
     "goals_assists_direct": "ГОЛЫ, ПАСЫ И ОЦЕНКИ",
     "filter_all_teams": "Все",
     "unassigned_players": "Не распределены",
+    "unassigned_short": "Не назначен",
     "no_players_in_team": "В этой команде пока нет игроков",
     "goals_short": "Г:",
     "assists_short": "П:",
